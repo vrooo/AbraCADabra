@@ -4,6 +4,7 @@ using System.Windows.Input;
 using System.Windows.Forms;
 using System.Drawing;
 
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
 namespace AbraCADabra
@@ -22,9 +23,10 @@ namespace AbraCADabra
         PlaneXZ plane;
 
         System.Drawing.Point prevLocation;
-        float cameraRotateSpeed = 0.02f;
-        float cameraTranslateSpeed = 0.02f;
-        float cameraScrollSpeed = 0.01f;
+        float rotateSpeed = 0.02f;
+        float translateSpeed = 0.04f;
+        float scrollSpeed = 0.02f;
+        float scaleSpeed = 0.001f;
         float shiftModifier = 10.0f;
 
         public MainWindow()
@@ -78,11 +80,11 @@ namespace AbraCADabra
 
             if (e.Button.HasFlag(MouseButtons.Left))
             {
-                float speed = cameraTranslateSpeed * speedModifier;
+                float speed = translateSpeed * speedModifier;
                 if (moveTorus)
                 {
-                    // TODO: relative to camera
-                    torus.Translate(diffX * speed, -diffY * speed, 0);
+                    Vector4 translation = camera.GetRotationMatrix() * new Vector4(diffX * speed, -diffY * speed, 0, 1);
+                    torus.Translate(translation.X, translation.Y, translation.Z);
                 }
                 else
                 {
@@ -93,7 +95,7 @@ namespace AbraCADabra
 
             if (e.Button.HasFlag(MouseButtons.Right))
             {
-                float speed = cameraRotateSpeed * speedModifier;
+                float speed = rotateSpeed * speedModifier;
                 if (moveTorus)
                 {
                     torus.Rotate(diffY * speed, diffX * speed, 0);
@@ -112,8 +114,17 @@ namespace AbraCADabra
         {
             float speedModifier = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)
                 ? shiftModifier : 1.0f;
-            float speed = cameraScrollSpeed * speedModifier;
-            camera.Translate(0, 0, e.Delta * speed);
+
+            if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
+            {
+                float speed = scaleSpeed * speedModifier;
+                torus.ScaleUniform(e.Delta * speed);
+            }
+            else
+            {
+                float speed = scrollSpeed * speedModifier;
+                camera.Translate(0, 0, e.Delta * speed);
+            }
             GLMain.Invalidate();
         }
 

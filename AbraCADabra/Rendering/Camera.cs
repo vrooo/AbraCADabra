@@ -7,10 +7,7 @@ namespace AbraCADabra
     {
         public Vector3 Position { get; private set; }
         public Vector3 Rotation { get; private set; }
-
-        private Vector3 right = Vector3.UnitX;
-        private Vector3 up = Vector3.UnitY;
-        private Vector3 front = Vector3.UnitZ;
+        public Vector3 Offset { get; set; } = new Vector3(0, 0, -10);
 
         public Camera(Vector3 position, Vector3 rotation)
         {
@@ -25,12 +22,20 @@ namespace AbraCADabra
         public Camera(float x, float y, float z, float rx, float ry, float rz)
             : this(new Vector3(x, y, z), new Vector3(rx, ry, rz)) { }
 
+        public Matrix4 GetRotationMatrix()
+        {
+            return Matrix4.CreateRotationZ(Rotation.Z) *
+                   Matrix4.CreateRotationY(Rotation.Y) *
+                   Matrix4.CreateRotationX(Rotation.X);
+        }
+
         public Matrix4 GetViewMatrix()
         {
             // TODO: cache
-            return Matrix4.CreateRotationZ(Rotation.Z) *
-                   Matrix4.CreateRotationY(Rotation.Y) *
-                   Matrix4.CreateRotationX(Rotation.X) *
+            Vector3 rotateAround = Position - Offset;
+            return Matrix4.CreateTranslation(rotateAround) *
+                   GetRotationMatrix() *
+                   Matrix4.CreateTranslation(-rotateAround) *
                    Matrix4.CreateTranslation(Position);
         }
 
@@ -48,7 +53,8 @@ namespace AbraCADabra
 
         public void Translate(float x, float y, float z)
         {
-            Position += new Vector3(x, y, z);
+            Vector4 change = GetRotationMatrix() * new Vector4(x, y, z, 1);
+            Position += new Vector3(change.X, change.Y, change.Z);
         }
     }
 }
