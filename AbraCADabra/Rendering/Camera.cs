@@ -1,0 +1,54 @@
+﻿using System;
+using OpenTK;
+
+namespace AbraCADabra
+{
+    class Camera
+    {
+        public Vector3 Position { get; private set; }
+        public Vector3 Rotation { get; private set; }
+
+        private Vector3 right = Vector3.UnitX;
+        private Vector3 up = Vector3.UnitY;
+        private Vector3 front = Vector3.UnitZ;
+
+        public Camera(Vector3 position, Vector3 rotation)
+        {
+            Position = position;
+            Rotation = rotation;
+        }
+
+        public Camera(Vector3 position) : this(position, Vector3.Zero) { }
+
+        public Camera(float x, float y, float z) : this(new Vector3(x, y, z)) { }
+
+        public Camera(float x, float y, float z, float rx, float ry, float rz)
+            : this(new Vector3(x, y, z), new Vector3(rx, ry, rz)) { }
+
+        public Matrix4 GetViewMatrix()
+        {
+            // TODO: cache
+            return Matrix4.CreateRotationZ(Rotation.Z) *
+                   Matrix4.CreateRotationY(Rotation.Y) *
+                   Matrix4.CreateRotationX(Rotation.X) *
+                   Matrix4.CreateTranslation(Position);
+        }
+
+        public Matrix4 GetProjectionMatrix(float width, float height)
+        {
+            // TODO: cache
+            return Matrix4.CreatePerspectiveFieldOfView((float)(Math.PI / 4.0), width/height, 0.1f, 500.0f);
+        }
+
+        public void Rotate(float x, float y, float z)
+        {
+            Rotation += new Vector3(x, y, z);
+            Rotation = Vector3.Clamp(Rotation, new Vector3(-89.0f), new Vector3(89.0f));
+        }
+
+        public void Translate(float x, float y, float z)
+        {
+            Position += new Vector3(x, y, z);
+        }
+    }
+}
