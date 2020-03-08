@@ -18,18 +18,23 @@ namespace AbraCADabra
         string fragPath = "../../Shaders/oneColor.frag";
 
         Camera camera;
-        Mesh mesh;
+        Torus torus;
         PlaneXZ plane;
 
         System.Drawing.Point prevLocation;
         float cameraRotateSpeed = 0.02f;
-        float cameraTranslateSpeed = 0.01f;
+        float cameraTranslateSpeed = 0.02f;
         float cameraScrollSpeed = 0.01f;
         float shiftModifier = 10.0f;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            SliderMajorR.ValueChanged += SliderTorusUpdate;
+            SliderMinorR.ValueChanged += SliderTorusUpdate;
+            SliderVerticalSlices.ValueChanged += SliderTorusUpdate;
+            SliderHorizontalSlices.ValueChanged += SliderTorusUpdate;
         }
 
         #region Old events
@@ -69,17 +74,34 @@ namespace AbraCADabra
             float speedModifier = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)
                 ? shiftModifier : 1.0f;
 
+            bool moveTorus = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+
             if (e.Button.HasFlag(MouseButtons.Left))
             {
                 float speed = cameraTranslateSpeed * speedModifier;
-                camera.Translate(diffX * speed, -diffY * speed, 0);
+                if (moveTorus)
+                {
+                    // TODO: relative to camera
+                    torus.Translate(diffX * speed, -diffY * speed, 0);
+                }
+                else
+                {
+                    camera.Translate(diffX * speed, -diffY * speed, 0);
+                }
                 GLMain.Invalidate();
             }
 
             if (e.Button.HasFlag(MouseButtons.Right))
             {
                 float speed = cameraRotateSpeed * speedModifier;
-                camera.Rotate(diffY * speed, diffX * speed, 0);
+                if (moveTorus)
+                {
+                    torus.Rotate(diffY * speed, diffX * speed, 0);
+                }
+                else
+                {
+                    camera.Rotate(diffY * speed, diffX * speed, 0);
+                }
                 GLMain.Invalidate();
             }
 
@@ -98,12 +120,14 @@ namespace AbraCADabra
         private void OnLoad(object sender, EventArgs e)
         {
             shader = new Shader(vertPath, fragPath);
-            GL.ClearColor(Color.Black);
+            GL.ClearColor(0.05f, 0.05f, 0.15f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
 
-            camera = new Camera(0, 0, -7.0f, 0.5f, 0, 0);
-            mesh = new Cube();
-            plane = new PlaneXZ(100.0f, 100.0f, 100, 100);
+            camera = new Camera(0, 0, -20.0f, 0.5f, 0, 0);
+            torus = new Torus((float)SliderMajorR.Value, (float)SliderMinorR.Value,
+                              (uint)SliderVerticalSlices.Value, (uint)SliderHorizontalSlices.Value,
+                              (uint)SliderVerticalSlices.Maximum, (uint)SliderHorizontalSlices.Maximum);
+            plane = new PlaneXZ(200.0f, 200.0f, 200, 200);
         }
 
         private void OnRender(object sender, PaintEventArgs e)
@@ -112,10 +136,13 @@ namespace AbraCADabra
             GL.Clear(ClearBufferMask.ColorBufferBit | 
                      ClearBufferMask.DepthBufferBit);
 
-            shader.Use(mesh, camera, GLMain.Width, GLMain.Height);
-            mesh.Render();
-            shader.Use(plane, camera, GLMain.Width, GLMain.Height);
-            plane.Render();
+            shader.Use(torus, camera, GLMain.Width, GLMain.Height);
+            torus.Render();
+            if (CheckBoxGrid.IsChecked.HasValue && CheckBoxGrid.IsChecked.Value)
+            {
+                shader.Use(plane, camera, GLMain.Width, GLMain.Height);
+                plane.Render();
+            }
 
             GLMain.SwapBuffers();
         }
@@ -124,9 +151,21 @@ namespace AbraCADabra
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-            mesh.Dispose();
+            torus.Dispose();
             plane.Dispose();
             shader.Dispose();
+        }
+
+        private void RoutedInvalidate(object sender, RoutedEventArgs e)
+        {
+            GLMain.Invalidate();
+        }
+
+        private void SliderTorusUpdate(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            torus?.Update((float)SliderMajorR.Value, (float)SliderMinorR.Value, 
+                          (uint)SliderVerticalSlices.Value, (uint)SliderHorizontalSlices.Value);
+            GLMain.Invalidate();
         }
     }
 }

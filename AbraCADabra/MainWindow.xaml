@@ -17,9 +17,8 @@
             <Setter Property="Margin" Value="1,5,5,0"/>
             <EventSetter Event="ValueChanged" Handler="SliderRedraw"/>
         </Style>
-        <Style TargetType="{x:Type RadioButton}">
+        <Style TargetType="{x:Type CheckBox}">
             <Setter Property="Margin" Value="0,5,0,0"/>
-            <EventSetter Event="Checked" Handler="RadioRedraw"/>
         </Style>
         <Style TargetType="{x:Type TextBox}">
             <Setter Property="Margin" Value="0,5,0,0"/>
@@ -43,19 +42,19 @@
             <StackPanel Margin="3">
                 <GroupBox Header="Torus">
                     <StackPanel>
-                        <TextBlock>Big radius:</TextBlock>
+                        <TextBlock>Major radius:</TextBlock>
                         <DockPanel>
-                            <TextBox x:Name="TextBoxBigR" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
-                                     Text="{Binding ElementName=SliderBigR,Path=Value}"/>
-                            <Slider x:Name="SliderBigR" DockPanel.Dock="Left"
-                                    Minimum="1" Maximum="20" Value="5" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                            <TextBox x:Name="TextBoxMajorR" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
+                                     Text="{Binding ElementName=SliderMajorR,Path=Value}"/>
+                            <Slider x:Name="SliderMajorR" DockPanel.Dock="Left"
+                                    Minimum="0.01" Maximum="20" Value="6"/>
                         </DockPanel>
-                        <TextBlock>Small radius:</TextBlock>
+                        <TextBlock>Minor radius:</TextBlock>
                         <DockPanel>
-                            <TextBox x:Name="TextBoxSmallR" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
-                                     Text="{Binding ElementName=SliderSmallR,Path=Value}"/>
-                            <Slider x:Name="SliderSmallR" DockPanel.Dock="Left"
-                                    Minimum="1" Maximum="20" Value="5" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                            <TextBox x:Name="TextBoxMinorR" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
+                                     Text="{Binding ElementName=SliderMinorR,Path=Value}"/>
+                            <Slider x:Name="SliderMinorR" DockPanel.Dock="Left"
+                                    Minimum="0.01" Maximum="20" Value="4"/>
                         </DockPanel>
                     </StackPanel>
                 </GroupBox>
@@ -66,16 +65,20 @@
                             <TextBox x:Name="TextBoxVerticalSlices" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
                                      Text="{Binding ElementName=SliderVerticalSlices,Path=Value}"/>
                             <Slider x:Name="SliderVerticalSlices" DockPanel.Dock="Left"
-                                    Minimum="3" Maximum="100" Value="10" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                    Minimum="3" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True"/>
                         </DockPanel>
                         <TextBlock>Horizontal slices:</TextBlock>
                         <DockPanel>
                             <TextBox x:Name="TextBoxHorizontalSlices" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
                                      Text="{Binding ElementName=SliderHorizontalSlices,Path=Value}"/>
                             <Slider x:Name="SliderHorizontalSlices" DockPanel.Dock="Left"
-                                    Minimum="3" Maximum="100" Value="10" TickFrequency="1" IsSnapToTickEnabled="True"/>
+                                    Minimum="3" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True"/>
                         </DockPanel>
                     </StackPanel>
+                </GroupBox>
+                <GroupBox Header="View">
+                    <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
+                              Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
                 </GroupBox>
             </StackPanel>
         </ScrollViewer>

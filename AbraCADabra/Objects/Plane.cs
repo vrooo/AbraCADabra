@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
 namespace AbraCADabra
@@ -17,7 +16,6 @@ namespace AbraCADabra
 
             float startX = -sizeX / 2, stepX = sizeX / divX;
             float startZ = -sizeZ / 2, stepZ = sizeZ / divZ;
-            uint maxInd = (divX + 1) * (divZ + 1);
             for (uint ix = 0; ix < divX + 1; ix++)
             {
                 float x = startX + stepX * ix;

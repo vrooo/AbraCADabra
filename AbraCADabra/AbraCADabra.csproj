@@ -85,6 +85,7 @@
     <Compile Include="Objects\Cube.cs" />
     <Compile Include="Objects\Mesh.cs" />
     <Compile Include="Objects\Plane.cs" />
+    <Compile Include="Objects\Torus.cs" />
     <Compile Include="Old\MathHelper.cs" />
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\Shader.cs" />
