@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
+using OpenTK;
 
 namespace AbraCADabra
 {
@@ -12,6 +13,7 @@ namespace AbraCADabra
 
         public PlaneXZ(float sizeX, float sizeZ, uint divX, uint divZ)
         {
+            Color = new Vector4(0.5f, 0.5f, 0.5f, 1.0f);
             primitiveType = PrimitiveType.Lines;
 
             float startX = -sizeX / 2, stepX = sizeX / divX;

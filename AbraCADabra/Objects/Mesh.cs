@@ -3,14 +3,14 @@ using OpenTK.Graphics.OpenGL;
 
 namespace AbraCADabra
 {
-    abstract class Mesh
+    public abstract class Mesh
     {
         protected int vao, vbo, ebo;
         protected abstract float[] vertices { get; }
         protected abstract uint[] indices { get; }
 
         protected PrimitiveType primitiveType = PrimitiveType.Triangles;
-        public Vector4 Color { get; set; } = new Vector4(0.5f, 0.5f, 0.5f, 1.0f);
+        public Vector4 Color { get; set; }
 
         public Vector3 Position { get; protected set; }
         public Vector3 Rotation { get; protected set; }

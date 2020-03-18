@@ -1,0 +1,6 @@
+﻿namespace AbraCADabra
+{
+    class Cursor
+    {
+    }
+}

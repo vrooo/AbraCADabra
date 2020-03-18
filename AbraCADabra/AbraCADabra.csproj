@@ -83,12 +83,17 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Objects\Cube.cs" />
+    <Compile Include="Objects\Cursor.cs" />
     <Compile Include="Objects\Mesh.cs" />
     <Compile Include="Objects\Plane.cs" />
     <Compile Include="Objects\Torus.cs" />
-    <Compile Include="Old\MathHelper.cs" />
+    <Compile Include="PropertyWindow.xaml.cs">
+      <DependentUpon>PropertyWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\Shader.cs" />
+    <Compile Include="UI\MeshManager.cs" />
+    <Compile Include="UI\TorusManager.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -101,9 +106,16 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="PropertyWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Resources.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Old\Matrix.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

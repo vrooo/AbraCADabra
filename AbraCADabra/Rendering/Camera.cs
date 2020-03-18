@@ -7,7 +7,11 @@ namespace AbraCADabra
     {
         public Vector3 Position { get; private set; }
         public Vector3 Rotation { get; private set; }
-        public Vector3 Offset { get; set; } = new Vector3(0, 0, -10);
+        public Vector3 Offset { get; set; } = new Vector3(0, 0, -30);
+
+        private readonly float zNear = 0.1f;
+        private readonly float zFar = 5000.0f;
+        private readonly float fov = (float)(Math.PI / 4.0);
 
         public Camera(Vector3 position, Vector3 rotation)
         {
@@ -42,7 +46,7 @@ namespace AbraCADabra
         public Matrix4 GetProjectionMatrix(float width, float height)
         {
             // TODO: cache
-            return Matrix4.CreatePerspectiveFieldOfView((float)(Math.PI / 4.0), width/height, 0.1f, 500.0f);
+            return Matrix4.CreatePerspectiveFieldOfView(fov, width/height, zNear, zFar);
         }
 
         public void Rotate(float x, float y, float z)

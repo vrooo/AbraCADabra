@@ -1,0 +1,62 @@
+﻿<Window x:Class="AbraCADabra.PropertyWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AbraCADabra"
+        mc:Ignorable="d"
+        Title="Properties" Height="300" Width="200" MinHeight="100" MinWidth="100" WindowStyle="ToolWindow"
+        DataContextChanged="ContextChanged">
+    <Window.Resources>
+        <Style TargetType="{x:Type Slider}" x:Key="SliderUpdating">
+            <EventSetter Event="ValueChanged" Handler="SliderUpdate"/>
+        </Style>
+    </Window.Resources>
+    <StackPanel>
+        <GroupBox Header="General">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Left" Style="{StaticResource TextBlockBasic}">Name:</TextBlock>
+                <TextBox DockPanel.Dock="Left" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            </DockPanel>
+        </GroupBox>
+
+        <GroupBox x:Name="GroupTorus" Header="Torus">
+            <StackPanel>
+                <TextBlock Style="{StaticResource TextBlockBasic}">Major radius:</TextBlock>
+                <DockPanel>
+                    <TextBox x:Name="TextBoxMajorR" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
+                             Text="{Binding ElementName=SliderMajorR,Path=Value}"/>
+                    <Slider x:Name="SliderMajorR" DockPanel.Dock="Left"
+                            Style="{StaticResource SliderUpdating}"
+                            Minimum="0.01" Maximum="20" Value="{Binding MajorR, Mode=TwoWay}"/>
+                </DockPanel>
+                <TextBlock Style="{StaticResource TextBlockBasic}">Minor radius:</TextBlock>
+                <DockPanel>
+                    <TextBox x:Name="TextBoxMinorR" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
+                             Text="{Binding ElementName=SliderMinorR,Path=Value}"/>
+                    <Slider x:Name="SliderMinorR" DockPanel.Dock="Left"
+                            Style="{StaticResource SliderUpdating}"
+                            Minimum="0.01" Maximum="20" Value="{Binding MinorR, Mode=TwoWay}"/>
+                </DockPanel>
+                <TextBlock Style="{StaticResource TextBlockBasic}">Vertical slices:</TextBlock>
+                <DockPanel>
+                    <TextBox x:Name="TextBoxVerticalSlices" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
+                             Text="{Binding ElementName=SliderVerticalSlices,Path=Value}"/>
+                    <Slider x:Name="SliderVerticalSlices" DockPanel.Dock="Left"
+                            Style="{StaticResource SliderUpdating}"
+                            Minimum="3" Maximum="100" Value="{Binding DivMajorR, Mode=TwoWay}"
+                            TickFrequency="1" IsSnapToTickEnabled="True"/>
+                </DockPanel>
+                <TextBlock Style="{StaticResource TextBlockBasic}">Horizontal slices:</TextBlock>
+                <DockPanel>
+                    <TextBox x:Name="TextBoxHorizontalSlices" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
+                             Text="{Binding ElementName=SliderHorizontalSlices,Path=Value}"/>
+                    <Slider x:Name="SliderHorizontalSlices" DockPanel.Dock="Left"
+                            Style="{StaticResource SliderUpdating}"
+                            Minimum="3" Maximum="100" Value="{Binding DivMinorR, Mode=TwoWay}"
+                            TickFrequency="1" IsSnapToTickEnabled="True"/>
+                </DockPanel>
+            </StackPanel>
+        </GroupBox>
+    </StackPanel>
+</Window>

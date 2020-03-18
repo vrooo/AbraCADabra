@@ -10,22 +10,14 @@
         >
 
     <Window.Resources>
-        <Style TargetType="{x:Type GroupBox}">
-            <Setter Property="Margin" Value="0,5,0,0"/>
+        <Style TargetType="{x:Type ListBoxItem}">
+            <EventSetter Event="MouseDoubleClick" Handler="ListBoxItemDoubleClick"/>
         </Style>
-        <Style TargetType="{x:Type Slider}">
-            <Setter Property="Margin" Value="1,5,5,0"/>
-            <EventSetter Event="ValueChanged" Handler="SliderRedraw"/>
-        </Style>
-        <Style TargetType="{x:Type CheckBox}">
-            <Setter Property="Margin" Value="0,5,0,0"/>
-        </Style>
-        <Style TargetType="{x:Type TextBox}">
-            <Setter Property="Margin" Value="0,5,0,0"/>
-        </Style>
-        <Style TargetType="{x:Type TextBlock}">
-            <Setter Property="Margin" Value="1,5,5,0"/>
-        </Style>
+        <!--<Style TargetType="ScrollBar">
+            <Setter Property="Background" Value="#181b2e"/>
+            <Setter Property="Foreground"  Value="#2a3157"/>
+            <Setter Property="BorderBrush" Value="#181b2e"/>
+        </Style>-->
     </Window.Resources>
     
     <Grid>
@@ -40,41 +32,22 @@
         </WindowsFormsHost>
         <ScrollViewer Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <StackPanel Margin="3">
-                <GroupBox Header="Torus">
-                    <StackPanel>
-                        <TextBlock>Major radius:</TextBlock>
-                        <DockPanel>
-                            <TextBox x:Name="TextBoxMajorR" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
-                                     Text="{Binding ElementName=SliderMajorR,Path=Value}"/>
-                            <Slider x:Name="SliderMajorR" DockPanel.Dock="Left"
-                                    Minimum="0.01" Maximum="20" Value="6"/>
-                        </DockPanel>
-                        <TextBlock>Minor radius:</TextBlock>
-                        <DockPanel>
-                            <TextBox x:Name="TextBoxMinorR" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
-                                     Text="{Binding ElementName=SliderMinorR,Path=Value}"/>
-                            <Slider x:Name="SliderMinorR" DockPanel.Dock="Left"
-                                    Minimum="0.01" Maximum="20" Value="4"/>
-                        </DockPanel>
-                    </StackPanel>
+                <GroupBox Header="Objects">
+                    <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                        <ListBox x:Name="ListObjects" ItemsSource="{Binding}" Height="200">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="1, 0, 0, 0" Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
                 </GroupBox>
-                <GroupBox Header="Wireframe">
-                    <StackPanel>
-                        <TextBlock>Vertical slices:</TextBlock>
-                        <DockPanel>
-                            <TextBox x:Name="TextBoxVerticalSlices" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
-                                     Text="{Binding ElementName=SliderVerticalSlices,Path=Value}"/>
-                            <Slider x:Name="SliderVerticalSlices" DockPanel.Dock="Left"
-                                    Minimum="3" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True"/>
-                        </DockPanel>
-                        <TextBlock>Horizontal slices:</TextBlock>
-                        <DockPanel>
-                            <TextBox x:Name="TextBoxHorizontalSlices" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
-                                     Text="{Binding ElementName=SliderHorizontalSlices,Path=Value}"/>
-                            <Slider x:Name="SliderHorizontalSlices" DockPanel.Dock="Left"
-                                    Minimum="3" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True"/>
-                        </DockPanel>
-                    </StackPanel>
+                <GroupBox Header="Add object">
+                    <WrapPanel>
+                        <Button Click="ButtonCreatePoint">Point</Button>
+                        <Button Click="ButtonCreateTorus">Torus</Button>
+                    </WrapPanel>
                 </GroupBox>
                 <GroupBox Header="View">
                     <CheckBox x:Name="CheckBoxGrid" IsChecked="True"

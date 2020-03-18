@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
+using OpenTK;
 
 namespace AbraCADabra
 {
@@ -11,13 +12,12 @@ namespace AbraCADabra
         private List<uint> indexList = new List<uint>();
         protected override uint[] indices => indexList.ToArray();
 
-        public Torus(float majorR, float minorR, uint divMajorR, uint divMinorR,
-                     uint maxDivMajorR, uint maxDivMinorR)
+        public Torus(uint maxDivMajorR, uint maxDivMinorR)
         {
             primitiveType = PrimitiveType.Lines;
-            Color = new OpenTK.Vector4(0.7f, 0.7f, 0.3f, 1.0f);
+            Color = new Vector4(0.7f, 0.7f, 0.3f, 1.0f);
 
-            CalculateVertices(majorR, minorR, divMajorR, divMinorR);
+            //CalculateVertices(majorR, minorR, divMajorR, divMinorR);
             uint maxVertices = (maxDivMajorR + 1) * (maxDivMinorR + 1) * 3;
             uint maxIndices = (maxDivMajorR + 1) * (maxDivMinorR + 1) * 4;
             Initialize((int)maxVertices, (int)maxIndices);
