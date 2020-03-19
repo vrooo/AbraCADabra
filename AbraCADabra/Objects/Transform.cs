@@ -101,14 +101,10 @@ namespace AbraCADabra
 
         public Matrix4 GetModelMatrix()
         {
-            Matrix4 rotation = Matrix4.CreateFromAxisAngle(Vector3.UnitX, Rotation.X);
-            Vector3 axisY = new Vector3(Matrix4.Invert(rotation) * Vector4.UnitY);
-            rotation *= Matrix4.CreateFromAxisAngle(axisY, Rotation.Y);
-            Vector3 axisZ = new Vector3(Matrix4.Invert(rotation) * Vector4.UnitZ);
-            rotation *= Matrix4.CreateFromAxisAngle(axisZ, Rotation.Z);
-
             return Matrix4.CreateScale(Scale) *
-                   rotation *
+                   Matrix4.CreateRotationX(Rotation.X) *
+                   Matrix4.CreateRotationY(Rotation.Y) *
+                   Matrix4.CreateRotationZ(Rotation.Z) *
                    Matrix4.CreateTranslation(Position);
         }
 
