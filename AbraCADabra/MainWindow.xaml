@@ -4,9 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:otk="clr-namespace:OpenTK;assembly=OpenTK.GLControl"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:AbraCADabra"
         mc:Ignorable="d"
-        Title="AbraCADabra" Height="600" Width="800" MinHeight="200" MinWidth="400"
+        x:Name="_this" Title="AbraCADabra" Height="800" Width="1200" MinHeight="200" MinWidth="400"
         >
 
     <Window.Resources>
@@ -23,25 +24,29 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="250"/>
         </Grid.ColumnDefinitions>
         <WindowsFormsHost x:Name="WFHost" Grid.Column="0">
             <otk:GLControl x:Name="GLMain"
                            Load="OnLoad" Paint="OnRender" Disposed="OnDisposed"
-                           MouseMove="OnMouseMove" MouseWheel="OnMouseScroll"/>
+                           MouseMove="OnMouseMove" MouseWheel="OnMouseScroll" MouseDown="OnMouseDown"/>
         </WindowsFormsHost>
         <ScrollViewer Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <StackPanel Margin="3">
                 <GroupBox Header="Objects">
-                    <ScrollViewer VerticalScrollBarVisibility="Hidden">
-                        <ListBox x:Name="ListObjects" ItemsSource="{Binding}" Height="200">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Margin="1, 0, 0, 0" Text="{Binding Name}"/>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </ScrollViewer>
+                    <StackPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                            <ListBox x:Name="ListObjects" ItemsSource="{Binding}" Height="150" SelectionMode="Extended"
+                                     SelectionChanged="ListObjectsSelectionChanged">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Margin="1, 0, 0, 0" Text="{Binding Name}"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </ScrollViewer>
+                        <Button Margin="0" Click="ButtonDelete">Delete selected</Button>
+                    </StackPanel>
                 </GroupBox>
                 <GroupBox Header="Add object">
                     <WrapPanel>
@@ -49,9 +54,62 @@
                         <Button Click="ButtonCreateTorus">Torus</Button>
                     </WrapPanel>
                 </GroupBox>
-                <GroupBox Header="View">
-                    <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
+                <GroupBox Header="Cursor">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource TextBlockBasic}">World:</TextBlock>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
+                            <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
+                                                x:Name="DecimalWorldX" Value="0.0"
+                                                ValueChanged="DecimalWorldValueChanged"></xctk:DecimalUpDown>
+                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
+                            <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
+                                                x:Name="DecimalWorldY" Value="0.0"
+                                                ValueChanged="DecimalWorldValueChanged"></xctk:DecimalUpDown>
+                            <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
+                            <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
+                                                x:Name="DecimalWorldZ" Value="0.0"
+                                                ValueChanged="DecimalWorldValueChanged"></xctk:DecimalUpDown>
+                        </Grid>
+                        <TextBlock Style="{StaticResource TextBlockBasic}">Screen:</TextBlock>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
+                            <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
+                                                x:Name="DecimalScreenX" Value="0.0"
+                                                ValueChanged="DecimalScreenValueChanged"></xctk:DecimalUpDown>
+                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
+                            <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
+                                                x:Name="DecimalScreenY" Value="0.0"
+                                                ValueChanged="DecimalScreenValueChanged"></xctk:DecimalUpDown>
+                            <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
+                            <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
+                                                x:Name="DecimalScreenZ" Value="0.0"
+                                                ValueChanged="DecimalScreenValueChanged"></xctk:DecimalUpDown>
+                        </Grid>
+                    </StackPanel>
+                </GroupBox>
+                <GroupBox Header="Configuration">
+                    <StackPanel>
+                        <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
                               Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
+                        <CheckBox x:Name="CheckBoxRotateOrigin" IsChecked="True">Rotate around cursor</CheckBox>
+                    </StackPanel>
                 </GroupBox>
             </StackPanel>
         </ScrollViewer>

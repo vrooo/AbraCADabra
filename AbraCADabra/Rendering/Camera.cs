@@ -3,15 +3,15 @@ using OpenTK;
 
 namespace AbraCADabra
 {
-    class Camera
+    public class Camera
     {
         public Vector3 Position { get; private set; }
         public Vector3 Rotation { get; private set; }
         public Vector3 Offset { get; set; } = new Vector3(0, 0, -30);
 
-        private readonly float zNear = 0.1f;
-        private readonly float zFar = 5000.0f;
-        private readonly float fov = (float)(Math.PI / 4.0);
+        public float ZNear { get; set; } = 0.1f;
+        public float ZFar { get; set; } = 5000.0f;
+        public float FOV { get; set; } = (float)(Math.PI / 4.0);
 
         public Camera(Vector3 position, Vector3 rotation)
         {
@@ -46,13 +46,12 @@ namespace AbraCADabra
         public Matrix4 GetProjectionMatrix(float width, float height)
         {
             // TODO: cache
-            return Matrix4.CreatePerspectiveFieldOfView(fov, width/height, zNear, zFar);
+            return Matrix4.CreatePerspectiveFieldOfView(FOV, width/height, ZNear, ZFar);
         }
 
         public void Rotate(float x, float y, float z)
         {
             Rotation += new Vector3(x, y, z);
-            Rotation = Vector3.Clamp(Rotation, new Vector3(-89.0f), new Vector3(89.0f));
         }
 
         public void Translate(float x, float y, float z)

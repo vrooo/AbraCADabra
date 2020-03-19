@@ -5,15 +5,20 @@ using OpenTK;
 
 namespace AbraCADabra
 {
-    class Torus : Mesh
+    class Torus : Transform
     {
         private List<float> vertexList = new List<float>();
         protected override float[] vertices => vertexList.ToArray();
         private List<uint> indexList = new List<uint>();
         protected override uint[] indices => indexList.ToArray();
 
-        public Torus(uint maxDivMajorR, uint maxDivMinorR)
+        private uint maxDivMajorR, maxDivMinorR;
+
+        public Torus(Vector3 position, uint maxDivMajorR, uint maxDivMinorR) : base(position)
         {
+            this.maxDivMajorR = maxDivMajorR;
+            this.maxDivMinorR = maxDivMinorR;
+
             primitiveType = PrimitiveType.Lines;
             Color = new Vector4(0.7f, 0.7f, 0.3f, 1.0f);
 
@@ -25,6 +30,10 @@ namespace AbraCADabra
 
         public void Update(float majorR, float minorR, uint divMajorR, uint divMinorR)
         {
+            if (divMajorR < 3 || divMajorR > maxDivMajorR || divMinorR < 3 || divMinorR > maxDivMinorR)
+            {
+                return;
+            }
             CalculateVertices(majorR, minorR, divMajorR, divMinorR);
             UpdateBuffers();
         }

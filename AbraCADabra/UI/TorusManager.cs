@@ -1,8 +1,12 @@
-﻿namespace AbraCADabra
+﻿using OpenTK;
+
+namespace AbraCADabra
 {
-    class TorusManager : MeshManager
+    class TorusManager : TransformManager
     {
         public override string DefaultName => "Torus";
+        private static int counter = 0;
+        protected override int instanceCounter => counter++;
 
         public float MajorR { get; set; } = 6;
         public float MinorR { get; set; } = 4;
@@ -11,7 +15,8 @@
 
         private Torus torus;
 
-        public TorusManager(uint maxDivMajorR, uint maxDivMinorR) : this(new Torus(maxDivMajorR, maxDivMinorR)) { }
+        public TorusManager(Vector3 position, uint maxDivMajorR, uint maxDivMinorR) 
+            : this(new Torus(position, maxDivMajorR, maxDivMinorR)) { }
 
         public TorusManager(Torus torus) : base(torus)
         {

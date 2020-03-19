@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Text;
 
@@ -7,7 +8,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace AbraCADabra
 {
-    class Shader : IDisposable
+    public class Shader : IDisposable
     {
         private int shaderProgram;
 
@@ -29,11 +30,19 @@ namespace AbraCADabra
             GL.DeleteShader(frag);
         }
 
-        public void Use(Mesh mesh, Camera cam, float width, float height)
+        public void Use()
         {
             GL.UseProgram(shaderProgram);
-            BindVector4(mesh.Color, "color");
-            BindMatrix(mesh.GetModelMatrix(), "modelMatrix");
+        }
+
+        public void SetupTransform(Vector4 color, Matrix4 model)
+        {
+            BindVector4(color, "color");
+            BindMatrix(model, "modelMatrix");
+        }
+
+        public void SetupCamera(Camera cam, float width, float height)
+        {
             BindMatrix(cam.GetViewMatrix(), "viewMatrix");
             BindMatrix(cam.GetProjectionMatrix(width, height), "projMatrix");
         }

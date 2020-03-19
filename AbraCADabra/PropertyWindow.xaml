@@ -3,60 +3,167 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:AbraCADabra"
         mc:Ignorable="d"
-        Title="Properties" Height="300" Width="200" MinHeight="100" MinWidth="100" WindowStyle="ToolWindow"
+        Title="Properties" Height="440" Width="250" MinHeight="200" MinWidth="200" WindowStyle="ToolWindow" ShowInTaskbar="False"
         DataContextChanged="ContextChanged">
     <Window.Resources>
         <Style TargetType="{x:Type Slider}" x:Key="SliderUpdating">
+            <Setter Property="Margin" Value="1,5,5,0"/>
             <EventSetter Event="ValueChanged" Handler="SliderUpdate"/>
         </Style>
+        <Style TargetType="{x:Type xctk:DecimalUpDown}" BasedOn="{StaticResource {x:Type xctk:DecimalUpDown}}" x:Key="DecimalUpdating">
+            <EventSetter Event="ValueChanged" Handler="DecimalUpdate"/>
+        </Style>
     </Window.Resources>
-    <StackPanel>
-        <GroupBox Header="General">
-            <DockPanel>
-                <TextBlock DockPanel.Dock="Left" Style="{StaticResource TextBlockBasic}">Name:</TextBlock>
-                <TextBox DockPanel.Dock="Left" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-            </DockPanel>
-        </GroupBox>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel>
+            <GroupBox x:Name="GroupObject" Header="Object">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Left" Style="{StaticResource TextBlockBasic}">Name:</TextBlock>
+                    <TextBox DockPanel.Dock="Left" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                </DockPanel>
+            </GroupBox>
 
-        <GroupBox x:Name="GroupTorus" Header="Torus">
-            <StackPanel>
-                <TextBlock Style="{StaticResource TextBlockBasic}">Major radius:</TextBlock>
-                <DockPanel>
-                    <TextBox x:Name="TextBoxMajorR" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
-                             Text="{Binding ElementName=SliderMajorR,Path=Value}"/>
-                    <Slider x:Name="SliderMajorR" DockPanel.Dock="Left"
-                            Style="{StaticResource SliderUpdating}"
-                            Minimum="0.01" Maximum="20" Value="{Binding MajorR, Mode=TwoWay}"/>
-                </DockPanel>
-                <TextBlock Style="{StaticResource TextBlockBasic}">Minor radius:</TextBlock>
-                <DockPanel>
-                    <TextBox x:Name="TextBoxMinorR" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
-                             Text="{Binding ElementName=SliderMinorR,Path=Value}"/>
-                    <Slider x:Name="SliderMinorR" DockPanel.Dock="Left"
-                            Style="{StaticResource SliderUpdating}"
-                            Minimum="0.01" Maximum="20" Value="{Binding MinorR, Mode=TwoWay}"/>
-                </DockPanel>
-                <TextBlock Style="{StaticResource TextBlockBasic}">Vertical slices:</TextBlock>
-                <DockPanel>
-                    <TextBox x:Name="TextBoxVerticalSlices" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
-                             Text="{Binding ElementName=SliderVerticalSlices,Path=Value}"/>
-                    <Slider x:Name="SliderVerticalSlices" DockPanel.Dock="Left"
-                            Style="{StaticResource SliderUpdating}"
-                            Minimum="3" Maximum="100" Value="{Binding DivMajorR, Mode=TwoWay}"
-                            TickFrequency="1" IsSnapToTickEnabled="True"/>
-                </DockPanel>
-                <TextBlock Style="{StaticResource TextBlockBasic}">Horizontal slices:</TextBlock>
-                <DockPanel>
-                    <TextBox x:Name="TextBoxHorizontalSlices" DockPanel.Dock="Right" Width="40" IsReadOnly="True"
-                             Text="{Binding ElementName=SliderHorizontalSlices,Path=Value}"/>
-                    <Slider x:Name="SliderHorizontalSlices" DockPanel.Dock="Left"
-                            Style="{StaticResource SliderUpdating}"
-                            Minimum="3" Maximum="100" Value="{Binding DivMinorR, Mode=TwoWay}"
-                            TickFrequency="1" IsSnapToTickEnabled="True"/>
-                </DockPanel>
-            </StackPanel>
-        </GroupBox>
-    </StackPanel>
+            <GroupBox x:Name="GroupTransform" Header="Transform">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource TextBlockBasic}">Position:</TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
+                        <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
+                                            x:Name="DecimalPositionX" Style="{StaticResource DecimalUpdating}"
+                                            Value="{Binding PositionX, Mode=TwoWay}"></xctk:DecimalUpDown>
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
+                        <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
+                                            x:Name="DecimalPositionY" Style="{StaticResource DecimalUpdating}"
+                                            Value="{Binding PositionY, Mode=TwoWay}"></xctk:DecimalUpDown>
+                        <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
+                        <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
+                                            x:Name="DecimalPositionZ" Style="{StaticResource DecimalUpdating}"
+                                            Value="{Binding PositionZ, Mode=TwoWay}"></xctk:DecimalUpDown>
+                    </Grid>
+                    
+                    <TextBlock Style="{StaticResource TextBlockBasic}">Rotation:</TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
+                        <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
+                                            x:Name="DecimalRotationX" Style="{StaticResource DecimalUpdating}"
+                                            Increment=".1"
+                                            Value="{Binding RotationX, Mode=TwoWay}"></xctk:DecimalUpDown>
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
+                        <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
+                                            x:Name="DecimalRotationY" Style="{StaticResource DecimalUpdating}"
+                                            Increment=".1"
+                                            Value="{Binding RotationY, Mode=TwoWay}"></xctk:DecimalUpDown>
+                        <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
+                        <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
+                                            x:Name="DecimalRotationZ" Style="{StaticResource DecimalUpdating}"
+                                            Increment=".1"
+                                            Value="{Binding RotationZ, Mode=TwoWay}"></xctk:DecimalUpDown>
+                    </Grid>
+
+                    <TextBlock Style="{StaticResource TextBlockBasic}">Scale:</TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
+                        <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
+                                            x:Name="DecimalScaleX" Style="{StaticResource DecimalUpdating}"
+                                            Increment=".1"
+                                            Value="{Binding ScaleX, Mode=TwoWay}"></xctk:DecimalUpDown>
+                        <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
+                        <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
+                                            x:Name="DecimalScaleY" Style="{StaticResource DecimalUpdating}"
+                                            Increment=".1"
+                                            Value="{Binding ScaleY, Mode=TwoWay}"></xctk:DecimalUpDown>
+                        <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
+                        <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
+                                            x:Name="DecimalScaleZ" Style="{StaticResource DecimalUpdating}"
+                                            Increment=".1"
+                                            Value="{Binding ScaleZ, Mode=TwoWay}"></xctk:DecimalUpDown>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox x:Name="GroupTorus" Header="Torus">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource TextBlockBasic}">Major radius:</TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4*"/>
+                            <ColumnDefinition Width="*" MinWidth="50"/>
+                        </Grid.ColumnDefinitions>
+                        <xctk:DecimalUpDown Grid.Column="1" x:Name="DecimalMajorR" DockPanel.Dock="Right"
+                                            Increment=".1"
+                                            Value="{Binding ElementName=SliderMajorR, Path=Value, Mode=TwoWay}"/>
+                        <Slider x:Name="SliderMajorR" DockPanel.Dock="Left"
+                                Style="{StaticResource SliderUpdating}"
+                                Minimum="0" Maximum="20" Value="{Binding MajorR, Mode=TwoWay}"/>
+                    </Grid>
+                    <TextBlock Style="{StaticResource TextBlockBasic}">Minor radius:</TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4*"/>
+                            <ColumnDefinition Width="*" MinWidth="50"/>
+                        </Grid.ColumnDefinitions>
+                        <xctk:DecimalUpDown Grid.Column="1" x:Name="DecimalMinorR" DockPanel.Dock="Right"
+                                            Increment=".1"
+                                            Value="{Binding ElementName=SliderMinorR, Path=Value, Mode=TwoWay}"/>
+                        <Slider x:Name="SliderMinorR" DockPanel.Dock="Left"
+                                Style="{StaticResource SliderUpdating}"
+                                Minimum="0" Maximum="20" Value="{Binding MinorR, Mode=TwoWay}"/>
+                    </Grid>
+                    <TextBlock Style="{StaticResource TextBlockBasic}">Vertical slices:</TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4*"/>
+                            <ColumnDefinition Width="*" MinWidth="50"/>
+                        </Grid.ColumnDefinitions>
+                        <xctk:DecimalUpDown Grid.Column="1" x:Name="DecimalVerticalSlices" DockPanel.Dock="Right" FormatString="G"
+                                            Value="{Binding ElementName=SliderVerticalSlices, Path=Value, Mode=TwoWay}"/>
+                        <Slider x:Name="SliderVerticalSlices" DockPanel.Dock="Left"
+                                Style="{StaticResource SliderUpdating}"
+                                Minimum="3" Maximum="100" Value="{Binding DivMajorR, Mode=TwoWay}"
+                                TickFrequency="1" IsSnapToTickEnabled="True"/>
+                    </Grid>
+                    <TextBlock Style="{StaticResource TextBlockBasic}">Horizontal slices:</TextBlock>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="4*"/>
+                            <ColumnDefinition Width="*" MinWidth="50"/>
+                        </Grid.ColumnDefinitions>
+                        <xctk:DecimalUpDown Grid.Column="1" x:Name="DecimalHorizontalSlices" DockPanel.Dock="Right" FormatString="G"
+                                            Value="{Binding ElementName=SliderHorizontalSlices, Path=Value, Mode=TwoWay}"/>
+                        <Slider x:Name="SliderHorizontalSlices" DockPanel.Dock="Left"
+                                Style="{StaticResource SliderUpdating}"
+                                Minimum="3" Maximum="100" Value="{Binding DivMinorR, Mode=TwoWay}"
+                                TickFrequency="1" IsSnapToTickEnabled="True"/>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </ScrollViewer>
 </Window>

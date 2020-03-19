@@ -3,7 +3,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace AbraCADabra
 {
-    public abstract class Mesh
+    public abstract class Transform
     {
         protected int vao, vbo, ebo;
         protected abstract float[] vertices { get; }
@@ -12,9 +12,16 @@ namespace AbraCADabra
         protected PrimitiveType primitiveType = PrimitiveType.Triangles;
         public Vector4 Color { get; set; }
 
-        public Vector3 Position { get; protected set; }
-        public Vector3 Rotation { get; protected set; }
-        public Vector3 Scale { get; protected set; } = Vector3.One;
+        public Vector3 Position;
+        public Vector3 Rotation;
+        public Vector3 Scale = Vector3.One;
+
+        public Transform() { }
+
+        public Transform(Vector3 position)
+        {
+            Position = position;
+        }
 
         protected void Initialize(int maxVertices = -1, int maxIndices = -1)
         {
@@ -58,37 +65,71 @@ namespace AbraCADabra
                              indices.Length * sizeof(float), indices);
         }
 
-        public void Render()
+        public virtual void Render(Shader shader)
         {
+            shader.SetupTransform(Color, GetModelMatrix());
             GL.BindVertexArray(vao);
             GL.DrawElements(primitiveType, indices.Length, DrawElementsType.UnsignedInt, 0);
             GL.BindVertexArray(0);
         }
 
-        public void Rotate(float x, float y, float z)
+        public virtual void Rotate(float x, float y, float z)
         {
             Rotation += new Vector3(x, y, z);
-            Rotation = Vector3.Clamp(Rotation, new Vector3(-89.0f), new Vector3(89.0f));
         }
 
-        public void Translate(float x, float y, float z)
+        public virtual void RotateAround(float xAngle, float yAngle, float zAngle, Vector3 center)
+        {
+            var oldVect = new Vector4(Position - center, 1.0f);
+            var newVect = oldVect * Matrix4.CreateFromAxisAngle(Vector3.UnitX, xAngle) * 
+                                    Matrix4.CreateFromAxisAngle(Vector3.UnitY, yAngle) * 
+                                    Matrix4.CreateFromAxisAngle(Vector3.UnitZ, zAngle);
+            var translation = newVect - oldVect;
+            Translate(translation.X, translation.Y, translation.Z);
+            Rotate(xAngle, yAngle, zAngle);
+        }
+
+        public virtual void Translate(float x, float y, float z)
         {
             Position += new Vector3(x, y, z);
         }
 
-        public void ScaleUniform(float delta)
+        public virtual void ScaleUniform(float delta)
         {
             Scale += new Vector3(delta);
-            Scale = Vector3.Clamp(Scale, new Vector3(-0.01f), new Vector3(10.0f));
         }
 
         public Matrix4 GetModelMatrix()
         {
+            Matrix4 rotation = Matrix4.CreateFromAxisAngle(Vector3.UnitX, Rotation.X);
+            Vector3 axisY = new Vector3(Matrix4.Invert(rotation) * Vector4.UnitY);
+            rotation *= Matrix4.CreateFromAxisAngle(axisY, Rotation.Y);
+            Vector3 axisZ = new Vector3(Matrix4.Invert(rotation) * Vector4.UnitZ);
+            rotation *= Matrix4.CreateFromAxisAngle(axisZ, Rotation.Z);
+
             return Matrix4.CreateScale(Scale) *
-                   Matrix4.CreateRotationX(Rotation.X) *
-                   Matrix4.CreateRotationY(Rotation.Y) *
-                   Matrix4.CreateRotationZ(Rotation.Z) *
+                   rotation *
                    Matrix4.CreateTranslation(Position);
+        }
+
+        public Vector3 GetScreenSpaceCoords(Camera camera, float width, float height)
+        {
+            Matrix4 model = GetModelMatrix(),
+                    view = camera.GetViewMatrix(),
+                    proj = camera.GetProjectionMatrix(width, height);
+            var coords = Vector4.UnitW * model * view * proj;
+            coords /= coords.W;
+            coords.X = (coords.X + 1.0f) * (width / 2.0f);
+            coords.Y = (-coords.Y + 1.0f) * (height / 2.0f);
+            coords.Z = camera.ZFar * camera.ZNear / (camera.ZFar + coords.Z * (camera.ZNear - camera.ZFar));
+
+            return new Vector3(coords);
+        }
+
+        public virtual bool TestHit(Camera camera, float width, float height, float x, float y, out float z)
+        {
+            z = 0.0f;
+            return false;
         }
 
         public void Dispose()
