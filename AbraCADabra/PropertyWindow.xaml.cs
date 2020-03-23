@@ -10,18 +10,36 @@ namespace AbraCADabra
     /// </summary>
     public partial class PropertyWindow : Window
     {
+        private struct DisplayParams
+        {
+            public GroupBox GroupBox;
+            public bool ShowPosition;
+            public bool ShowRotation;
+            public bool ShowScale;
+
+            public DisplayParams(GroupBox gb, bool showPos, bool showRot, bool showSca)
+            {
+                GroupBox = gb;
+                ShowPosition = showPos;
+                ShowRotation = showRot;
+                ShowScale = showSca;
+            }
+        }
         List<GroupBox> groupBoxes;
-        Dictionary<Type, GroupBox> typeMap;
+        Dictionary<Type, DisplayParams> typeMap;
         public PropertyWindow()
         {
             InitializeComponent();
             groupBoxes = new List<GroupBox>
             {
-                GroupTorus
+                GroupTorus,
+                GroupBezier3
             };
-            typeMap = new Dictionary<Type, GroupBox>
+            typeMap = new Dictionary<Type, DisplayParams>
             {
-                { typeof(TorusManager), GroupTorus }
+                { typeof(TorusManager), new DisplayParams(GroupTorus, true, true, true) },
+                { typeof(PointManager), new DisplayParams(null, true, false, false) },
+                { typeof(Bezier3Manager), new DisplayParams(GroupBezier3, false, false, false) }
             };
         }
 
@@ -41,9 +59,15 @@ namespace AbraCADabra
                 GroupTransform.IsEnabled = true;
 
                 Type type = DataContext.GetType();
-                if (typeMap.TryGetValue(type, out GroupBox gb))
+                if (typeMap.TryGetValue(type, out DisplayParams dp))
                 {
-                    gb.Visibility = Visibility.Visible;
+                    if (dp.GroupBox != null)
+                    {
+                        dp.GroupBox.Visibility = Visibility.Visible;
+                    }
+                    GridPosition.IsEnabled = dp.ShowPosition;
+                    GridRotation.IsEnabled = dp.ShowRotation;
+                    GridScale.IsEnabled = dp.ShowScale;
                 }
             }
             else
@@ -67,6 +91,65 @@ namespace AbraCADabra
             {
                 PropertyUpdated?.Invoke(DataContext as TransformManager);
             }
+        }
+
+        private void CheckBoxUpdate(object sender, RoutedEventArgs e)
+        {
+            if (DataContext != null)
+            {
+                PropertyUpdated?.Invoke(DataContext as TransformManager);
+            }
+        }
+
+        private void ButtonBezier3Add(object sender, RoutedEventArgs e)
+        {
+            var points = (Owner as MainWindow).GetObjectsOfType(typeof(PointManager));
+            var isw = new ItemSelectionWindow
+            {
+                DataContext = points
+            };
+            bool? result = isw.ShowDialog();
+            if (result.HasValue && result.Value)
+            {
+                foreach (var item in isw.SelectedItems)
+                {
+                    (DataContext as Bezier3Manager).AddPoint(item as PointManager);
+                }
+                PropertyUpdated?.Invoke(DataContext as TransformManager);
+            }
+        }
+
+        private void ButtonBezier3Remove(object sender, RoutedEventArgs e)
+        {
+            var selected = ListBezier3.SelectedItems;
+            if (selected.Count > 0)
+            {
+                for (int i = selected.Count - 1; i >= 0; i--)
+                {
+                    (DataContext as Bezier3Manager).RemovePoint(selected[i] as PointManager);
+                }
+                PropertyUpdated?.Invoke(DataContext as TransformManager);
+            }
+        }
+
+        private void ButtonBezier3MoveUp(object sender, RoutedEventArgs e)
+        {
+            int index = ListBezier3.SelectedIndex;
+            if (ListBezier3.SelectedItems.Count == 1 && index > 0)
+            {
+                (DataContext as Bezier3Manager).MovePoint(index, index - 1);
+            }
+            PropertyUpdated?.Invoke(DataContext as TransformManager);
+        }
+
+        private void ButtonBezier3MoveDown(object sender, RoutedEventArgs e)
+        {
+            int index = ListBezier3.SelectedIndex;
+            if (ListBezier3.SelectedItems.Count == 1 && index < ListBezier3.Items.Count - 1)
+            {
+                (DataContext as Bezier3Manager).MovePoint(index, index + 1);
+            }
+            PropertyUpdated?.Invoke(DataContext as TransformManager);
         }
     }
 }

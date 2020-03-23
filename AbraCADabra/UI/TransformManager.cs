@@ -115,6 +115,8 @@ namespace AbraCADabra
         protected abstract int instanceCounter { get; } // TODO: better solution?
 
         public event PropertyChangedEventHandler PropertyChanged;
+        public delegate void ManagerDisposingEventHandler(TransformManager sender);
+        public event ManagerDisposingEventHandler ManagerDisposing;
 
         protected TransformManager(Transform transform)
         {
@@ -127,7 +129,7 @@ namespace AbraCADabra
             }
         }
 
-        public void Translate(float x, float y, float z)
+        public virtual void Translate(float x, float y, float z)
         {
             Transform.Translate(x, y, z);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("PositionX"));
@@ -135,22 +137,25 @@ namespace AbraCADabra
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("PositionZ"));
         }
 
-        public void Rotate(float x, float y, float z)
+        public virtual void Rotate(float x, float y, float z)
         {
             Transform.Rotate(x, y, z);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("RotationX"));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("RotationY"));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("RotationZ"));
         }
-        public void RotateAround(float xAngle, float yAngle, float zAngle, Vector3 center)
+        public virtual void RotateAround(float xAngle, float yAngle, float zAngle, Vector3 center)
         {
             Transform.RotateAround(xAngle, yAngle, zAngle, center);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("PositionX"));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("PositionY"));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("PositionZ"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("RotationX"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("RotationY"));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("RotationZ"));
         }
 
-        public void ScaleUniform(float delta)
+        public virtual void ScaleUniform(float delta)
         {
             Transform.ScaleUniform(delta);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ScaleX"));
@@ -166,8 +171,14 @@ namespace AbraCADabra
 
         public abstract void Update();
 
-        public void Dispose()
+        public virtual void Render(Shader shader)
         {
+            Transform.Render(shader);
+        }
+
+        public virtual void Dispose()
+        {
+            ManagerDisposing?.Invoke(this);
             Transform.Dispose();
         }
     }

@@ -25,6 +25,21 @@ namespace AbraCADabra
 
         protected void Initialize(int maxVertices = -1, int maxIndices = -1)
         {
+            vao = GL.GenVertexArray();
+            GL.BindVertexArray(vao);
+
+            vbo = GL.GenBuffer();
+            ebo = GL.GenBuffer();
+            CreateBuffers(maxVertices, maxIndices);
+
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
+
+            GL.BindVertexArray(0);
+        }
+
+        protected void CreateBuffers(int maxVertices = -1, int maxIndices = -1)
+        {
             if (maxVertices == -1)
             {
                 maxVertices = vertices.Length;
@@ -34,25 +49,15 @@ namespace AbraCADabra
                 maxIndices = indices.Length;
             }
 
-            vao = GL.GenVertexArray();
-            GL.BindVertexArray(vao);
-
-            vbo = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer,
                           maxVertices * sizeof(float), vertices,
                           BufferUsageHint.DynamicDraw);
 
-            ebo = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
             GL.BufferData(BufferTarget.ElementArrayBuffer,
                           maxIndices * sizeof(uint), indices,
                           BufferUsageHint.DynamicDraw);
-
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
-
-            GL.BindVertexArray(0);
         }
 
         protected void UpdateBuffers()
@@ -99,7 +104,7 @@ namespace AbraCADabra
             Scale += new Vector3(delta);
         }
 
-        public Matrix4 GetModelMatrix()
+        public virtual Matrix4 GetModelMatrix()
         {
             return Matrix4.CreateScale(Scale) *
                    Matrix4.CreateRotationX(Rotation.X) *

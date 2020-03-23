@@ -97,11 +97,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ItemSelectionWindow.xaml.cs">
+      <DependentUpon>ItemSelectionWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Objects\Bezier3.cs" />
     <Compile Include="Objects\CenterMarker.cs" />
     <Compile Include="Objects\CrossCursor.cs" />
     <Compile Include="Objects\Cube.cs" />
     <Compile Include="Objects\Cursor.cs" />
     <Compile Include="Objects\Point.cs" />
+    <Compile Include="Objects\PolyLine.cs" />
     <Compile Include="Objects\Transform.cs" />
     <Compile Include="Objects\Plane.cs" />
     <Compile Include="Objects\Torus.cs" />
@@ -110,9 +115,14 @@
     </Compile>
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\Shader.cs" />
+    <Compile Include="UI\Bezier3Manager.cs" />
     <Compile Include="UI\PointManager.cs" />
     <Compile Include="UI\TransformManager.cs" />
     <Compile Include="UI\TorusManager.cs" />
+    <Page Include="ItemSelectionWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

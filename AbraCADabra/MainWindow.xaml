@@ -45,13 +45,18 @@
                                 </ListBox.ItemTemplate>
                             </ListBox>
                         </ScrollViewer>
-                        <Button Margin="0" Click="ButtonDelete">Delete selected</Button>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Margin="0" Click="ButtonMoveUp" Content=" ▲ "/>
+                            <Button DockPanel.Dock="Left" Margin="0" Click="ButtonMoveDown" Content=" ▼ "/>
+                            <Button DockPanel.Dock="Left" Margin="0" Click="ButtonDelete">Delete selected</Button>
+                        </DockPanel>
                     </StackPanel>
                 </GroupBox>
                 <GroupBox Header="Add object">
                     <WrapPanel>
                         <Button Click="ButtonCreatePoint">Point</Button>
                         <Button Click="ButtonCreateTorus">Torus</Button>
+                        <Button Click="ButtonCreateBezier3">Bezier3</Button>
                     </WrapPanel>
                 </GroupBox>
                 <GroupBox Header="Cursor">

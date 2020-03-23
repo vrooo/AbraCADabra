@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Input;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using Xceed.Wpf.Toolkit;
 using System.Windows.Controls;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
+using System.Linq;
+using System.CodeDom;
 
 namespace AbraCADabra
 {
@@ -46,6 +50,11 @@ namespace AbraCADabra
             ListObjects.DataContext = objects;
         }
 
+        public IEnumerable<TransformManager> GetObjectsOfType(Type type)
+        {
+            return objects.Where(tm => tm.GetType() == type);
+        }
+
         private void OnLoad(object sender, EventArgs e)
         {
             shader = new Shader(vertPath, fragPath);
@@ -59,6 +68,10 @@ namespace AbraCADabra
             centerMarker = new CenterMarker();
 
             objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
+
+            // TODO: this is temporary! has to be nicer!
+            Bezier3Manager.Camera = camera;
+            Bezier3Manager.GLControl = GLMain;
         }
 
         private void OnRender(object sender, System.Windows.Forms.PaintEventArgs e)
@@ -74,11 +87,13 @@ namespace AbraCADabra
                 plane.Render(shader);
             }
 
-            centerMarker.Render(shader);
             foreach (var ob in objects)
             {
-                ob.Transform.Render(shader);
+                ob.Render(shader);
             }
+
+            UpdateCenterMarker();
+            centerMarker.Render(shader);
 
             cursor.Render(shader);
             if (!renderFromScreenCoordsChange)
@@ -120,7 +135,6 @@ namespace AbraCADabra
 
         private void RefreshView()
         {
-            UpdateCenterMarker();
             GLMain.Invalidate();
         }
 
@@ -317,13 +331,37 @@ namespace AbraCADabra
 
         private void ButtonCreatePoint(object sender, RoutedEventArgs e)
         {
-            objects.Add(new PointManager(cursor.Position));
+            var point = new PointManager(cursor.Position);
+            objects.Add(point);
+
+            foreach (var ob in ListObjects.SelectedItems)
+            {
+                if (ob is Bezier3Manager bm)
+                {
+                    bm.AddPoint(point);
+                }
+            }
+
             RefreshView();
         }
 
         private void ButtonCreateTorus(object sender, RoutedEventArgs e)
         {
             objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
+            RefreshView();
+        }
+
+        private void ButtonCreateBezier3(object sender, RoutedEventArgs e)
+        {
+            List<PointManager> points = new List<PointManager>();
+            foreach (var ob in ListObjects.SelectedItems)
+            {
+                if (ob is PointManager)
+                {
+                    points.Add(ob as PointManager);
+                }
+            }
+            objects.Add(new Bezier3Manager(points));
             RefreshView();
         }
 
@@ -382,5 +420,60 @@ namespace AbraCADabra
                 }
             }
         }
+
+        private void ButtonMoveUp(object sender, RoutedEventArgs e)
+        {
+            int index = ListObjects.SelectedIndex;
+            if (ListObjects.SelectedItems.Count == 1 && index > 0)
+            {
+                objects.Move(index, index - 1);
+            }
+        }
+
+        private void ButtonMoveDown(object sender, RoutedEventArgs e)
+        {
+            int index = ListObjects.SelectedIndex;
+            if (ListObjects.SelectedItems.Count == 1 && index < objects.Count - 1)
+            {
+                objects.Move(index, index + 1);
+            }
+        }
+
+        //private void ListObjectsPreviewMouseDown(object sender, MouseButtonEventArgs e)
+        //{
+        //    if (e.ChangedButton == MouseButton.Right)
+        //    {
+        //        e.Handled = true; // prevent selecting on right click
+        //    }
+        //}
+
+        //private void ListBoxItemPreviewMouseUp(object sender, MouseButtonEventArgs e)
+        //{
+        //    if (e.ChangedButton == MouseButton.Right)
+        //    {
+        //        var item = sender as ListBoxItem;
+        //        if (item.DataContext is PointManager)
+        //        {
+        //            var beziers = objects.Where(tm => tm is Bezier3Manager);
+        //            if (beziers.Any())
+        //            {
+        //                item.ContextMenu = new ContextMenu();
+        //                var mi = new MenuItem { Header = "Add to Bezier curve" };
+        //                foreach (var ob in objects)
+        //                {
+        //                    if (ob is Bezier3Manager bm)
+        //                    {
+        //                        mi.Items.Add(new MenuItem { Header = bm.Name, Tag = bm });
+        //                    }
+        //                }
+        //                item.ContextMenu.Items.Add(mi);
+        //            }
+        //            else
+        //            {
+        //                item.ContextMenu = null;
+        //            }
+        //        }
+        //    }
+        //}
     }
 }
