@@ -31,9 +31,11 @@ namespace AbraCADabra
         {
             if (Visible)
             {
+                GL.Disable(EnableCap.DepthTest);
                 GL.PointSize(pointSize);
                 base.Render(shader);
                 GL.PointSize(1.0f);
+                GL.Enable(EnableCap.DepthTest);
             }
         }
     }

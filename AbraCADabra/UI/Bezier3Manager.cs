@@ -44,7 +44,7 @@ namespace AbraCADabra
 
         private static List<int> CalculateDivisions(IEnumerable<PointManager> points)
         {
-            Func<float, int> lenToDivs = l => (int)(l / 10);
+            Func<float, int> lenToDivs = l => (int)(10*l);
 
             List<int> divs = new List<int>();
             float len = 0.0f;
@@ -56,7 +56,7 @@ namespace AbraCADabra
                 Vector3 screen = point.GetScreenSpaceCoords(Camera, GLControl.Width, GLControl.Height);
                 screen.X = Math.Abs(screen.X);
                 screen.Y = Math.Abs(screen.Y);
-                screen.Z = Math.Abs(screen.Z);
+                screen.Z = Math.Max(0.0f, screen.Z);
                 if (first)
                 {
                     first = false;
