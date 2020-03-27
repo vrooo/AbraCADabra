@@ -8,9 +8,7 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using Xceed.Wpf.Toolkit;
 using System.Windows.Controls;
-using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using System.Linq;
-using System.CodeDom;
 
 namespace AbraCADabra
 {
@@ -21,9 +19,10 @@ namespace AbraCADabra
     {
         const uint wireframeMax = 100;
 
-        Shader shader;
+        ShaderManager shader;
         string vertPath = "../../Shaders/mvp.vert";
         string fragPath = "../../Shaders/oneColor.frag";
+        string geomPath = "../../Shaders/bezier.geom";
 
         Camera camera;
         PlaneXZ plane;
@@ -57,7 +56,6 @@ namespace AbraCADabra
 
         private void OnLoad(object sender, EventArgs e)
         {
-            shader = new Shader(vertPath, fragPath);
             GL.ClearColor(0.05f, 0.05f, 0.15f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.PointSmooth);
@@ -67,11 +65,9 @@ namespace AbraCADabra
             cursor = new Cursor();
             centerMarker = new CenterMarker();
 
-            objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
+            shader = new ShaderManager(vertPath, fragPath, geomPath, camera, GLMain);
 
-            // TODO: this is temporary! has to be nicer!
-            Bezier3Manager.Camera = camera;
-            Bezier3Manager.GLControl = GLMain;
+            objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
         }
 
         private void OnRender(object sender, System.Windows.Forms.PaintEventArgs e)
@@ -79,8 +75,7 @@ namespace AbraCADabra
             GL.Viewport(0, 0, GLMain.Width, GLMain.Height);
             GL.Clear(ClearBufferMask.ColorBufferBit |
                      ClearBufferMask.DepthBufferBit);
-            shader.Use();
-            shader.SetupCamera(camera, GLMain.Width, GLMain.Height);
+            shader.UseBasic();
 
             if (CheckBoxGrid.IsChecked.HasValue && CheckBoxGrid.IsChecked.Value)
             {

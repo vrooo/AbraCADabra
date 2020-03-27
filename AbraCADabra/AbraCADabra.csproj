@@ -115,10 +115,11 @@
     </Compile>
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\Shader.cs" />
-    <Compile Include="UI\Bezier3Manager.cs" />
-    <Compile Include="UI\PointManager.cs" />
-    <Compile Include="UI\TransformManager.cs" />
-    <Compile Include="UI\TorusManager.cs" />
+    <Compile Include="Rendering\ShaderManager.cs" />
+    <Compile Include="ObjectManagers\Bezier3Manager.cs" />
+    <Compile Include="ObjectManagers\PointManager.cs" />
+    <Compile Include="ObjectManagers\TransformManager.cs" />
+    <Compile Include="ObjectManagers\TorusManager.cs" />
     <Page Include="ItemSelectionWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -168,6 +169,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Shaders\bezier.geom" />
     <None Include="Shaders\basic.frag" />
     <None Include="Shaders\basic.vert" />
     <None Include="Shaders\mvp.vert" />

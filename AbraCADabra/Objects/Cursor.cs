@@ -34,7 +34,7 @@ namespace AbraCADabra
             Initialize();
         }
 
-        public override void Render(Shader shader)
+        public override void Render(ShaderManager shader)
         {
             GL.Disable(EnableCap.DepthTest);
 

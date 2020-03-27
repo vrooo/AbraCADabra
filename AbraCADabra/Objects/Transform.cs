@@ -70,7 +70,7 @@ namespace AbraCADabra
                              indices.Length * sizeof(float), indices);
         }
 
-        public virtual void Render(Shader shader)
+        public virtual void Render(ShaderManager shader)
         {
             shader.SetupTransform(Color, GetModelMatrix());
             GL.BindVertexArray(vao);

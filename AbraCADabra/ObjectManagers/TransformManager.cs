@@ -171,7 +171,7 @@ namespace AbraCADabra
 
         public abstract void Update();
 
-        public virtual void Render(Shader shader)
+        public virtual void Render(ShaderManager shader)
         {
             Transform.Render(shader);
         }

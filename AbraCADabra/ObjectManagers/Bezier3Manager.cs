@@ -9,10 +9,6 @@ namespace AbraCADabra
 {
     class Bezier3Manager : TransformManager
     {
-        // TODO: either put this in all TMs or remove it
-        public static Camera Camera { get; set; }
-        public static GLControl GLControl { get; set; }
-
         public override string DefaultName => "Bezier3";
         private static int counter = 0;
         protected override int instanceCounter => counter++;
@@ -24,7 +20,7 @@ namespace AbraCADabra
         private PolyLine polyLine;
 
         public Bezier3Manager(IEnumerable<PointManager> points)
-            : this(new Bezier3(points.Select(p => p.Transform.Position), CalculateDivisions(points)),
+            : this(new Bezier3(points.Select(p => p.Transform.Position)),
                    new PolyLine(points.Select(p => p.Transform.Position)))
         {
             Points = new ObservableCollection<PointManager>();
@@ -42,58 +38,60 @@ namespace AbraCADabra
             this.polyLine = polyLine;
         }
 
-        private static List<int> CalculateDivisions(IEnumerable<PointManager> points)
-        {
-            Func<float, int> lenToDivs = l => (int)(10*l);
+        //private static List<int> CalculateDivisions(IEnumerable<PointManager> points)
+        //{
+        //    Func<float, int> lenToDivs = l => (int)(l);
 
-            List<int> divs = new List<int>();
-            float len = 0.0f;
-            int count = 0;
-            Vector3 prev = new Vector3();
-            bool first = true;
-            foreach(var point in points)
-            {
-                Vector3 screen = point.GetScreenSpaceCoords(Camera, GLControl.Width, GLControl.Height);
-                screen.X = Math.Abs(screen.X);
-                screen.Y = Math.Abs(screen.Y);
-                screen.Z = Math.Max(0.0f, screen.Z);
-                if (first)
-                {
-                    first = false;
-                }
-                else
-                {
-                    len += (prev - screen).Length;
-                }
+        //    List<int> divs = new List<int>();
+        //    float len = 0.0f;
+        //    int count = 0;
+        //    Vector3 prev = new Vector3();
+        //    bool first = true;
+        //    foreach(var point in points)
+        //    {
+        //        Vector3 screen = point.GetScreenSpaceCoords(Camera, GLControl.Width, GLControl.Height);
+        //        screen.X = Math.Abs(screen.X);
+        //        screen.Y = Math.Abs(screen.Y);
+        //        screen.Z = Math.Max(0.0f, screen.Z);
+        //        if (first)
+        //        {
+        //            first = false;
+        //        }
+        //        else
+        //        {
+        //            len += (prev - screen).Length;
+        //        }
 
-                count++;
-                if (count == 4)
-                {
-                    divs.Add(lenToDivs(len));
-                    len = 0.0f;
-                    count = 1;
-                }
-                prev = screen;
-            }
-            if (count > 1)
-            {
-                divs.Add(lenToDivs(len));
-            }
-            return divs;
-        }
+        //        count++;
+        //        if (count == 4)
+        //        {
+        //            divs.Add(lenToDivs(len));
+        //            len = 0.0f;
+        //            count = 1;
+        //        }
+        //        prev = screen;
+        //    }
+        //    if (count > 1)
+        //    {
+        //        divs.Add(lenToDivs(len));
+        //    }
+        //    return divs;
+        //}
 
         public override void Update() { }
 
-        public override void Render(Shader shader)
+        public override void Render(ShaderManager shader)
         {
             var points = Points.Select(p => p.Transform.Position);
-            bezier.Update(points, CalculateDivisions(Points));
+            bezier.Update(points);
             if (DrawPolygon)
             {
                 polyLine.Update(points);
                 polyLine.Render(shader);
             }
+            shader.UseAdapt();
             base.Render(shader);
+            shader.UseBasic();
         }
 
         public override void Translate(float x, float y, float z)

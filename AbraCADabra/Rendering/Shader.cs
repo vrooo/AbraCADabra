@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing.Drawing2D;
 using System.IO;
 using System.Text;
 
@@ -8,54 +7,56 @@ using OpenTK.Graphics.OpenGL;
 
 namespace AbraCADabra
 {
-    public class Shader : IDisposable
+    public class Shader
     {
-        private int shaderProgram;
+        private int program;
 
         private bool disposed = false;
 
-        public Shader(string vertPath, string fragPath)
+        public Shader(string vertPath, string fragPath, string geomPath = null)
         {
+            program = GL.CreateProgram();
+            bool doGeom = !string.IsNullOrEmpty(geomPath);
+
             int vert = CompileShader(vertPath, ShaderType.VertexShader);
+            GL.AttachShader(program, vert);
             int frag = CompileShader(fragPath, ShaderType.FragmentShader);
+            GL.AttachShader(program, frag);
 
-            shaderProgram = GL.CreateProgram();
-            GL.AttachShader(shaderProgram, vert);
-            GL.AttachShader(shaderProgram, frag);
-            GL.LinkProgram(shaderProgram);
+            int geom = -1;
+            if (doGeom)
+            {
+                geom = CompileShader(geomPath, ShaderType.GeometryShader);
+                GL.AttachShader(program, geom);
+            }
 
-            GL.DetachShader(shaderProgram, vert);
-            GL.DetachShader(shaderProgram, frag);
+            GL.LinkProgram(program);
+            GL.DetachShader(program, vert);
             GL.DeleteShader(vert);
+            GL.DetachShader(program, frag);
             GL.DeleteShader(frag);
+
+            if (doGeom)
+            {
+                GL.DetachShader(program, geom);
+                GL.DeleteShader(geom);
+            }
         }
 
         public void Use()
         {
-            GL.UseProgram(shaderProgram);
+            GL.UseProgram(program);
         }
 
-        public void SetupTransform(Vector4 color, Matrix4 model)
+        public void BindMatrix(Matrix4 matrix, string name)
         {
-            BindVector4(color, "color");
-            BindMatrix(model, "modelMatrix");
-        }
-
-        public void SetupCamera(Camera cam, float width, float height)
-        {
-            BindMatrix(cam.GetViewMatrix(), "viewMatrix");
-            BindMatrix(cam.GetProjectionMatrix(width, height), "projMatrix");
-        }
-
-        private void BindMatrix(Matrix4 matrix, string name)
-        {
-            int location = GL.GetUniformLocation(shaderProgram, name);
+            int location = GL.GetUniformLocation(program, name);
             GL.UniformMatrix4(location, false, ref matrix);
         }
 
-        private void BindVector4(Vector4 vector, string name)
+        public void BindVector4(Vector4 vector, string name)
         {
-            int location = GL.GetUniformLocation(shaderProgram, name);
+            int location = GL.GetUniformLocation(program, name);
             GL.Uniform4(location, vector);
         }
 
@@ -79,14 +80,14 @@ namespace AbraCADabra
         {
             if (!disposed)
             {
-                GL.DeleteProgram(shaderProgram);
+                GL.DeleteProgram(program);
                 disposed = true;
             }
         }
 
         ~Shader()
         {
-            GL.DeleteProgram(shaderProgram);
+            GL.DeleteProgram(program);
         }
 
         public void Dispose()
