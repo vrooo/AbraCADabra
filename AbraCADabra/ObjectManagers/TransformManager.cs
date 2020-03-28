@@ -1,10 +1,19 @@
 ﻿using OpenTK;
 using System;
 using System.ComponentModel;
-using System.Windows.Media.Media3D;
 
 namespace AbraCADabra
 {
+    public abstract class FloatTransformManager : TransformManager<float>
+    {
+        protected FloatTransformManager(FloatTransform transform) : base(transform) { }
+    }
+
+    public abstract class TransformManager<T> : TransformManager where T : struct
+    {
+        protected TransformManager(Transform<T> transform) : base(transform) { }
+    }
+
     public abstract class TransformManager : INotifyPropertyChanged, IDisposable
     {
         public Transform Transform { get; }

@@ -2,7 +2,7 @@
 
 namespace AbraCADabra
 {
-    class TorusManager : TransformManager
+    class TorusManager : FloatTransformManager
     {
         public override string DefaultName => "Torus";
         private static int counter = 0;

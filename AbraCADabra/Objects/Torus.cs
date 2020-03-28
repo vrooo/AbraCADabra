@@ -5,7 +5,7 @@ using OpenTK;
 
 namespace AbraCADabra
 {
-    class Torus : Transform
+    class Torus : FloatTransform
     {
         private List<float> vertexList = new List<float>();
         protected override float[] vertices => vertexList.ToArray();

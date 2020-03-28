@@ -3,7 +3,7 @@ using OpenTK;
 
 namespace AbraCADabra
 {
-    public class CenterMarker : Transform
+    public class CenterMarker : FloatTransform
     {
         private float pointSize = 8.0f;
         public bool Visible { get; set; } = false;

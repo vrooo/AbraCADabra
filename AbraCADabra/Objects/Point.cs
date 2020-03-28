@@ -3,7 +3,7 @@ using OpenTK;
 
 namespace AbraCADabra
 {
-    public class Point : Transform
+    public class Point : FloatTransform
     {
         private float pointSize = 15.0f;
 

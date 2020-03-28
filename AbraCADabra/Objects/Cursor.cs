@@ -3,7 +3,7 @@ using OpenTK;
 
 namespace AbraCADabra
 {
-    public class Cursor : Transform
+    public class Cursor : FloatTransform
     {
         private float pointSize = 10.0f;
         private float outlineThickness = 2.0f;

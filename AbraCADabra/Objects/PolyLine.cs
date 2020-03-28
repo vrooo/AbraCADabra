@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace AbraCADabra
 {
-    class PolyLine : Transform
+    class PolyLine : FloatTransform
     {
         private List<float> vertexList = new List<float>();
         protected override float[] vertices => vertexList.ToArray();
@@ -14,7 +14,7 @@ namespace AbraCADabra
 
         public PolyLine(IEnumerable<Vector3> points)
         {
-            primitiveType = PrimitiveType.Lines;
+            primitiveType = PrimitiveType.LineStrip;
             Color = new Vector4(0.7f, 0.7f, 0.0f, 1.0f);
 
             CalculateVertices(points);
@@ -39,11 +39,7 @@ namespace AbraCADabra
                 vertexList.Add(point.X);
                 vertexList.Add(point.Y);
                 vertexList.Add(point.Z);
-                if (i > 0)
-                {
-                    indexList.Add(i - 1);
-                    indexList.Add(i);
-                }
+                indexList.Add(i);
                 i++;
                 position += point;
             }

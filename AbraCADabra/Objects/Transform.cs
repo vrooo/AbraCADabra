@@ -1,14 +1,96 @@
 ﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using System.Runtime.InteropServices;
 
 namespace AbraCADabra
 {
-    public abstract class Transform
+    // TODO: separate files!
+    public abstract class FloatTransform : Transform<float>
+    {
+        public FloatTransform() { }
+
+        public FloatTransform(Vector3 position) : base(position) { }
+
+        protected override void SetVertexAttribPointer()
+        {
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+        }
+    }
+
+    public abstract class Transform<T> : Transform where T : struct
     {
         protected int vao, vbo, ebo;
-        protected abstract float[] vertices { get; }
+        protected abstract T[] vertices { get; }
         protected abstract uint[] indices { get; }
 
+        public Transform() { }
+
+        public Transform(Vector3 position) : base(position) { }
+
+        protected override void Initialize(int maxVertices = -1, int maxIndices = -1)
+        {
+            vao = GL.GenVertexArray();
+            GL.BindVertexArray(vao);
+
+            vbo = GL.GenBuffer();
+            ebo = GL.GenBuffer();
+            CreateBuffers(maxVertices, maxIndices);
+
+            SetVertexAttribPointer();
+
+            GL.BindVertexArray(0);
+        }
+
+        protected override void CreateBuffers(int maxVertices = -1, int maxIndices = -1)
+        {
+            if (maxVertices == -1)
+            {
+                maxVertices = vertices.Length;
+            }
+            if (maxIndices == -1)
+            {
+                maxIndices = indices.Length;
+            }
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferData(BufferTarget.ArrayBuffer,
+                          maxVertices * Marshal.SizeOf<T>(), vertices,
+                          BufferUsageHint.DynamicDraw);
+
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
+            GL.BufferData(BufferTarget.ElementArrayBuffer,
+                          maxIndices * sizeof(uint), indices,
+                          BufferUsageHint.DynamicDraw);
+        }
+
+        protected override void UpdateBuffers()
+        {
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferSubData(BufferTarget.ArrayBuffer, (System.IntPtr)0,
+                             vertices.Length * Marshal.SizeOf<T>(), vertices);
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
+            GL.BufferSubData(BufferTarget.ElementArrayBuffer, (System.IntPtr)0,
+                             indices.Length * sizeof(uint), indices);
+        }
+
+        public override void Render(ShaderManager shader)
+        {
+            shader.SetupTransform(Color, GetModelMatrix());
+            GL.BindVertexArray(vao);
+            GL.DrawElements(primitiveType, indices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.BindVertexArray(0);
+        }
+        public override void Dispose()
+        {
+            ebo = DeleteBuffer(ebo);
+            vbo = DeleteBuffer(vbo);
+            vao = DeleteBuffer(vao);
+        }
+    }
+
+    public abstract class Transform
+    {
         protected PrimitiveType primitiveType = PrimitiveType.Triangles;
         public Vector4 Color { get; set; }
 
@@ -23,60 +105,15 @@ namespace AbraCADabra
             Position = position;
         }
 
-        protected void Initialize(int maxVertices = -1, int maxIndices = -1)
-        {
-            vao = GL.GenVertexArray();
-            GL.BindVertexArray(vao);
+        protected abstract void Initialize(int maxVertices = -1, int maxIndices = -1);
 
-            vbo = GL.GenBuffer();
-            ebo = GL.GenBuffer();
-            CreateBuffers(maxVertices, maxIndices);
+        protected abstract void SetVertexAttribPointer();
 
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
+        protected abstract void CreateBuffers(int maxVertices = -1, int maxIndices = -1);
 
-            GL.BindVertexArray(0);
-        }
+        protected abstract void UpdateBuffers();
 
-        protected void CreateBuffers(int maxVertices = -1, int maxIndices = -1)
-        {
-            if (maxVertices == -1)
-            {
-                maxVertices = vertices.Length;
-            }
-            if (maxIndices == -1)
-            {
-                maxIndices = indices.Length;
-            }
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferData(BufferTarget.ArrayBuffer,
-                          maxVertices * sizeof(float), vertices,
-                          BufferUsageHint.DynamicDraw);
-
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
-            GL.BufferData(BufferTarget.ElementArrayBuffer,
-                          maxIndices * sizeof(uint), indices,
-                          BufferUsageHint.DynamicDraw);
-        }
-
-        protected void UpdateBuffers()
-        {
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferSubData(BufferTarget.ArrayBuffer, (System.IntPtr)0,
-                             vertices.Length * sizeof(float), vertices);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
-            GL.BufferSubData(BufferTarget.ElementArrayBuffer, (System.IntPtr)0,
-                             indices.Length * sizeof(float), indices);
-        }
-
-        public virtual void Render(ShaderManager shader)
-        {
-            shader.SetupTransform(Color, GetModelMatrix());
-            GL.BindVertexArray(vao);
-            GL.DrawElements(primitiveType, indices.Length, DrawElementsType.UnsignedInt, 0);
-            GL.BindVertexArray(0);
-        }
+        public abstract void Render(ShaderManager shader);
 
         public virtual void Rotate(float x, float y, float z)
         {
@@ -133,14 +170,9 @@ namespace AbraCADabra
             return false;
         }
 
-        public void Dispose()
-        {
-            ebo = DeleteBuffer(ebo);
-            vbo = DeleteBuffer(vbo);
-            vao = DeleteBuffer(vao);
-        }
+        public abstract void Dispose();
 
-        private int DeleteBuffer(int buffer)
+        protected int DeleteBuffer(int buffer)
         {
             if (buffer != 0)
             {

@@ -13,11 +13,11 @@ namespace AbraCADabra
 
         private Shader shaderCurrent;
 
-        public ShaderManager(string vertPath, string fragPath, string geomPath,
+        public ShaderManager(string vertPath, string fragPath, string vertPathAdapt, string fragPathAdapt, string geomPathAdapt,
                              Camera camera, GLControl glControl)
         {
             shaderBasic = new Shader(vertPath, fragPath);
-            shaderAdapt = new Shader(vertPath, fragPath, geomPath);
+            shaderAdapt = new Shader(vertPathAdapt, fragPathAdapt, geomPathAdapt);
             this.camera = camera;
             this.glControl = glControl;
         }

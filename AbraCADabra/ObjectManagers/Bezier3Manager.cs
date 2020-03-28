@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace AbraCADabra
 {
-    class Bezier3Manager : TransformManager
+    class Bezier3Manager : TransformManager<AdjacencyVertex>
     {
         public override string DefaultName => "Bezier3";
         private static int counter = 0;

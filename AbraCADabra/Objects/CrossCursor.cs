@@ -3,7 +3,7 @@ using OpenTK;
 
 namespace AbraCADabra
 {
-    public class CrossCursor : Transform
+    public class CrossCursor : FloatTransform
     {
         private float[] _vertices =
         {

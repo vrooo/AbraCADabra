@@ -20,9 +20,11 @@ namespace AbraCADabra
         const uint wireframeMax = 100;
 
         ShaderManager shader;
-        string vertPath = "../../Shaders/mvp.vert";
-        string fragPath = "../../Shaders/oneColor.frag";
-        string geomPath = "../../Shaders/bezier.geom";
+        string vertPath = "../../Shaders/basic.vert";
+        string fragPath = "../../Shaders/basic.frag";
+        string vertPathAdapt = "../../Shaders/bezier.vert";
+        string fragPathAdapt = "../../Shaders/basic.frag";
+        string geomPathAdapt = "../../Shaders/bezier.geom";
 
         Camera camera;
         PlaneXZ plane;
@@ -65,7 +67,7 @@ namespace AbraCADabra
             cursor = new Cursor();
             centerMarker = new CenterMarker();
 
-            shader = new ShaderManager(vertPath, fragPath, geomPath, camera, GLMain);
+            shader = new ShaderManager(vertPath, fragPath, vertPathAdapt, fragPathAdapt, geomPathAdapt, camera, GLMain);
 
             objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
         }

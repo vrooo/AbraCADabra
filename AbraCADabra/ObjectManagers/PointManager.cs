@@ -2,7 +2,7 @@
 
 namespace AbraCADabra
 {
-    class PointManager : TransformManager
+    class PointManager : FloatTransformManager
     {
         public override string DefaultName => "Point";
         private static int counter = 0;
