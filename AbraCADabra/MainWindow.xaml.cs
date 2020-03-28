@@ -348,7 +348,7 @@ namespace AbraCADabra
             RefreshView();
         }
 
-        private void ButtonCreateBezier3(object sender, RoutedEventArgs e)
+        private void ButtonCreateBezier3C0(object sender, RoutedEventArgs e)
         {
             List<PointManager> points = new List<PointManager>();
             foreach (var ob in ListObjects.SelectedItems)
@@ -358,7 +358,21 @@ namespace AbraCADabra
                     points.Add(ob as PointManager);
                 }
             }
-            objects.Add(new Bezier3Manager(points));
+            objects.Add(new Bezier3C0Manager(points));
+            RefreshView();
+        }
+
+        private void ButtonCreateBezier3C2(object sender, RoutedEventArgs e)
+        {
+            List<PointManager> points = new List<PointManager>();
+            foreach (var ob in ListObjects.SelectedItems)
+            {
+                if (ob is PointManager)
+                {
+                    points.Add(ob as PointManager);
+                }
+            }
+            objects.Add(new Bezier3C2Manager(points));
             RefreshView();
         }
 
@@ -435,42 +449,5 @@ namespace AbraCADabra
                 objects.Move(index, index + 1);
             }
         }
-
-        //private void ListObjectsPreviewMouseDown(object sender, MouseButtonEventArgs e)
-        //{
-        //    if (e.ChangedButton == MouseButton.Right)
-        //    {
-        //        e.Handled = true; // prevent selecting on right click
-        //    }
-        //}
-
-        //private void ListBoxItemPreviewMouseUp(object sender, MouseButtonEventArgs e)
-        //{
-        //    if (e.ChangedButton == MouseButton.Right)
-        //    {
-        //        var item = sender as ListBoxItem;
-        //        if (item.DataContext is PointManager)
-        //        {
-        //            var beziers = objects.Where(tm => tm is Bezier3Manager);
-        //            if (beziers.Any())
-        //            {
-        //                item.ContextMenu = new ContextMenu();
-        //                var mi = new MenuItem { Header = "Add to Bezier curve" };
-        //                foreach (var ob in objects)
-        //                {
-        //                    if (ob is Bezier3Manager bm)
-        //                    {
-        //                        mi.Items.Add(new MenuItem { Header = bm.Name, Tag = bm });
-        //                    }
-        //                }
-        //                item.ContextMenu.Items.Add(mi);
-        //            }
-        //            else
-        //            {
-        //                item.ContextMenu = null;
-        //            }
-        //        }
-        //    }
-        //}
     }
 }

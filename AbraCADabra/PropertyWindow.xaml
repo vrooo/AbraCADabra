@@ -169,12 +169,12 @@
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox x:Name="GroupBezier3" Header="Bezier3">
+            <GroupBox x:Name="GroupBezier3C0" Header="Bezier C0">
                 <StackPanel>
                     <CheckBox IsChecked="{Binding DrawPolygon}"
                               Style="{StaticResource CheckBoxUpdating}">Show control polygon</CheckBox>
                     <ScrollViewer VerticalScrollBarVisibility="Hidden">
-                        <ListBox x:Name="ListBezier3" ItemsSource="{Binding Points}" Height="150" SelectionMode="Extended">
+                        <ListBox x:Name="ListBezier3C0" ItemsSource="{Binding Points}" Height="150" SelectionMode="Extended">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Margin="1, 0, 0, 0" Text="{Binding Name}"/>
@@ -189,10 +189,10 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Margin="0" Click="ButtonBezier3MoveUp" Content=" ▲ "/>
-                        <Button Grid.Column="1" Margin="0" Click="ButtonBezier3MoveDown" Content=" ▼ "/>
-                        <Button Grid.Column="2" Margin="0" Click="ButtonBezier3Add">Add</Button>
-                        <Button Grid.Column="3" Margin="0" Click="ButtonBezier3Remove">Remove</Button>
+                        <Button Grid.Column="0" Margin="0" Click="ButtonBezier3C0MoveUp" Content=" ▲ "/>
+                        <Button Grid.Column="1" Margin="0" Click="ButtonBezier3C0MoveDown" Content=" ▼ "/>
+                        <Button Grid.Column="2" Margin="0" Click="ButtonBezier3C0Add">Add</Button>
+                        <Button Grid.Column="3" Margin="0" Click="ButtonBezier3C0Remove">Remove</Button>
                     </Grid>
                 </StackPanel>
             </GroupBox>

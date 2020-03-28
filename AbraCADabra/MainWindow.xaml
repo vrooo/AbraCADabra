@@ -55,8 +55,9 @@
                 <GroupBox Header="Add object">
                     <WrapPanel>
                         <Button Click="ButtonCreatePoint">Point</Button>
+                        <Button Click="ButtonCreateBezier3C0">Bezier C0</Button>
+                        <Button Click="ButtonCreateBezier3C2">Bezier C2</Button>
                         <Button Click="ButtonCreateTorus">Torus</Button>
-                        <Button Click="ButtonCreateBezier3">Bezier3</Button>
                     </WrapPanel>
                 </GroupBox>
                 <GroupBox Header="Cursor">

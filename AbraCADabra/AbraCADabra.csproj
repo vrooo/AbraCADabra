@@ -100,7 +100,11 @@
     <Compile Include="ItemSelectionWindow.xaml.cs">
       <DependentUpon>ItemSelectionWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ObjectManagers\Bezier3C2Manager.cs" />
+    <Compile Include="ObjectManagers\Bezier3Manager.cs" />
     <Compile Include="Objects\Bezier3.cs" />
+    <Compile Include="Objects\Bezier3C0.cs" />
+    <Compile Include="Objects\Bezier3C2.cs" />
     <Compile Include="Objects\CenterMarker.cs" />
     <Compile Include="Objects\CrossCursor.cs" />
     <Compile Include="Objects\Cube.cs" />
@@ -116,7 +120,7 @@
     <Compile Include="Rendering\Camera.cs" />
     <Compile Include="Rendering\Shader.cs" />
     <Compile Include="Rendering\ShaderManager.cs" />
-    <Compile Include="ObjectManagers\Bezier3Manager.cs" />
+    <Compile Include="ObjectManagers\Bezier3C0Manager.cs" />
     <Compile Include="ObjectManagers\PointManager.cs" />
     <Compile Include="ObjectManagers\TransformManager.cs" />
     <Compile Include="ObjectManagers\TorusManager.cs" />

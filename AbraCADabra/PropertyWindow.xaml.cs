@@ -33,13 +33,13 @@ namespace AbraCADabra
             groupBoxes = new List<GroupBox>
             {
                 GroupTorus,
-                GroupBezier3
+                GroupBezier3C0
             };
             typeMap = new Dictionary<Type, DisplayParams>
             {
                 { typeof(TorusManager), new DisplayParams(GroupTorus, true, true, true) },
                 { typeof(PointManager), new DisplayParams(null, true, false, false) },
-                { typeof(Bezier3Manager), new DisplayParams(GroupBezier3, false, false, false) }
+                { typeof(Bezier3C0Manager), new DisplayParams(GroupBezier3C0, false, false, false) }
             };
         }
 
@@ -101,7 +101,7 @@ namespace AbraCADabra
             }
         }
 
-        private void ButtonBezier3Add(object sender, RoutedEventArgs e)
+        private void ButtonBezier3C0Add(object sender, RoutedEventArgs e)
         {
             var points = (Owner as MainWindow).GetObjectsOfType(typeof(PointManager));
             var isw = new ItemSelectionWindow
@@ -113,41 +113,41 @@ namespace AbraCADabra
             {
                 foreach (var item in isw.SelectedItems)
                 {
-                    (DataContext as Bezier3Manager).AddPoint(item as PointManager);
+                    (DataContext as Bezier3C0Manager).AddPoint(item as PointManager);
                 }
                 PropertyUpdated?.Invoke(DataContext as TransformManager);
             }
         }
 
-        private void ButtonBezier3Remove(object sender, RoutedEventArgs e)
+        private void ButtonBezier3C0Remove(object sender, RoutedEventArgs e)
         {
-            var selected = ListBezier3.SelectedItems;
+            var selected = ListBezier3C0.SelectedItems;
             if (selected.Count > 0)
             {
                 for (int i = selected.Count - 1; i >= 0; i--)
                 {
-                    (DataContext as Bezier3Manager).RemovePoint(selected[i] as PointManager);
+                    (DataContext as Bezier3C0Manager).RemovePoint(selected[i] as PointManager);
                 }
                 PropertyUpdated?.Invoke(DataContext as TransformManager);
             }
         }
 
-        private void ButtonBezier3MoveUp(object sender, RoutedEventArgs e)
+        private void ButtonBezier3C0MoveUp(object sender, RoutedEventArgs e)
         {
-            int index = ListBezier3.SelectedIndex;
-            if (ListBezier3.SelectedItems.Count == 1 && index > 0)
+            int index = ListBezier3C0.SelectedIndex;
+            if (ListBezier3C0.SelectedItems.Count == 1 && index > 0)
             {
-                (DataContext as Bezier3Manager).MovePoint(index, index - 1);
+                (DataContext as Bezier3C0Manager).MovePoint(index, index - 1);
             }
             PropertyUpdated?.Invoke(DataContext as TransformManager);
         }
 
-        private void ButtonBezier3MoveDown(object sender, RoutedEventArgs e)
+        private void ButtonBezier3C0MoveDown(object sender, RoutedEventArgs e)
         {
-            int index = ListBezier3.SelectedIndex;
-            if (ListBezier3.SelectedItems.Count == 1 && index < ListBezier3.Items.Count - 1)
+            int index = ListBezier3C0.SelectedIndex;
+            if (ListBezier3C0.SelectedItems.Count == 1 && index < ListBezier3C0.Items.Count - 1)
             {
-                (DataContext as Bezier3Manager).MovePoint(index, index + 1);
+                (DataContext as Bezier3C0Manager).MovePoint(index, index + 1);
             }
             PropertyUpdated?.Invoke(DataContext as TransformManager);
         }
