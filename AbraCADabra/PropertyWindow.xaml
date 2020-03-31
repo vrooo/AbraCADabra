@@ -189,10 +189,50 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Margin="0" Click="ButtonBezier3C0MoveUp" Content=" ▲ "/>
-                        <Button Grid.Column="1" Margin="0" Click="ButtonBezier3C0MoveDown" Content=" ▼ "/>
-                        <Button Grid.Column="2" Margin="0" Click="ButtonBezier3C0Add">Add</Button>
-                        <Button Grid.Column="3" Margin="0" Click="ButtonBezier3C0Remove">Remove</Button>
+                        <Button Grid.Column="0" Margin="0" Tag="{Binding ElementName=ListBezier3C0}"
+                                Click="ButtonBezier3MoveUp" Content=" ▲ "/>
+                        <Button Grid.Column="1" Margin="0" Tag="{Binding ElementName=ListBezier3C0}"
+                                Click="ButtonBezier3MoveDown" Content=" ▼ "/>
+                        <Button Grid.Column="2" Margin="0" Tag="{Binding ElementName=ListBezier3C0}"
+                                Click="ButtonBezier3Add">Add</Button>
+                        <Button Grid.Column="3" Margin="0" Tag="{Binding ElementName=ListBezier3C0}"
+                                Click="ButtonBezier3Remove">Remove</Button>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
+            
+            <GroupBox x:Name="GroupBezier3C2" Header="Bezier C2">
+                <StackPanel>
+                    <CheckBox IsChecked="{Binding DrawPolygon}"
+                              Style="{StaticResource CheckBoxUpdating}">Show de Boor polygon</CheckBox>
+                    <CheckBox IsChecked="{Binding DrawVirtualPolygon}"
+                              Style="{StaticResource CheckBoxUpdating}">Show Bernstein polygon</CheckBox>
+                    <CheckBox IsChecked="{Binding DrawVirtualPoints}"
+                              Style="{StaticResource CheckBoxUpdating}">Show Bernstein points</CheckBox>
+                    <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                        <ListBox x:Name="ListBezier3C2" ItemsSource="{Binding Points}" Height="150" SelectionMode="Extended">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="1, 0, 0, 0" Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Margin="0" Tag="{Binding ElementName=ListBezier3C2}"
+                                Click="ButtonBezier3MoveUp" Content=" ▲ "/>
+                        <Button Grid.Column="1" Margin="0" Tag="{Binding ElementName=ListBezier3C2}"
+                                Click="ButtonBezier3MoveDown" Content=" ▼ "/>
+                        <Button Grid.Column="2" Margin="0" Tag="{Binding ElementName=ListBezier3C2}"
+                                Click="ButtonBezier3Add">Add</Button>
+                        <Button Grid.Column="3" Margin="0" Tag="{Binding ElementName=ListBezier3C2}"
+                                Click="ButtonBezier3Remove">Remove</Button>
                     </Grid>
                 </StackPanel>
             </GroupBox>

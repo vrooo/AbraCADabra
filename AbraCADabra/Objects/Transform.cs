@@ -85,7 +85,7 @@ namespace AbraCADabra
         {
             ebo = DeleteBuffer(ebo);
             vbo = DeleteBuffer(vbo);
-            vao = DeleteBuffer(vao);
+            vao = DeleteVertexArray(vao);
         }
     }
 
@@ -177,6 +177,14 @@ namespace AbraCADabra
             if (buffer != 0)
             {
                 GL.DeleteBuffer(buffer);
+            }
+            return 0;
+        }
+        protected int DeleteVertexArray(int array)
+        {
+            if (array != 0)
+            {
+                GL.DeleteVertexArray(array);
             }
             return 0;
         }

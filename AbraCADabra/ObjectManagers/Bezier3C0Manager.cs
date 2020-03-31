@@ -13,8 +13,8 @@ namespace AbraCADabra
         protected override int instanceCounter => counter++;
 
         public Bezier3C0Manager(IEnumerable<PointManager> points)
-            : this(new Bezier3C0(points.Select(p => p.Transform.Position)),
-                   new PolyLine(points.Select(p => p.Transform.Position)))
+            : base(new Bezier3C0(points.Select(p => p.Transform.Position)),
+                   new PolyLine(points.Select(p => p.Transform.Position), new Vector4(0.7f, 0.7f, 0.0f, 1.0f)))
         {
             Points = new ObservableCollection<PointManager>();
             foreach (var point in points)
@@ -25,8 +25,6 @@ namespace AbraCADabra
             }
         }
 
-        private Bezier3C0Manager(Bezier3C0 bezier, PolyLine polyLine) : base(bezier, polyLine) { }
-
         public override void Translate(float x, float y, float z)
         {
             foreach (var pm in Points)
@@ -36,6 +34,7 @@ namespace AbraCADabra
                 pm.PropertyChanged += PointChanged;
             }
             base.Translate(x, y, z);
+            Update();
         }
 
         public override void RotateAround(float xAngle, float yAngle, float zAngle, Vector3 center)
@@ -47,6 +46,7 @@ namespace AbraCADabra
                 pm.PropertyChanged += PointChanged;
             }
             base.RotateAround(xAngle, yAngle, zAngle, center);
+            Update();
         }
     }
 }

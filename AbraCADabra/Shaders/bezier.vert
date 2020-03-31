@@ -6,8 +6,15 @@ uniform mat4 viewMatrix;
 uniform mat4 projMatrix;
 uniform mat4 modelMatrix;
 
+out VertexData {
+    vec4 World;
+    vec4 Position;
+    int Valid;
+} VSOut;
+
 void main()
 {
-    gl_Position = projMatrix * viewMatrix * modelMatrix * vec4(position.x, position.y, position.z, 1.0);
-    gl_PointSize = valid;
+    VSOut.World = modelMatrix * vec4(position.x, position.y, position.z, 1.0);
+    VSOut.Position = projMatrix * viewMatrix * VSOut.World;
+    VSOut.Valid = valid;
 }

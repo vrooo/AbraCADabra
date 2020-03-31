@@ -5,7 +5,13 @@ layout (line_strip, max_vertices = 256) out;
 const int minDivs = 10;
 const int maxDivs = 255;
 const int n = 4;
-const float lenMult = 20.0f;
+const float lenMult = 40.0f;
+
+in VertexData {
+    vec4 World;
+    vec4 Position;
+    int Valid;
+} VSOut[4];
 
 vec4 getBezierPoint(float t, vec4 pts[n], int len) {
     vec4 arr[n][n];
@@ -29,9 +35,9 @@ void main() {
     int cnt = 0;
     for (int i = 0; i < n; i++)
     {
-        if (gl_in[i].gl_PointSize > 0)
+        if (VSOut[i].Valid > 0)
         {
-            pts[cnt] = gl_in[cnt].gl_Position;
+            pts[cnt] = VSOut[cnt].Position;
             ptsNorm[cnt] = pts[cnt] / pts[cnt].w;
             cnt++;
         }

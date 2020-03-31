@@ -12,10 +12,10 @@ namespace AbraCADabra
         private List<uint> indexList = new List<uint>();
         protected override uint[] indices => indexList.ToArray();
 
-        public PolyLine(IEnumerable<Vector3> points)
+        public PolyLine(IEnumerable<Vector3> points, Vector4 color)
         {
             primitiveType = PrimitiveType.LineStrip;
-            Color = new Vector4(0.7f, 0.7f, 0.0f, 1.0f);
+            Color = color;
 
             CalculateVertices(points);
             Initialize();

@@ -5,7 +5,7 @@ namespace AbraCADabra
 {
     public class Point : FloatTransform
     {
-        private float pointSize = 15.0f;
+        private float pointSize;
 
         private float[] _vertices =
         {
@@ -19,10 +19,11 @@ namespace AbraCADabra
         };
         protected override uint[] indices => _indices;
 
-        public Point(Vector3 position) : base(position)
+        public Point(Vector3 position, Vector4 color, float pointSize = 10.0f) : base(position)
         {
             primitiveType = PrimitiveType.Points;
-            Color = new Vector4(1.0f, 1.0f, 0.0f, 1.0f);
+            Color = color;
+            this.pointSize = pointSize;
             Initialize();
         }
 

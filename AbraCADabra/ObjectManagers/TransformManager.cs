@@ -175,10 +175,10 @@ namespace AbraCADabra
         public Vector3 GetScreenSpaceCoords(Camera camera, float width, float height)
             => Transform.GetScreenSpaceCoords(camera, width, height);
 
-        public bool TestHit(Camera camera, float width, float height, float x, float y, out float z)
+        public virtual bool TestHit(Camera camera, float width, float height, float x, float y, out float z)
             => Transform.TestHit(camera, width, height, x, y, out z);
 
-        public abstract void Update();
+        public abstract void Update(); // TODO: this should set update flag which is checked before render
 
         public virtual void Render(ShaderManager shader)
         {

@@ -10,7 +10,7 @@ namespace AbraCADabra
 
         private Point point;
 
-        public PointManager(Vector3 position) : this(new Point(position)) { }
+        public PointManager(Vector3 position) : this(new Point(position, new Vector4(1.0f, 1.0f, 0.0f, 1.0f))) { }
 
         public PointManager(Point point) : base(point)
         {

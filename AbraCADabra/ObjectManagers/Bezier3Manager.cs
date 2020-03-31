@@ -1,5 +1,4 @@
 ﻿using OpenTK;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -20,42 +19,22 @@ namespace AbraCADabra
             this.polyLine = polyLine;
         }
 
-        public override void Update() { }
-
-        public override void Render(ShaderManager shader)
+        public override void Update()
         {
             var points = Points.Select(p => p.Transform.Position);
             bezier.Update(points);
+            polyLine.Update(points);
+        }
+
+        public override void Render(ShaderManager shader)
+        {
             if (DrawPolygon)
             {
-                polyLine.Update(points);
                 polyLine.Render(shader);
             }
             shader.UseAdapt();
             base.Render(shader);
             shader.UseBasic();
-        }
-
-        public override void Translate(float x, float y, float z)
-        {
-            foreach (var pm in Points)
-            {
-                pm.PropertyChanged -= PointChanged;
-                pm.Translate(x, y, z);
-                pm.PropertyChanged += PointChanged;
-            }
-            base.Translate(x, y, z);
-        }
-
-        public override void RotateAround(float xAngle, float yAngle, float zAngle, Vector3 center)
-        {
-            foreach (var pm in Points)
-            {
-                pm.PropertyChanged -= PointChanged;
-                pm.RotateAround(xAngle, yAngle, zAngle, center);
-                pm.PropertyChanged += PointChanged;
-            }
-            base.RotateAround(xAngle, yAngle, zAngle, center);
         }
 
         protected void PointChanged(object sender, PropertyChangedEventArgs e)
