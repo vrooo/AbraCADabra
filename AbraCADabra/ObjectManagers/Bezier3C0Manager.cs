@@ -13,7 +13,7 @@ namespace AbraCADabra
         protected override int instanceCounter => counter++;
 
         public Bezier3C0Manager(IEnumerable<PointManager> points)
-            : base(new Bezier3C0(points.Select(p => p.Transform.Position)),
+            : base(new Bezier3(points.Select(p => p.Transform.Position)),
                    new PolyLine(points.Select(p => p.Transform.Position), new Vector4(0.7f, 0.7f, 0.0f, 1.0f)))
         {
             Points = new ObservableCollection<PointManager>();

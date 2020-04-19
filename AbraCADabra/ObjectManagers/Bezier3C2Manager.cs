@@ -30,7 +30,7 @@ namespace AbraCADabra
         private PointWrapper selected;
 
         public Bezier3C2Manager(IEnumerable<PointManager> points)
-            : base(new Bezier3C0(GetBernsteinPoints(points.Select(p => p.Transform.Position))),
+            : base(new Bezier3(GetBernsteinPoints(points.Select(p => p.Transform.Position))),
                    new PolyLine(points.Select(p => p.Transform.Position), new Vector4(0.5f, 0.5f, 0.0f, 1.0f)))
         {
             Points = new ObservableCollection<PointManager>();
