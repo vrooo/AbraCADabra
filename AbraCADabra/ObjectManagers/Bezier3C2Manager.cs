@@ -30,7 +30,7 @@ namespace AbraCADabra
         private PointWrapper selected;
 
         public Bezier3C2Manager(IEnumerable<PointManager> points)
-            : base(new Bezier3(GetBernsteinPoints(points.Select(p => p.Transform.Position))),
+            : base(new Bezier3(GetBernsteinFromDeBoor(points.Select(p => p.Transform.Position))),
                    new PolyLine(points.Select(p => p.Transform.Position), new Vector4(0.5f, 0.5f, 0.0f, 1.0f)))
         {
             Points = new ObservableCollection<PointManager>();
@@ -45,9 +45,35 @@ namespace AbraCADabra
             virtualPolyLine = new PolyLine(bPoints, new Vector4(0.3f, 0.0f, 0.7f, 1.0f));
         }
 
+        private static List<Vector3> GetBernsteinFromDeBoor(IEnumerable<Vector3> points)
+        {
+            var pointsList = new List<Vector3>(points);
+            var bPoints = new List<Vector3>();
+
+            int pc = pointsList.Count;
+            if (pc > 0)
+            {
+                bPoints.Add(pointsList[0]);
+                for (int i = 1; i < pc; i++)
+                {
+                    Vector3 third = (pointsList[i] - pointsList[i - 1]) / 3;
+                    Vector3 v1 = pointsList[i - 1] + third, v2 = pointsList[i - 1] + 2 * third;
+                    if (i > 1)
+                    {
+                        bPoints.Add((v1 + bPoints[3 * i - 4]) / 2);
+                    }
+                    bPoints.Add(v1);
+                    bPoints.Add(v2);
+                }
+                bPoints.Add(pointsList[pc - 1]);
+            }
+
+            return bPoints;
+        }
+
         private IEnumerable<Vector3> UpdateVirtualPoints(IEnumerable<Vector3> points)
         {
-            var bPoints = GetBernsteinPoints(points);
+            var bPoints = GetBernsteinFromDeBoor(points);
             if (bPoints.Count() != virtualPoints.Count)
             {
                 foreach (var point in virtualPoints)
@@ -96,32 +122,6 @@ namespace AbraCADabra
                     pw.Point.Render(shader);
                 }
             }
-        }
-
-        private static List<Vector3> GetBernsteinPoints(IEnumerable<Vector3> points)
-        {
-            var pointsList = new List<Vector3>(points);
-            var bPoints = new List<Vector3>();
-
-            int pc = pointsList.Count;
-            if (pc > 0)
-            {
-                bPoints.Add(pointsList[0]);
-                for (int i = 1; i < pc; i++)
-                {
-                    Vector3 third = (pointsList[i] - pointsList[i - 1]) / 3;
-                    Vector3 v1 = pointsList[i - 1] + third, v2 = pointsList[i - 1] + 2 * third;
-                    if (i > 1)
-                    {
-                        bPoints.Add((v1 + bPoints[3 * i - 4]) / 2);
-                    }
-                    bPoints.Add(v1);
-                    bPoints.Add(v2);
-                }
-                bPoints.Add(pointsList[pc - 1]);
-            }
-
-            return bPoints;
         }
 
         public override bool TestHit(Camera camera, float width, float height, float x, float y, out float z)

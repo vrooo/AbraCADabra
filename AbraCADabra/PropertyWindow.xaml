@@ -236,6 +236,38 @@
                     </Grid>
                 </StackPanel>
             </GroupBox>
+
+            <GroupBox x:Name="GroupBezier3Inter" Header="Bezier Interpolating">
+                <StackPanel>
+                    <CheckBox IsChecked="{Binding DrawPolygon}"
+                              Style="{StaticResource CheckBoxUpdating}">Show control polygon</CheckBox>
+                    <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                        <ListBox x:Name="ListBezier3Inter" ItemsSource="{Binding Points}" Height="150" SelectionMode="Extended">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="1, 0, 0, 0" Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Margin="0" Tag="{Binding ElementName=ListBezier3Inter}"
+                                Click="ButtonBezier3MoveUp" Content=" ▲ "/>
+                        <Button Grid.Column="1" Margin="0" Tag="{Binding ElementName=ListBezier3Inter}"
+                                Click="ButtonBezier3MoveDown" Content=" ▼ "/>
+                        <Button Grid.Column="2" Margin="0" Tag="{Binding ElementName=ListBezier3Inter}"
+                                Click="ButtonBezier3Add">Add</Button>
+                        <Button Grid.Column="3" Margin="0" Tag="{Binding ElementName=ListBezier3Inter}"
+                                Click="ButtonBezier3Remove">Remove</Button>
+                    </Grid>
+                </StackPanel>
+            </GroupBox>
         </StackPanel>
     </ScrollViewer>
 </Window>

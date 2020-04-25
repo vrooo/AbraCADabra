@@ -43,6 +43,11 @@
                                         <TextBlock Margin="1, 0, 0, 0" Text="{Binding Name}"/>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
+                                <ListBox.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="[DEBUG] Four points" Click="Debug_FourPoints"/>
+                                    </ContextMenu>
+                                </ListBox.ContextMenu>
                             </ListBox>
                         </ScrollViewer>
                         <DockPanel>
@@ -57,6 +62,7 @@
                         <Button Click="ButtonCreatePoint">Point</Button>
                         <Button Click="ButtonCreateBezier3C0">Bezier C0</Button>
                         <Button Click="ButtonCreateBezier3C2">Bezier C2</Button>
+                        <Button Click="ButtonCreateBezier3Inter">Bezier Interpol.</Button>
                         <Button Click="ButtonCreateTorus">Torus</Button>
                     </WrapPanel>
                 </GroupBox>

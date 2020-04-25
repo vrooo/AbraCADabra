@@ -350,19 +350,23 @@ namespace AbraCADabra
 
         private void ButtonCreateBezier3C0(object sender, RoutedEventArgs e)
         {
-            List<PointManager> points = new List<PointManager>();
-            foreach (var ob in ListObjects.SelectedItems)
-            {
-                if (ob is PointManager)
-                {
-                    points.Add(ob as PointManager);
-                }
-            }
-            objects.Add(new Bezier3C0Manager(points));
+            objects.Add(new Bezier3C0Manager(GetSelectedPoints()));
             RefreshView();
         }
 
         private void ButtonCreateBezier3C2(object sender, RoutedEventArgs e)
+        {
+            objects.Add(new Bezier3C2Manager(GetSelectedPoints()));
+            RefreshView();
+        }
+
+        private void ButtonCreateBezier3Inter(object sender, RoutedEventArgs e)
+        {
+            objects.Add(new Bezier3InterManager(GetSelectedPoints()));
+            RefreshView();
+        }
+
+        private List<PointManager> GetSelectedPoints()
         {
             List<PointManager> points = new List<PointManager>();
             foreach (var ob in ListObjects.SelectedItems)
@@ -372,8 +376,7 @@ namespace AbraCADabra
                     points.Add(ob as PointManager);
                 }
             }
-            objects.Add(new Bezier3C2Manager(points));
-            RefreshView();
+            return points;
         }
 
         private void DecimalWorldValueChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -448,6 +451,16 @@ namespace AbraCADabra
             {
                 objects.Move(index, index + 1);
             }
+        }
+
+        private void Debug_FourPoints(object sender, RoutedEventArgs e)
+        {
+            objects.Clear();
+            objects.Add(new PointManager(new Vector3(-10.0f, -10.0f, 1.0f)));
+            objects.Add(new PointManager(new Vector3(-3.0f, -3.0f, 4.0f)));
+            objects.Add(new PointManager(new Vector3(4.0f, -12.0f, 2.0f)));
+            objects.Add(new PointManager(new Vector3(11.0f, -4.0f, 3.0f)));
+            CheckBoxGrid.IsChecked = false;
         }
     }
 }

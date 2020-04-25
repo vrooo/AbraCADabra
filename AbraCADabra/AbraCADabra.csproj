@@ -101,6 +101,7 @@
       <DependentUpon>ItemSelectionWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ObjectManagers\Bezier3C2Manager.cs" />
+    <Compile Include="ObjectManagers\Bezier3InterManager.cs" />
     <Compile Include="ObjectManagers\Bezier3Manager.cs" />
     <Compile Include="Objects\Bezier3.cs" />
     <Compile Include="Objects\CenterMarker.cs" />
@@ -123,6 +124,8 @@
     <Compile Include="ObjectManagers\TransformManager.cs" />
     <Compile Include="ObjectManagers\TorusManager.cs" />
     <Compile Include="Rendering\Vertex.cs" />
+    <Compile Include="Utilites\ListExtender.cs" />
+    <Compile Include="Utilites\MathHelper.cs" />
     <Page Include="ItemSelectionWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
