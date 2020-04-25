@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing.Drawing2D;
 using OpenTK;
 
 namespace AbraCADabra
@@ -35,12 +36,19 @@ namespace AbraCADabra
 
         public Matrix4 GetViewMatrix()
         {
-            // TODO: cache
+            // TODO: cache and calc inv matrix
             Vector3 rotateAround = Position - Offset;
             return Matrix4.CreateTranslation(rotateAround) *
                    GetRotationMatrix() *
                    Matrix4.CreateTranslation(-rotateAround) *
                    Matrix4.CreateTranslation(Position);
+        }
+
+        public Matrix4 GetInvViewMatrix()
+        {
+            var view = GetViewMatrix();
+            view.Invert();
+            return view;
         }
 
         public Matrix4 GetProjectionMatrix(float width, float height)

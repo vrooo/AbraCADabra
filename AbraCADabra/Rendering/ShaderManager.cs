@@ -9,15 +9,15 @@ namespace AbraCADabra
         private GLControl glControl;
 
         private Shader shaderBasic;
-        private Shader shaderAdapt;
+        private Shader shaderBezier;
 
         private Shader shaderCurrent;
 
-        public ShaderManager(string vertPath, string fragPath, string vertPathAdapt, string fragPathAdapt, string geomPathAdapt,
+        public ShaderManager(string vertPath, string fragPath, string vertPathBezier, string fragPathBezier, string geomPathBezier,
                              Camera camera, GLControl glControl)
         {
             shaderBasic = new Shader(vertPath, fragPath);
-            shaderAdapt = new Shader(vertPathAdapt, fragPathAdapt, geomPathAdapt);
+            shaderBezier = new Shader(vertPathBezier, fragPathBezier, geomPathBezier);
             this.camera = camera;
             this.glControl = glControl;
         }
@@ -27,9 +27,9 @@ namespace AbraCADabra
             Use(shaderBasic);
         }
 
-        public void UseAdapt()
+        public void UseBezier()
         {
-            Use(shaderAdapt);
+            Use(shaderBezier);
         }
 
         private void Use(Shader shader)
@@ -37,6 +37,11 @@ namespace AbraCADabra
             shader.Use();
             shaderCurrent = shader;
             SetupCamera();
+        }
+
+        public void SetupColor(Vector4 color)
+        {
+            BindVector4(color, "color");
         }
 
         public void SetupTransform(Vector4 color, Matrix4 model)
@@ -49,6 +54,12 @@ namespace AbraCADabra
         {
             BindMatrix(camera.GetViewMatrix(), "viewMatrix");
             BindMatrix(camera.GetProjectionMatrix(glControl.Width, glControl.Height), "projMatrix");
+        }
+
+        public float GetCameraDistance(Vector3 point)
+        {
+            var pos = camera.GetInvViewMatrix().ExtractTranslation();
+            return (pos - point).Length;
         }
 
         private void BindMatrix(Matrix4 matrix, string name)
@@ -65,7 +76,7 @@ namespace AbraCADabra
         public void Dispose()
         {
             shaderBasic.Dispose();
-            shaderAdapt.Dispose();
+            shaderBezier.Dispose();
         }
         #endregion
     }

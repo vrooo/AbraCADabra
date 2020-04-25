@@ -22,13 +22,13 @@ namespace AbraCADabra
         ShaderManager shader;
         string vertPath = "../../Shaders/basic.vert";
         string fragPath = "../../Shaders/basic.frag";
-        string vertPathAdapt = "../../Shaders/bezier.vert";
-        string fragPathAdapt = "../../Shaders/basic.frag";
-        string geomPathAdapt = "../../Shaders/bezier.geom";
+        string vertPathBezier = "../../Shaders/bezier.vert";
+        string fragPathBezier = "../../Shaders/basic.frag";
+        string geomPathBezier = "../../Shaders/bezier.geom";
 
         Camera camera;
         PlaneXZ plane;
-        Cursor cursor;
+        CrossCursor cursor;
         CenterMarker centerMarker;
         ObservableCollection<TransformManager> objects = new ObservableCollection<TransformManager>();
 
@@ -64,10 +64,10 @@ namespace AbraCADabra
 
             camera = new Camera(0, 5.0f, -40.0f, 0.3f, 0, 0);
             plane = new PlaneXZ(200.0f, 200.0f, 200, 200);
-            cursor = new Cursor();
+            cursor = new CrossCursor();
             centerMarker = new CenterMarker();
 
-            shader = new ShaderManager(vertPath, fragPath, vertPathAdapt, fragPathAdapt, geomPathAdapt, camera, GLMain);
+            shader = new ShaderManager(vertPath, fragPath, vertPathBezier, fragPathBezier, geomPathBezier, camera, GLMain);
 
             objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
         }

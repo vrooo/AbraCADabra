@@ -8,9 +8,6 @@ namespace AbraCADabra
         private float pointSize = 10.0f;
         private float outlineThickness = 2.0f;
 
-        //private CrossCursor cross;
-        //private float crossThickness = 2.0f;
-
         private float[] _vertices =
         {
             0.0f, 0.0f, 0.0f
@@ -30,7 +27,6 @@ namespace AbraCADabra
             primitiveType = PrimitiveType.Points;
             Color = new Vector4(1.0f, 0.5f, 0.0f, 1.0f);
             OutlineColor = new Vector4(0.0f, 0.0f, 0.0f, 0.0f);
-            //cross = new CrossCursor();
             Initialize();
         }
 
@@ -38,17 +34,13 @@ namespace AbraCADabra
         {
             GL.Disable(EnableCap.DepthTest);
 
-            //GL.LineWidth(crossThickness);
-            //cross.Render(shader);
-            //GL.LineWidth(1.0f);
-
             GL.BindVertexArray(vao);
 
             shader.SetupTransform(OutlineColor, GetModelMatrix());
             GL.PointSize(pointSize + 2 * outlineThickness);
             GL.DrawElements(primitiveType, indices.Length, DrawElementsType.UnsignedInt, 0);
 
-            shader.SetupTransform(Color, GetModelMatrix());
+            shader.SetupColor(Color);
             GL.PointSize(pointSize);
             GL.DrawElements(primitiveType, indices.Length, DrawElementsType.UnsignedInt, 0);
 

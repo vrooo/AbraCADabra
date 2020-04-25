@@ -32,7 +32,7 @@ namespace AbraCADabra
             {
                 polyLine.Render(shader);
             }
-            shader.UseAdapt();
+            shader.UseBezier();
             base.Render(shader);
             shader.UseBasic();
         }
