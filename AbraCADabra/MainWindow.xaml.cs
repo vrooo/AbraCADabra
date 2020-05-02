@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
@@ -23,7 +24,6 @@ namespace AbraCADabra
         string vertPath = "../../Shaders/basic.vert";
         string fragPath = "../../Shaders/basic.frag";
         string vertPathBezier = "../../Shaders/bezier.vert";
-        string fragPathBezier = "../../Shaders/basic.frag";
         string geomPathBezier = "../../Shaders/bezier.geom";
 
         Camera camera;
@@ -51,10 +51,7 @@ namespace AbraCADabra
             ListObjects.DataContext = objects;
         }
 
-        public IEnumerable<TransformManager> GetObjectsOfType(Type type)
-        {
-            return objects.Where(tm => tm.GetType() == type);
-        }
+        public IEnumerable<TransformManager> GetObjectsOfType(Type type) => objects.Where(tm => tm.GetType() == type);
 
         private void OnLoad(object sender, EventArgs e)
         {
@@ -67,7 +64,7 @@ namespace AbraCADabra
             cursor = new CrossCursor();
             centerMarker = new CenterMarker();
 
-            shader = new ShaderManager(vertPath, fragPath, vertPathBezier, fragPathBezier, geomPathBezier, camera, GLMain);
+            shader = new ShaderManager(vertPath, fragPath, vertPathBezier, geomPathBezier, camera, GLMain);
 
             objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
         }
@@ -77,8 +74,37 @@ namespace AbraCADabra
             GL.Viewport(0, 0, GLMain.Width, GLMain.Height);
             GL.Clear(ClearBufferMask.ColorBufferBit |
                      ClearBufferMask.DepthBufferBit);
-            shader.UseBasic();
 
+            // TODO
+            if (CheckBoxAnaglyph.IsChecked.HasValue && CheckBoxAnaglyph.IsChecked.Value)
+            {
+                float eye = (float)SliderEyeDistance.Value, plane = (float)SliderProjDistance.Value;
+                shader.SetAnaglyphMode(AnaglyphMode.Left, eye, plane, false);
+                shader.UseBasic();
+                GL.ColorMask(true, false, false, true);
+                RenderScene();
+
+                shader.SetAnaglyphMode(AnaglyphMode.Right, eye, plane);
+                GL.ColorMask(false, true, true, true);
+                RenderScene();
+
+                shader.SetAnaglyphMode(AnaglyphMode.None, eye, plane, false);
+                GL.ColorMask(true, true, true, true);
+            }
+            else
+            {
+                shader.UseBasic();
+                RenderScene();
+            }
+
+            renderFromScreenCoordsChange = false;
+            renderFromWorldCoordsChange = false;
+
+            GLMain.SwapBuffers();
+        }
+
+        private void RenderScene()
+        {
             if (CheckBoxGrid.IsChecked.HasValue && CheckBoxGrid.IsChecked.Value)
             {
                 plane.Render(shader);
@@ -101,10 +127,6 @@ namespace AbraCADabra
             {
                 UpdateCursorWorldPos();
             }
-            renderFromScreenCoordsChange = false;
-            renderFromWorldCoordsChange = false;
-
-            GLMain.SwapBuffers();
         }
 
         private void UpdateCursorScreenPos()
@@ -130,10 +152,7 @@ namespace AbraCADabra
             dud.ValueChanged += handler;
         }
 
-        private void RefreshView()
-        {
-            GLMain.Invalidate();
-        }
+        private void RefreshView() => GLMain.Invalidate();
 
         private void OnMouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
         {
@@ -222,7 +241,7 @@ namespace AbraCADabra
             {
                 if (ob.TestHit(camera, GLMain.Width, GLMain.Height, e.X, e.Y, out float z))
                 {
-                    if (z > 0 && z < cloZ)
+                    if (z > camera.ZNear && z < cloZ)
                     {
                         clo = ob;
                         cloZ = z;
@@ -248,10 +267,11 @@ namespace AbraCADabra
             shader.Dispose();
         }
 
-        private void RoutedInvalidate(object sender, RoutedEventArgs e)
-        {
-            RefreshView();
-        }
+        private void RoutedInvalidate(object sender, RoutedEventArgs e) => RefreshView();
+
+        private void ValueChangedInvalidate(object sender, RoutedPropertyChangedEventArgs<double> e) => RefreshView();
+
+        private void ColorChangedInvalidate(object sender, RoutedPropertyChangedEventArgs<Color?> e) => RefreshView();
 
         private void ListBoxItemDoubleClick(object sender, MouseButtonEventArgs e)
         {

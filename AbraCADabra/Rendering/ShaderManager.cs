@@ -3,6 +3,11 @@ using OpenTK;
 
 namespace AbraCADabra
 {
+    public enum AnaglyphMode
+    {
+        None, Left, Right
+    }
+
     public class ShaderManager : IDisposable
     {
         private Camera camera;
@@ -13,11 +18,16 @@ namespace AbraCADabra
 
         private Shader shaderCurrent;
 
-        public ShaderManager(string vertPath, string fragPath, string vertPathBezier, string fragPathBezier, string geomPathBezier,
+        private AnaglyphMode anaglyphMode = AnaglyphMode.None;
+        private float eyeDistance = 0.0f;
+        private float planeDistance = 0.0f;
+
+        public ShaderManager(string vertPath, string fragPath,
+                             string vertPathBezier, string geomPathBezier,
                              Camera camera, GLControl glControl)
         {
             shaderBasic = new Shader(vertPath, fragPath);
-            shaderBezier = new Shader(vertPathBezier, fragPathBezier, geomPathBezier);
+            shaderBezier = new Shader(vertPathBezier, fragPath, geomPathBezier);
             this.camera = camera;
             this.glControl = glControl;
         }
@@ -39,6 +49,17 @@ namespace AbraCADabra
             SetupCamera();
         }
 
+        public void SetAnaglyphMode(AnaglyphMode mode, float eyeDist, float planeDist, bool resetCam = true)
+        {
+            anaglyphMode = mode;
+            eyeDistance = eyeDist;
+            planeDistance = planeDist;
+            if (resetCam)
+            {
+                SetupCamera();
+            }
+        }
+
         public void SetupColor(Vector4 color)
         {
             BindVector4(color, "color");
@@ -53,7 +74,17 @@ namespace AbraCADabra
         public void SetupCamera()
         {
             BindMatrix(camera.GetViewMatrix(), "viewMatrix");
-            BindMatrix(camera.GetProjectionMatrix(glControl.Width, glControl.Height), "projMatrix");
+            Matrix4 projMatrix;
+            if (anaglyphMode == AnaglyphMode.None)
+            {
+                projMatrix = camera.GetProjectionMatrix(glControl.Width, glControl.Height);
+            }
+            else
+            {
+                var (left, right) = camera.GetStereoscopicMatrices(glControl.Width, glControl.Height, eyeDistance, planeDistance);
+                projMatrix = anaglyphMode == AnaglyphMode.Left ? left : right;
+            }
+            BindMatrix(projMatrix, "projMatrix");
         }
 
         public float GetCameraDistance(Vector3 point)

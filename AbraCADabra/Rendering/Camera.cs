@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing.Drawing2D;
 using OpenTK;
 
 namespace AbraCADabra
@@ -8,7 +7,7 @@ namespace AbraCADabra
     {
         public Vector3 Position { get; private set; }
         public Vector3 Rotation { get; private set; }
-        public Vector3 Offset { get; set; } = new Vector3(0, 0, -30);
+        public Vector3 Offset { get; set; } = new Vector3(0, 0, -30.0f);
 
         public float ZNear { get; set; } = 0.1f;
         public float ZFar { get; set; } = 5000.0f;
@@ -51,10 +50,27 @@ namespace AbraCADabra
             return view;
         }
 
+        Random rand = new Random();
         public Matrix4 GetProjectionMatrix(float width, float height)
         {
             // TODO: cache
             return Matrix4.CreatePerspectiveFieldOfView(FOV, width/height, ZNear, ZFar);
+        }
+
+        public (Matrix4 left, Matrix4 right) GetStereoscopicMatrices(float width, float height, float eyeDist, float planeDist)
+        {
+            double tan = Math.Tan(FOV / 2.0f), asp = width/height;
+            double lD = ZNear * (asp * tan - eyeDist / (2 * planeDist));
+            float r = (float)(2 * ZNear * asp * tan - lD);
+            float l = (float)lD;
+            float ud = (float)(ZNear * tan);
+
+            float eh = eyeDist / 2.0f;
+            var left  = Matrix4.CreateTranslation(eh, 0.0f, 0.0f) *
+                        Matrix4.CreatePerspectiveOffCenter(-l, r, -ud, ud, ZNear, ZFar);
+            var right = Matrix4.CreateTranslation(-eh, 0.0f, 0.0f) * 
+                        Matrix4.CreatePerspectiveOffCenter(-r, l, -ud, ud, ZNear, ZFar);
+            return (left, right);
         }
 
         public void Rotate(float x, float y, float z)

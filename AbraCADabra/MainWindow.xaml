@@ -19,6 +19,7 @@
             <Setter Property="Foreground"  Value="#2a3157"/>
             <Setter Property="BorderBrush" Value="#181b2e"/>
         </Style>-->
+        <BooleanToVisibilityConverter x:Key="BoolVisConverter"/>
     </Window.Resources>
     
     <Grid>
@@ -33,7 +34,7 @@
         </WindowsFormsHost>
         <ScrollViewer Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <StackPanel Margin="3">
-                <GroupBox Header="Objects">
+                <Expander Header="Objects" IsExpanded="True">
                     <StackPanel>
                         <ScrollViewer VerticalScrollBarVisibility="Hidden">
                             <ListBox x:Name="ListObjects" ItemsSource="{Binding}" Height="150" SelectionMode="Extended"
@@ -56,8 +57,8 @@
                             <Button DockPanel.Dock="Left" Margin="0" Click="ButtonDelete">Delete selected</Button>
                         </DockPanel>
                     </StackPanel>
-                </GroupBox>
-                <GroupBox Header="Add object">
+                </Expander>
+                <Expander Header="Add object" IsExpanded="False">
                     <WrapPanel>
                         <Button Click="ButtonCreatePoint">Point</Button>
                         <Button Click="ButtonCreateBezier3C0">Bezier C0</Button>
@@ -65,8 +66,8 @@
                         <Button Click="ButtonCreateBezier3Inter">Bezier Interpol.</Button>
                         <Button Click="ButtonCreateTorus">Torus</Button>
                     </WrapPanel>
-                </GroupBox>
-                <GroupBox Header="Cursor">
+                </Expander>
+                <Expander Header="Cursor" IsExpanded="False">
                     <StackPanel>
                         <TextBlock Style="{StaticResource TextBlockBasic}">World:</TextBlock>
                         <Grid>
@@ -115,14 +116,70 @@
                                                 ValueChanged="DecimalScreenValueChanged"></xctk:DecimalUpDown>
                         </Grid>
                     </StackPanel>
-                </GroupBox>
-                <GroupBox Header="Configuration">
+                </Expander>
+                <Expander Header="Configuration" IsExpanded="False">
                     <StackPanel>
                         <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
-                              Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
                         <CheckBox x:Name="CheckBoxRotateOrigin" IsChecked="True">Rotate around cursor</CheckBox>
                     </StackPanel>
-                </GroupBox>
+                </Expander>
+                <Expander Header="Anaglyph" IsExpanded="False">
+                    <StackPanel>
+                        <CheckBox x:Name="CheckBoxAnaglyph" IsChecked="False"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Enable anaglyph</CheckBox>
+                        <StackPanel Margin="20, 0, 0, 0"
+                                    Visibility="{Binding IsChecked,ElementName=CheckBoxAnaglyph,Converter={StaticResource BoolVisConverter}}">
+                            <TextBlock Style="{StaticResource TextBlockBasic}">Eye distance:</TextBlock>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+                                <xctk:DecimalUpDown Grid.Column="1" x:Name="DecimalEyeDistance" DockPanel.Dock="Right"
+                                                    Increment=".1"
+                                                    Value="{Binding ElementName=SliderEyeDistance, Path=Value, Mode=TwoWay}"/>
+                                <Slider x:Name="SliderEyeDistance" DockPanel.Dock="Left"
+                                        Minimum="0" Maximum="5" Value="1"
+                                        ValueChanged="ValueChangedInvalidate"/>
+                            </Grid>
+                            <TextBlock Style="{StaticResource TextBlockBasic}">Projection plane distance:</TextBlock>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+                                <xctk:DecimalUpDown Grid.Column="1" x:Name="DecimalProjDistance" DockPanel.Dock="Right"
+                                                    Value="{Binding ElementName=SliderProjDistance, Path=Value, Mode=TwoWay}"/>
+                                <Slider x:Name="SliderProjDistance" DockPanel.Dock="Left"
+                                        Minimum="1" Maximum="500" Value="50"
+                                        ValueChanged="ValueChangedInvalidate"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                           Style="{StaticResource TextBlockBasic}">Left eye color:</TextBlock>
+                                <xctk:ColorPicker Grid.Column="1" x:Name="ColorPickerLeft" SelectedColor="#ff0000"
+                                                  UsingAlphaChannel="False"
+                                                  SelectedColorChanged="ColorChangedInvalidate"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="50"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                           Style="{StaticResource TextBlockBasic}">Right eye color:</TextBlock>
+                                <xctk:ColorPicker Grid.Column="1" x:Name="ColorPickerRight" SelectedColor="#00ffff"
+                                                  UsingAlphaChannel="False"
+                                                  SelectedColorChanged="ColorChangedInvalidate"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Expander>
             </StackPanel>
         </ScrollViewer>
     </Grid>
