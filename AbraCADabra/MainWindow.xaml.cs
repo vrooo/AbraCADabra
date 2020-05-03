@@ -25,6 +25,13 @@ namespace AbraCADabra
         string fragPath = "../../Shaders/basic.frag";
         string vertPathBezier = "../../Shaders/bezier.vert";
         string geomPathBezier = "../../Shaders/bezier.geom";
+        string vertPathMultitex = "../../Shaders/multitex.vert";
+        string fragPathMultitex = "../../Shaders/multitex.frag";
+
+        int anaglyphFrameBufferLeft, anaglyphFrameBufferRight;
+        int anaglyphDepthBufferLeft, anaglyphDepthBufferRight;
+        int anaglyphTexLeft, anaglyphTexRight;
+        Quad anaglyphQuad;
 
         Camera camera;
         PlaneXZ plane;
@@ -59,12 +66,23 @@ namespace AbraCADabra
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.PointSmooth);
 
+            anaglyphFrameBufferLeft = GL.GenFramebuffer();
+            anaglyphFrameBufferRight = GL.GenFramebuffer();
+            anaglyphDepthBufferLeft = GL.GenRenderbuffer();
+            anaglyphDepthBufferRight = GL.GenRenderbuffer();
+            anaglyphTexLeft = GL.GenTexture();
+            anaglyphTexRight = GL.GenTexture();
+            anaglyphQuad = new Quad();
+
             camera = new Camera(0, 5.0f, -40.0f, 0.3f, 0, 0);
             plane = new PlaneXZ(200.0f, 200.0f, 200, 200);
             cursor = new CrossCursor();
             centerMarker = new CenterMarker();
 
-            shader = new ShaderManager(vertPath, fragPath, vertPathBezier, geomPathBezier, camera, GLMain);
+            shader = new ShaderManager(vertPath, fragPath,
+                                       vertPathBezier, geomPathBezier,
+                                       vertPathMultitex, fragPathMultitex,
+                                       camera, GLMain);
 
             objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
         }
@@ -79,17 +97,29 @@ namespace AbraCADabra
             if (CheckBoxAnaglyph.IsChecked.HasValue && CheckBoxAnaglyph.IsChecked.Value)
             {
                 float eye = (float)SliderEyeDistance.Value, plane = (float)SliderProjDistance.Value;
+
+                GL.ActiveTexture(TextureUnit.Texture0);
+                SetTexture(anaglyphTexLeft, anaglyphFrameBufferLeft, anaglyphDepthBufferLeft);
                 shader.SetAnaglyphMode(AnaglyphMode.Left, eye, plane, false);
                 shader.UseBasic();
-                GL.ColorMask(true, false, false, true);
                 RenderScene();
 
+                GL.ActiveTexture(TextureUnit.Texture1);
+                SetTexture(anaglyphTexRight, anaglyphFrameBufferRight, anaglyphDepthBufferRight);
                 shader.SetAnaglyphMode(AnaglyphMode.Right, eye, plane);
-                GL.ColorMask(false, true, true, true);
                 RenderScene();
 
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                GL.Clear(ClearBufferMask.ColorBufferBit |
+                         ClearBufferMask.DepthBufferBit);
                 shader.SetAnaglyphMode(AnaglyphMode.None, eye, plane, false);
-                GL.ColorMask(true, true, true, true);
+                shader.UseMultitex();
+
+                var lCol = ColorPickerLeft.SelectedColor.Value;
+                var rCol = ColorPickerRight.SelectedColor.Value;
+                shader.SetupAnaglyphColors(new Vector4(lCol.R / 255.0f, lCol.G / 255.0f, lCol.B / 255.0f, 1.0f),
+                                           new Vector4(rCol.R / 255.0f, rCol.G / 255.0f, rCol.B / 255.0f, 1.0f));
+                anaglyphQuad.Render(shader);
             }
             else
             {
@@ -101,6 +131,40 @@ namespace AbraCADabra
             renderFromWorldCoordsChange = false;
 
             GLMain.SwapBuffers();
+        }
+
+        private void SetTexture(int tex, int fbo, int dbo)
+        {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
+
+            GL.BindTexture(TextureTarget.Texture2D, tex);
+            GL.TexImage2D(TextureTarget.Texture2D,
+                          0,
+                          PixelInternalFormat.Rgb,
+                          GLMain.Width, GLMain.Height, 0,
+                          OpenTK.Graphics.OpenGL.PixelFormat.Rgb,
+                          PixelType.UnsignedByte,
+                          IntPtr.Zero);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToBorder);
+
+            GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, dbo);
+            GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer,
+                                   RenderbufferStorage.DepthComponent,
+                                   GLMain.Width, GLMain.Height);
+            GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+            GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer,
+                                       FramebufferAttachment.DepthAttachment,
+                                       RenderbufferTarget.Renderbuffer,
+                                       dbo);
+
+            GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, tex, 0);
+            GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+
+            GL.Clear(ClearBufferMask.ColorBufferBit |
+                     ClearBufferMask.DepthBufferBit);
         }
 
         private void RenderScene()

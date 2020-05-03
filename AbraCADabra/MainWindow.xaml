@@ -173,7 +173,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" VerticalAlignment="Center"
                                            Style="{StaticResource TextBlockBasic}">Right eye color:</TextBlock>
-                                <xctk:ColorPicker Grid.Column="1" x:Name="ColorPickerRight" SelectedColor="#00ffff"
+                                <xctk:ColorPicker Grid.Column="1" x:Name="ColorPickerRight" SelectedColor="#0000ff"
                                                   UsingAlphaChannel="False"
                                                   SelectedColorChanged="ColorChangedInvalidate"/>
                             </Grid>

@@ -15,6 +15,7 @@ namespace AbraCADabra
 
         private Shader shaderBasic;
         private Shader shaderBezier;
+        private Shader shaderMultitex;
 
         private Shader shaderCurrent;
 
@@ -24,10 +25,12 @@ namespace AbraCADabra
 
         public ShaderManager(string vertPath, string fragPath,
                              string vertPathBezier, string geomPathBezier,
+                             string vertPathMultitex, string fragPathMultitex,
                              Camera camera, GLControl glControl)
         {
             shaderBasic = new Shader(vertPath, fragPath);
             shaderBezier = new Shader(vertPathBezier, fragPath, geomPathBezier);
+            shaderMultitex = new Shader(vertPathMultitex, fragPathMultitex);
             this.camera = camera;
             this.glControl = glControl;
         }
@@ -40,6 +43,11 @@ namespace AbraCADabra
         public void UseBezier()
         {
             Use(shaderBezier);
+        }
+
+        public void UseMultitex()
+        {
+            Use(shaderMultitex);
         }
 
         private void Use(Shader shader)
@@ -63,6 +71,14 @@ namespace AbraCADabra
         public void SetupColor(Vector4 color)
         {
             BindVector4(color, "color");
+        }
+
+        public void SetupAnaglyphColors(Vector4 colorLeft, Vector4 colorRight)
+        {
+            BindInt(0, "textureLeft");
+            BindInt(1, "textureRight");
+            BindVector4(colorLeft, "colorLeft");
+            BindVector4(colorRight, "colorRight");
         }
 
         public void SetupTransform(Vector4 color, Matrix4 model)
@@ -101,6 +117,11 @@ namespace AbraCADabra
         private void BindVector4(Vector4 vector, string name)
         {
             shaderCurrent.BindVector4(vector, name);
+        }
+
+        private void BindInt(int obj, string name)
+        {
+            shaderCurrent.BindInt(obj, name);
         }
 
         #region Disposing

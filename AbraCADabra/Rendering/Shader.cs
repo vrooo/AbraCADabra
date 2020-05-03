@@ -60,6 +60,12 @@ namespace AbraCADabra
             GL.Uniform4(location, vector);
         }
 
+        public void BindInt(int obj, string name)
+        {
+            int location = GL.GetUniformLocation(program, name);
+            GL.Uniform1(location, obj);
+        }
+
         private int CompileShader(string path, ShaderType type)
         {
             // TODO: error checking

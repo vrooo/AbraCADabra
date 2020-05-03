@@ -40,6 +40,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -97,6 +98,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Objects\Quad.cs" />
     <Compile Include="UI\ItemSelectionWindow.xaml.cs">
       <DependentUpon>ItemSelectionWindow.xaml</DependentUpon>
     </Compile>
@@ -178,6 +180,8 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Shaders\multitex.frag" />
+    <None Include="Shaders\multitex.vert" />
     <None Include="Shaders\bezier.geom" />
     <None Include="Shaders\bezier.vert" />
     <None Include="Shaders\debug.frag" />
