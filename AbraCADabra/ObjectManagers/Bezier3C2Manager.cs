@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace AbraCADabra
 {
-    class Bezier3C2Manager : Bezier3Manager
+    public class Bezier3C2Manager : Bezier3Manager
     {
         private class PointWrapper
         {

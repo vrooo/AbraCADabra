@@ -91,10 +91,10 @@ namespace AbraCADabra
             }
         }
 
-        ~Shader()
-        {
-            GL.DeleteProgram(program);
-        }
+        //~Shader()
+        //{
+        //    GL.DeleteProgram(program);
+        //}
 
         public void Dispose()
         {

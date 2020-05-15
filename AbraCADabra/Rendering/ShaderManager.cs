@@ -10,11 +10,20 @@ namespace AbraCADabra
 
     public class ShaderManager : IDisposable
     {
+        private const string vertPath = "../../Shaders/basic.vert";
+        private const string fragPath = "../../Shaders/basic.frag";
+        private const string vertPathBezier = "../../Shaders/bezier.vert";
+        private const string geomPathBezier = "../../Shaders/bezier.geom";
+        private const string vertPathPatch = "../../Shaders/patch.vert";
+        private const string vertPathMultitex = "../../Shaders/multitex.vert";
+        private const string fragPathMultitex = "../../Shaders/multitex.frag";
+
         private Camera camera;
         private GLControl glControl;
 
         private Shader shaderBasic;
         private Shader shaderBezier;
+        private Shader shaderPatch;
         private Shader shaderMultitex;
 
         private Shader shaderCurrent;
@@ -23,13 +32,11 @@ namespace AbraCADabra
         private float eyeDistance = 0.0f;
         private float planeDistance = 0.0f;
 
-        public ShaderManager(string vertPath, string fragPath,
-                             string vertPathBezier, string geomPathBezier,
-                             string vertPathMultitex, string fragPathMultitex,
-                             Camera camera, GLControl glControl)
+        public ShaderManager(Camera camera, GLControl glControl)
         {
             shaderBasic = new Shader(vertPath, fragPath);
             shaderBezier = new Shader(vertPathBezier, fragPath, geomPathBezier);
+            shaderPatch = new Shader(vertPathPatch, fragPath);
             shaderMultitex = new Shader(vertPathMultitex, fragPathMultitex);
             this.camera = camera;
             this.glControl = glControl;
@@ -43,6 +50,11 @@ namespace AbraCADabra
         public void UseBezier()
         {
             Use(shaderBezier);
+        }
+
+        public void UsePatch()
+        {
+            Use(shaderPatch);
         }
 
         public void UseMultitex()
@@ -79,6 +91,11 @@ namespace AbraCADabra
             BindInt(1, "textureRight");
             BindVector4(colorLeft, "colorLeft");
             BindVector4(colorRight, "colorRight");
+        }
+
+        public void SetupInt(int id, string name)
+        {
+            BindInt(id, name);
         }
 
         public void SetupTransform(Vector4 color, Matrix4 model)
@@ -129,6 +146,8 @@ namespace AbraCADabra
         {
             shaderBasic.Dispose();
             shaderBezier.Dispose();
+            shaderPatch.Dispose();
+            shaderMultitex.Dispose();
         }
         #endregion
     }

@@ -21,12 +21,6 @@ namespace AbraCADabra
         const uint wireframeMax = 100;
 
         ShaderManager shader;
-        string vertPath = "../../Shaders/basic.vert";
-        string fragPath = "../../Shaders/basic.frag";
-        string vertPathBezier = "../../Shaders/bezier.vert";
-        string geomPathBezier = "../../Shaders/bezier.geom";
-        string vertPathMultitex = "../../Shaders/multitex.vert";
-        string fragPathMultitex = "../../Shaders/multitex.frag";
 
         int anaglyphFrameBufferLeft, anaglyphFrameBufferRight;
         int anaglyphDepthBufferLeft, anaglyphDepthBufferRight;
@@ -79,10 +73,7 @@ namespace AbraCADabra
             cursor = new CrossCursor();
             centerMarker = new CenterMarker();
 
-            shader = new ShaderManager(vertPath, fragPath,
-                                       vertPathBezier, geomPathBezier,
-                                       vertPathMultitex, fragPathMultitex,
-                                       camera, GLMain);
+            shader = new ShaderManager(camera, GLMain);
 
             objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
         }
@@ -93,8 +84,7 @@ namespace AbraCADabra
             GL.Clear(ClearBufferMask.ColorBufferBit |
                      ClearBufferMask.DepthBufferBit);
 
-            // TODO
-            if (CheckBoxAnaglyph.IsChecked.HasValue && CheckBoxAnaglyph.IsChecked.Value)
+            if (CheckBoxAnaglyph.IsChecked == true)
             {
                 float eye = (float)SliderEyeDistance.Value, plane = (float)SliderProjDistance.Value;
 
@@ -169,7 +159,7 @@ namespace AbraCADabra
 
         private void RenderScene()
         {
-            if (CheckBoxGrid.IsChecked.HasValue && CheckBoxGrid.IsChecked.Value)
+            if (CheckBoxGrid.IsChecked == true)
             {
                 plane.Render(shader);
             }
@@ -251,7 +241,7 @@ namespace AbraCADabra
                 float speed = rotateSpeed * speedModifier;
                 if (controlHeld)
                 {
-                    Vector3 center = (CheckBoxRotateOrigin.IsChecked.HasValue && CheckBoxRotateOrigin.IsChecked.Value) ?
+                    Vector3 center = (CheckBoxRotateOrigin.IsChecked == true) ?
                                      cursor.Position : centerMarker.Position;
                     foreach (var ob in ListObjects.SelectedItems)
                     {
@@ -326,7 +316,13 @@ namespace AbraCADabra
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-            objects[0].Transform.Dispose();
+            foreach (var ob in objects)
+            {
+                ob.Dispose();
+            }
+            anaglyphQuad.Dispose();
+            centerMarker.Dispose();
+            cursor.Dispose();
             plane.Dispose();
             shader.Dispose();
         }
@@ -450,6 +446,28 @@ namespace AbraCADabra
             RefreshView();
         }
 
+        private void ButtonCreatePatchC0(object sender, RoutedEventArgs e)
+        {
+            PatchWindow pw = new PatchWindow();
+            bool? res = pw.ShowDialog();
+            if (res == true)
+            {
+                var (patch, points) =
+                    CerealFactory.CreatePatchC0(cursor.Position, pw.PatchType,
+                                                pw.DimX, pw.DimZ,
+                                                pw.PatchCountX, pw.PatchCountZ);
+                for (int j = 0; j < points.GetLength(1); j++)
+                {
+                    for (int i = 0; i < points.GetLength(0); i++)
+                    {
+                        objects.Add(points[i, j]);
+                    }
+                }
+                objects.Add(patch);
+                RefreshView();
+            }
+        }
+
         private List<PointManager> GetSelectedPoints()
         {
             List<PointManager> points = new List<PointManager>();
@@ -511,8 +529,11 @@ namespace AbraCADabra
                     for (int i = selected.Count - 1; i >= 0; i--)
                     {
                         var removing = selected[i] as TransformManager;
-                        objects.Remove(removing);
-                        removing.Dispose();
+                        if (removing.Deletable)
+                        {
+                            objects.Remove(removing);
+                            removing.Dispose();
+                        }
                     }
                     RefreshView();
                 }

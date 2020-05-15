@@ -98,6 +98,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ObjectManagers\CerealFactory.cs" />
+    <Compile Include="ObjectManagers\PatchC0Manager.cs" />
+    <Compile Include="Objects\Patch.cs" />
+    <Compile Include="Objects\PolyGrid.cs" />
     <Compile Include="Objects\Quad.cs" />
     <Compile Include="UI\ItemSelectionWindow.xaml.cs">
       <DependentUpon>ItemSelectionWindow.xaml</DependentUpon>
@@ -117,7 +121,9 @@
     <Compile Include="Objects\Transform.cs" />
     <Compile Include="Objects\Plane.cs" />
     <Compile Include="Objects\Torus.cs" />
-    <Compile Include="Objects\Triangle.cs" />
+    <Compile Include="UI\PatchWindow.xaml.cs">
+      <DependentUpon>PatchWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\PropertyWindow.xaml.cs">
       <DependentUpon>PropertyWindow.xaml</DependentUpon>
     </Compile>
@@ -147,6 +153,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="UI\PatchWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\PropertyWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -188,6 +198,7 @@
     <None Include="Shaders\debug.vert" />
     <None Include="Shaders\basic.vert" />
     <None Include="Shaders\basic.frag" />
+    <None Include="Shaders\patch.vert" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

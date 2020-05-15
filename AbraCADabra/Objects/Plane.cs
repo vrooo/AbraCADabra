@@ -4,7 +4,7 @@ using OpenTK;
 
 namespace AbraCADabra
 {
-    class PlaneXZ : FloatTransform
+    public class PlaneXZ : FloatTransform
     {
         private List<float> vertexList = new List<float>();
         protected override float[] vertices => vertexList.ToArray();

@@ -5,7 +5,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace AbraCADabra
 {
-    class Arrow : FloatTransform
+    public class Arrow : FloatTransform
     {
         private float arrowRadius = 0.1f;
         private float arrowHeight = 0.4f;

@@ -16,6 +16,9 @@
         <Setter Property="Margin" Value="0,5,0,0"/>
         <Setter Property="FormatString" Value="F3"/>
     </Style>
+    <Style TargetType="{x:Type xctk:IntegerUpDown}">
+        <Setter Property="Margin" Value="0,5,0,0"/>
+    </Style>
     <Style TargetType="{x:Type xctk:ColorPicker}">
         <Setter Property="Margin" Value="0,5,0,0"/>
     </Style>
@@ -24,6 +27,9 @@
     </Style>
     <Style TargetType="{x:Type CheckBox}">
         <Setter Property="Margin" Value="0,5,0,2"/>
+    </Style>
+    <Style TargetType="{x:Type RadioButton}">
+        <Setter Property="Margin" Value="1,5,5,0"/>
     </Style>
     <Style TargetType="{x:Type Button}">
         <Setter Property="Margin" Value="3,5,3,0"/>

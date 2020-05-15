@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace AbraCADabra
 {
-    abstract class Bezier3Manager : TransformManager<AdjacencyVertex>
+    public abstract class Bezier3Manager : TransformManager<AdjacencyVertex>
     {
         public ObservableCollection<PointManager> Points { get; set; }
         public bool DrawPolygon { get; set; }

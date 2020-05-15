@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace AbraCADabra
 {
-    class Bezier3C0Manager : Bezier3Manager
+    public class Bezier3C0Manager : Bezier3Manager
     {
         public override string DefaultName => "Bezier C0";
         private static int counter = 0;

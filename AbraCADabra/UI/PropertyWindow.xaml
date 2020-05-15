@@ -16,6 +16,9 @@
         <Style TargetType="{x:Type xctk:DecimalUpDown}" BasedOn="{StaticResource {x:Type xctk:DecimalUpDown}}" x:Key="DecimalUpdating">
             <EventSetter Event="ValueChanged" Handler="DecimalUpdate"/>
         </Style>
+        <Style TargetType="{x:Type xctk:IntegerUpDown}" BasedOn="{StaticResource {x:Type xctk:IntegerUpDown}}" x:Key="IntegerUpdating">
+            <EventSetter Event="ValueChanged" Handler="DecimalUpdate"/>
+        </Style>
         <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}" x:Key="CheckBoxUpdating">
             <EventSetter Event="Checked" Handler="CheckBoxUpdate"/>
             <EventSetter Event="Unchecked" Handler="CheckBoxUpdate"/>
@@ -266,6 +269,27 @@
                         <Button Grid.Column="3" Margin="0" Tag="{Binding ElementName=ListBezier3Inter}"
                                 Click="ButtonBezier3Remove">Remove</Button>
                     </Grid>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox x:Name="GroupPatchC0" Header="Patch C0">
+                <StackPanel>
+                    <CheckBox IsChecked="{Binding DrawPolynet}"
+                              Style="{StaticResource CheckBoxUpdating}">Show control net</CheckBox>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="1,5,5,0" Text="Divisions X:"/>
+                        <xctk:IntegerUpDown DockPanel.Dock="Left" VerticalAlignment="Center"
+                                            x:Name="IntegerPatchDivX" Style="{StaticResource IntegerUpdating}"
+                                            Minimum="1"
+                                            Value="{Binding DivX, Mode=TwoWay}"></xctk:IntegerUpDown>
+                    </DockPanel>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="1,5,5,0" Text="Divisions Z:"/>
+                        <xctk:IntegerUpDown DockPanel.Dock="Left" VerticalAlignment="Center"
+                                            x:Name="IntegerPatchDivZ" Style="{StaticResource IntegerUpdating}"
+                                            Minimum="1"
+                                            Value="{Binding DivZ, Mode=TwoWay}"></xctk:IntegerUpDown>
+                    </DockPanel>
                 </StackPanel>
             </GroupBox>
         </StackPanel>

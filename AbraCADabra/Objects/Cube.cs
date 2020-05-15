@@ -1,6 +1,6 @@
 ﻿namespace AbraCADabra
 {
-    class Cube : FloatTransform
+    public class Cube : FloatTransform
     {
         private float[] _vertices =
         {

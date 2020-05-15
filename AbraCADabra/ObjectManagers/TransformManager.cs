@@ -123,6 +123,8 @@ namespace AbraCADabra
         public abstract string DefaultName { get; }
         protected abstract int instanceCounter { get; } // TODO: better solution?
 
+        public virtual bool Deletable => true;
+
         public event PropertyChangedEventHandler PropertyChanged;
         public delegate void ManagerDisposingEventHandler(TransformManager sender);
         public event ManagerDisposingEventHandler ManagerDisposing;

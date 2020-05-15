@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace AbraCADabra
 {
-    class PolyLine : FloatTransform
+    public class PolyLine : FloatTransform
     {
         private List<float> vertexList = new List<float>();
         protected override float[] vertices => vertexList.ToArray();

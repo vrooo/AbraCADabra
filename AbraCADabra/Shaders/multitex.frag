@@ -1,5 +1,5 @@
 ﻿#version 330 core
-uniform vec4 color;
+//uniform vec4 color;
 uniform vec4 colorLeft;
 uniform vec4 colorRight;
 uniform sampler2D textureLeft;

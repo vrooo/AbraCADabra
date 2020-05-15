@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace AbraCADabra
 {
-    class Bezier3InterManager : Bezier3Manager
+    public class Bezier3InterManager : Bezier3Manager
     {
         public override string DefaultName => "Bezier Interpolating";
         private static int counter = 0;

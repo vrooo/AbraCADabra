@@ -3,7 +3,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace AbraCADabra
 {
-    class Line : FloatTransform
+    public class Line : FloatTransform
     {
         private float[] _vertices =
         {

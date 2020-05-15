@@ -4,7 +4,7 @@ using OpenTK;
 
 namespace AbraCADabra
 {
-    class Bezier3 : Transform<AdjacencyVertex>
+    public class Bezier3 : Transform<AdjacencyVertex>
     {
         private List<AdjacencyVertex> vertexList = new List<AdjacencyVertex>();
         protected override AdjacencyVertex[] vertices => vertexList.ToArray();
