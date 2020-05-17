@@ -357,7 +357,8 @@ namespace AbraCADabra
                 foreach (var ob in ListObjects.SelectedItems)
                 {
                     count++;
-                    center += (ob as TransformManager).Transform.Position;
+                    var tm = ob as TransformManager;
+                    center += new Vector3(tm.PositionX, tm.PositionY, tm.PositionZ);
                 }
                 center /= count;
                 centerMarker.Position = center;
@@ -556,6 +557,12 @@ namespace AbraCADabra
             {
                 objects.Move(index, index + 1);
             }
+        }
+
+        private void Debug_Empty(object sender, RoutedEventArgs e)
+        {
+            objects.Clear();
+            CheckBoxGrid.IsChecked = false;
         }
 
         private void Debug_FourPoints(object sender, RoutedEventArgs e)

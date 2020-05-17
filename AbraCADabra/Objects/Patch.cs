@@ -18,7 +18,7 @@ namespace AbraCADabra
         public Patch(int patchesCountX, int patchesCountZ, int divX, int divZ)
         {
             primitiveType = PrimitiveType.Lines;
-            Color = new Vector4(0.9f, 0.5f, 0.9f, 1.0f);
+            Color = new Vector4(0.5f, 0.95f, 0.4f, 1.0f);
 
             patchCountX = patchesCountX;
             patchCountZ = patchesCountZ;
@@ -32,19 +32,10 @@ namespace AbraCADabra
             GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, PatchVertex.Size, PatchVertex.OffsetUV);
             GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 1, VertexAttribPointerType.Int, false, PatchVertex.Size, PatchVertex.OffsetIndex);
+            GL.VertexAttribIPointer(1, 1, VertexAttribIntegerType.Int, PatchVertex.Size, (IntPtr)PatchVertex.OffsetIndexX);
+            GL.EnableVertexAttribArray(2);
+            GL.VertexAttribIPointer(2, 1, VertexAttribIntegerType.Int, PatchVertex.Size, (IntPtr)PatchVertex.OffsetIndexZ);
         }
-
-        //public override void Render(ShaderManager shader)
-        //{
-        //    shader.SetupTransform(Color, GetModelMatrix());
-        //    GL.BindVertexArray(vao);
-        //    for (int start = 1; start < indices.Length; start += 3)
-        //    {
-        //        GL.DrawArrays(primitiveType, start, 4);
-        //    }
-        //    GL.BindVertexArray(0);
-        //}
 
         public void Update(int divX, int divZ)
         {
@@ -57,35 +48,30 @@ namespace AbraCADabra
             var vertexList = new List<PatchVertex>();
             var indexList = new List<uint>();
 
-            //int width = patchesCountX * divX + 1;
-            //int height = patchesCountZ * divZ + 1;
             int width = divX + 1; // for now
             int height = divZ + 1; // for now
-            Func<int, int, uint> ind = (i, j) => (uint)(i * height + j);
+            Func<int, int, int, int, uint> ind = (i, j, px, pz)
+                => (uint)(((pz * patchCountX + px) * width + i) * height + j);
 
             float stepX = 1.0f / divX, stepZ = 1.0f / divZ;
-            int patchInd = 0;
-            //for (int px = 0; px < patchesCountX; px++)
-            //{
-            //    for (int pz = 0; pz < patchesCountZ; pz++)
-            //    {
-
-            //    }
-            //}
-
-            // to remove
-            for (int i = 0; i < width; i++)
+            for (int px = 0; px < patchCountX; px++)
             {
-                for (int j = 0; j < height; j++)
+                for (int pz = 0; pz < patchCountZ; pz++)
                 {
-                    vertexList.Add(new PatchVertex(i * stepX, j * stepZ, 0));
-                    if (i < width - 1)
+                    for (int i = 0; i < width; i++)
                     {
-                        indexList.AddMany(ind(i, j), ind(i + 1, j));
-                    }
-                    if (j < height - 1)
-                    {
-                        indexList.AddMany(ind(i, j), ind(i, j + 1));
+                        for (int j = 0; j < height; j++)
+                        {
+                            vertexList.Add(new PatchVertex(i * stepX, j * stepZ, px, pz));
+                            if (i < width - 1)
+                            {
+                                indexList.AddMany(ind(i, j, px, pz), ind(i + 1, j, px, pz));
+                            }
+                            if (j < height - 1)
+                            {
+                                indexList.AddMany(ind(i, j, px, pz), ind(i, j + 1, px, pz));
+                            }
+                        }
                     }
                 }
             }

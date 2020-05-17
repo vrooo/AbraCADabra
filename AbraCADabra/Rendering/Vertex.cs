@@ -23,15 +23,17 @@ namespace AbraCADabra
     public struct PatchVertex
     {
         public Vector2 UV;
-        public int Index;
-        public PatchVertex(float u, float v, int ind)
+        public int IndexX, IndexZ;
+        public PatchVertex(float u, float v, int indX, int indZ)
         {
             UV = new Vector2(u, v);
-            Index = ind;
+            IndexX = indX;
+            IndexZ = indZ;
         }
 
         public static readonly int Size = Marshal.SizeOf<PatchVertex>();
         public static readonly int OffsetUV = (int)Marshal.OffsetOf<PatchVertex>(nameof(UV));
-        public static readonly int OffsetIndex = (int)Marshal.OffsetOf<PatchVertex>(nameof(Index));
+        public static readonly int OffsetIndexX = (int)Marshal.OffsetOf<PatchVertex>(nameof(IndexX));
+        public static readonly int OffsetIndexZ = (int)Marshal.OffsetOf<PatchVertex>(nameof(IndexZ));
     }
 }

@@ -19,7 +19,7 @@ namespace AbraCADabra
         public Transform Transform { get; }
 
         #region Model properties
-        public float PositionX
+        public virtual float PositionX
         {
             get { return Transform.Position.X; }
             set
@@ -29,7 +29,7 @@ namespace AbraCADabra
             }
         }
         
-        public float PositionY
+        public virtual float PositionY
         {
             get { return Transform.Position.Y; }
             set
@@ -39,7 +39,7 @@ namespace AbraCADabra
             }
         }
         
-        public float PositionZ
+        public virtual float PositionZ
         {
             get { return Transform.Position.Z; }
             set

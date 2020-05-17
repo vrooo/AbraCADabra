@@ -46,6 +46,7 @@
                                 </ListBox.ItemTemplate>
                                 <ListBox.ContextMenu>
                                     <ContextMenu>
+                                        <MenuItem Header="[DEBUG] Empty" Click="Debug_Empty"/>
                                         <MenuItem Header="[DEBUG] Four points" Click="Debug_FourPoints"/>
                                     </ContextMenu>
                                 </ListBox.ContextMenu>
@@ -122,7 +123,7 @@
                     <StackPanel>
                         <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
                                   Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
-                        <CheckBox x:Name="CheckBoxRotateOrigin" IsChecked="True">Rotate around cursor</CheckBox>
+                        <CheckBox x:Name="CheckBoxRotateOrigin" IsChecked="False">Rotate around cursor</CheckBox>
                     </StackPanel>
                 </Expander>
                 <Expander Header="Anaglyph" IsExpanded="False">
