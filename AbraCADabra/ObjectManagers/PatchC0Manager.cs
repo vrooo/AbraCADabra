@@ -56,7 +56,9 @@ namespace AbraCADabra
                 point.PropertyChanged += PointChanged;
             }
 
-            UpdatePointTexture(GetPointPositions(points, patchType).points);
+            var (pts, ctr) = GetPointPositions(points, patchType);
+            center = ctr;
+            UpdatePointTexture(pts);
         }
 
         private PatchC0Manager(Patch patch, PolyGrid polyGrid) : base(patch)
