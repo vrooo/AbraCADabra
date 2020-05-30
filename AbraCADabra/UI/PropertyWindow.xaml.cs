@@ -36,7 +36,8 @@ namespace AbraCADabra
                 GroupBezier3C0,
                 GroupBezier3C2,
                 GroupBezier3Inter,
-                GroupPatchC0
+                GroupPatchC0,
+                GroupPatchC2
             };
             typeMap = new Dictionary<Type, DisplayParams>
             {
@@ -45,7 +46,8 @@ namespace AbraCADabra
                 { typeof(Bezier3C0Manager), new DisplayParams(GroupBezier3C0, false, false, false) },
                 { typeof(Bezier3C2Manager), new DisplayParams(GroupBezier3C2, false, false, false) },
                 { typeof(Bezier3InterManager), new DisplayParams(GroupBezier3Inter, false, false, false) },
-                { typeof(PatchC0Manager), new DisplayParams(GroupPatchC0, false, false, false) }
+                { typeof(PatchC0Manager), new DisplayParams(GroupPatchC0, false, false, false) },
+                { typeof(PatchC2Manager), new DisplayParams(GroupPatchC2, false, false, false) }
             };
         }
 

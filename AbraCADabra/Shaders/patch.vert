@@ -4,6 +4,7 @@ uniform sampler2D texturePoint;
 uniform mat4 viewMatrix;
 uniform mat4 projMatrix;
 uniform mat4 modelMatrix;
+uniform int continuity;
 
 const int n = 4;
 
@@ -28,9 +29,34 @@ vec4 getBezierPoint(float t, vec4 pts[n])
     return arr[n - 1][0];
 }
 
-vec4 getPatchPoint(vec2 uv, int indx, int indz)
+vec4 getDeBoorPoint(float t, vec4 pts[n])
 {
-    int sx = 3 * indx, sz = 3 * indz;
+    float N[n], A[n - 1], B[n - 1];
+    N[0] = 1.f;
+    for (int i = 0; i < n - 1; i++)
+    {
+        A[i] = i - t + 1.f;
+        B[i] = i + t;
+        float saved = 0.f;
+        for (int j = 0; j <= i; j++)
+        {
+            float term = N[j] / (A[j] + B[i - j]);
+            N[j] = saved + A[j] * term;
+            saved = B[i - j] * term;
+        }
+		N[i + 1] = saved;
+    }
+
+    vec3 pos = vec3(0.f, 0.f, 0.f);
+    for (int i = 0; i < n; i++)
+    {
+        pos += N[i] * pts[i].xyz;
+    }
+    return vec4(pos, 1.f);
+}
+
+vec4 getPatchPoint(vec2 uv, int sx, int sz, bool deboor)
+{
     vec4 p[n], q[n];
     for (int i = 0; i < n; i++)
     {
@@ -38,13 +64,16 @@ vec4 getPatchPoint(vec2 uv, int indx, int indz)
         {
             p[j] = texelFetch(texturePoint, ivec2(sx + i, sz + j), 0);
         }
-        q[i] = getBezierPoint(uv.x, p);
+        q[i] = deboor ? getDeBoorPoint(uv.x, p) : getBezierPoint(uv.x, p);
     }
-    return getBezierPoint(uv.y, q);
+    return deboor ? getDeBoorPoint(uv.y, q) : getBezierPoint(uv.y, q);
 }
 
 void main()
 {
-    vec4 pos = getPatchPoint(uv, indexX, indexZ);
+    // assuming continuity is 0 or 2
+    int mult = 3 - continuity;
+    bool deboor = continuity == 2;
+    vec4 pos = getPatchPoint(uv, mult * indexX, mult * indexZ, deboor);
     gl_Position = projMatrix * viewMatrix * modelMatrix * pos;
 }

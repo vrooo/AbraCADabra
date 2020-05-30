@@ -66,6 +66,7 @@
                         <Button Click="ButtonCreateBezier3C2">Bezier C2</Button>
                         <Button Click="ButtonCreateBezier3Inter">Bezier Interpol.</Button>
                         <Button Click="ButtonCreatePatchC0">Patch C0</Button>
+                        <Button Click="ButtonCreatePatchC2">Patch C2</Button>
                         <Button Click="ButtonCreateTorus">Torus</Button>
                     </WrapPanel>
                 </Expander>

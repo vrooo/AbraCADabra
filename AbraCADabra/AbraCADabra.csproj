@@ -100,9 +100,16 @@
     </ApplicationDefinition>
     <Compile Include="ObjectManagers\CerealFactory.cs" />
     <Compile Include="ObjectManagers\PatchC0Manager.cs" />
+    <Compile Include="ObjectManagers\PatchC2Manager.cs" />
+    <Compile Include="ObjectManagers\PatchManager.cs" />
     <Compile Include="Objects\Patch.cs" />
     <Compile Include="Objects\PolyGrid.cs" />
     <Compile Include="Objects\Quad.cs" />
+    <Compile Include="Serialization\Bezier.cs" />
+    <Compile Include="Serialization\Patch.cs" />
+    <Compile Include="Serialization\Point.cs" />
+    <Compile Include="Serialization\Scene.cs" />
+    <Compile Include="Serialization\Torus.cs" />
     <Compile Include="UI\ItemSelectionWindow.xaml.cs">
       <DependentUpon>ItemSelectionWindow.xaml</DependentUpon>
     </Compile>

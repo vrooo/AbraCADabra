@@ -279,14 +279,35 @@
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="1,5,5,0" Text="Divisions X:"/>
                         <xctk:IntegerUpDown DockPanel.Dock="Left" VerticalAlignment="Center"
-                                            x:Name="IntegerPatchDivX" Style="{StaticResource IntegerUpdating}"
+                                            x:Name="IntegerPatchC0DivX" Style="{StaticResource IntegerUpdating}"
                                             Minimum="1"
                                             Value="{Binding DivX, Mode=TwoWay}"></xctk:IntegerUpDown>
                     </DockPanel>
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="1,5,5,0" Text="Divisions Z:"/>
                         <xctk:IntegerUpDown DockPanel.Dock="Left" VerticalAlignment="Center"
-                                            x:Name="IntegerPatchDivZ" Style="{StaticResource IntegerUpdating}"
+                                            x:Name="IntegerPatchC0DivZ" Style="{StaticResource IntegerUpdating}"
+                                            Minimum="1"
+                                            Value="{Binding DivZ, Mode=TwoWay}"></xctk:IntegerUpDown>
+                    </DockPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox x:Name="GroupPatchC2" Header="Patch C2">
+                <StackPanel>
+                    <CheckBox IsChecked="{Binding DrawPolynet}"
+                              Style="{StaticResource CheckBoxUpdating}">Show control net</CheckBox>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="1,5,5,0" Text="Divisions X:"/>
+                        <xctk:IntegerUpDown DockPanel.Dock="Left" VerticalAlignment="Center"
+                                            x:Name="IntegerPatchC2DivX" Style="{StaticResource IntegerUpdating}"
+                                            Minimum="1"
+                                            Value="{Binding DivX, Mode=TwoWay}"></xctk:IntegerUpDown>
+                    </DockPanel>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="1,5,5,0" Text="Divisions Z:"/>
+                        <xctk:IntegerUpDown DockPanel.Dock="Left" VerticalAlignment="Center"
+                                            x:Name="IntegerPatchC2DivZ" Style="{StaticResource IntegerUpdating}"
                                             Minimum="1"
                                             Value="{Binding DivZ, Mode=TwoWay}"></xctk:IntegerUpDown>
                     </DockPanel>

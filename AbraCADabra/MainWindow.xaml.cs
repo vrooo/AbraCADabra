@@ -469,6 +469,28 @@ namespace AbraCADabra
             }
         }
 
+        private void ButtonCreatePatchC2(object sender, RoutedEventArgs e)
+        {
+            PatchWindow pw = new PatchWindow();
+            bool? res = pw.ShowDialog();
+            if (res == true)
+            {
+                var (patch, points) =
+                    CerealFactory.CreatePatchC2(cursor.Position, pw.PatchType,
+                                                pw.DimX, pw.DimZ,
+                                                pw.PatchCountX, pw.PatchCountZ);
+                for (int j = 0; j < points.GetLength(1); j++)
+                {
+                    for (int i = 0; i < points.GetLength(0); i++)
+                    {
+                        objects.Add(points[i, j]);
+                    }
+                }
+                objects.Add(patch);
+                RefreshView();
+            }
+        }
+
         private List<PointManager> GetSelectedPoints()
         {
             List<PointManager> points = new List<PointManager>();
