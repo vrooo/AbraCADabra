@@ -40,9 +40,13 @@ namespace AbraCADabra
         System.Drawing.Point prevLocation;
         float rotateSpeed = 0.02f;
         float translateSpeed = 0.04f;
-        float scrollSpeed = 0.02f;
-        float scaleSpeed = 0.001f;
+        float scrollCamSpeed = 0.02f;
+        float scrollMoveSpeed = 0.005f;
+        float scrollScaleSpeed = 0.001f;
         float shiftModifier = 10.0f;
+
+        System.Drawing.Point boxSelectStart;
+        bool isBoxSelecting = false;
 
         bool renderFromScreenCoordsChange = false;
         bool renderFromWorldCoordsChange = false;
@@ -171,7 +175,8 @@ namespace AbraCADabra
 
             foreach (var ob in objects)
             {
-                ob.Render(shader);
+                if (!(ob is PointManager) || CheckBoxPoints.IsChecked == true)
+                    ob.Render(shader);
             }
 
             UpdateCenterMarker();
@@ -215,6 +220,11 @@ namespace AbraCADabra
 
         private void OnMouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
         {
+            if (isBoxSelecting)
+            {
+                prevLocation = e.Location;
+                return;
+            }
             float diffX = e.X - prevLocation.X;
             float diffY = e.Y - prevLocation.Y;
 
@@ -222,6 +232,9 @@ namespace AbraCADabra
                 ? shiftModifier : 1.0f;
 
             bool controlHeld = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+            bool xHeld = Keyboard.IsKeyDown(Key.X);
+            bool yHeld = Keyboard.IsKeyDown(Key.Y);
+            bool zHeld = Keyboard.IsKeyDown(Key.Z);
 
             if (e.Button.HasFlag(System.Windows.Forms.MouseButtons.Left))
             {
@@ -229,6 +242,9 @@ namespace AbraCADabra
                 if (controlHeld)
                 {
                     Vector4 translation = camera.GetRotationMatrix() * new Vector4(diffX * speed, -diffY * speed, 0, 1);
+                    if (xHeld) translation.Y = translation.Z = 0.0f;
+                    else if (yHeld) translation.X = translation.Z = 0.0f;
+                    else if (zHeld) translation.X = translation.Y = 0.0f;
                     foreach (var ob in ListObjects.SelectedItems)
                     {
                         (ob as TransformManager).Translate(translation.X, translation.Y, translation.Z);
@@ -250,7 +266,15 @@ namespace AbraCADabra
                                      cursor.Position : centerMarker.Position;
                     foreach (var ob in ListObjects.SelectedItems)
                     {
-                        (ob as TransformManager).RotateAround(diffY * speed, diffX * speed, 0, center);
+                        float xrot = diffY * speed, yrot = diffX * speed, zrot = 0.0f;
+                        if (xHeld) yrot = 0.0f;
+                        else if (yHeld) xrot = 0.0f;
+                        else if (zHeld)
+                        {
+                            xrot = yrot = 0.0f;
+                            zrot = diffY * speed;
+                        }
+                        (ob as TransformManager).RotateAround(xrot, yrot, zrot, center);
                     }
                 }
                 else
@@ -275,18 +299,42 @@ namespace AbraCADabra
         {
             float speedModifier = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift)
                 ? shiftModifier : 1.0f;
+            bool xHeld = Keyboard.IsKeyDown(Key.X);
+            bool yHeld = Keyboard.IsKeyDown(Key.Y);
+            bool zHeld = Keyboard.IsKeyDown(Key.Z);
 
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
-                float speed = scaleSpeed * speedModifier;
-                foreach (var ob in ListObjects.SelectedItems)
+                if (ListObjects.SelectedItems.Count == 1)
                 {
-                    (ob as TransformManager).ScaleUniform(e.Delta * speed);
+                    float speed = scrollScaleSpeed * speedModifier;
+                    (ListObjects.SelectedItem as TransformManager).ScaleUniform(e.Delta * speed);
+                }
+                else if (ListObjects.SelectedItems.Count > 1)
+                {
+                    float speed = scrollMoveSpeed * speedModifier;
+                    Vector3 center = (CheckBoxRotateOrigin.IsChecked == true) ?
+                                     cursor.Position : centerMarker.Position;
+                    foreach (var ob in ListObjects.SelectedItems)
+                    {
+                        var tm = ob as TransformManager;
+                        Vector3 translation = new Vector3(tm.PositionX, tm.PositionY, tm.PositionZ) - center;
+                        if (translation.Length < 120 * scrollMoveSpeed && e.Delta < 0)
+                        {
+                            tm.Translate(-translation.X, -translation.Y, -translation.Z);
+                        }
+                        else if (translation.Length > scrollMoveSpeed)
+                        {
+                            translation.Normalize();
+                            translation *= e.Delta * speed;
+                            tm.Translate(translation.X, translation.Y, translation.Z);
+                        }
+                    }
                 }
             }
             else
             {
-                float speed = scrollSpeed * speedModifier;
+                float speed = scrollCamSpeed * speedModifier;
                 camera.Translate(0, 0, e.Delta * speed);
             }
             RefreshView();
@@ -294,26 +342,61 @@ namespace AbraCADabra
 
         private void OnMouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            TransformManager clo = null;
-            float cloZ = camera.ZFar;
-            foreach (var ob in objects)
+            if (Keyboard.IsKeyDown(Key.Q)) // box selecting
             {
-                if (ob.TestHit(camera, GLMain.Width, GLMain.Height, e.X, e.Y, out float z))
+                isBoxSelecting = true;
+                boxSelectStart = e.Location;
+            }
+            else
+            {
+                TransformManager clo = null;
+                float cloZ = camera.ZFar;
+                foreach (var ob in objects)
                 {
-                    if (z > camera.ZNear && z < cloZ)
+                    if (ob.TestHit(camera, GLMain.Width, GLMain.Height, e.X, e.Y, out float z))
                     {
-                        clo = ob;
-                        cloZ = z;
+                        if (z > camera.ZNear && z < cloZ)
+                        {
+                            clo = ob;
+                            cloZ = z;
+                        }
                     }
                 }
+                if (clo != null)
+                {
+                    if (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl))
+                    {
+                        ListObjects.SelectedItems.Clear();
+                    }
+                    ListObjects.SelectedItems.Add(clo);
+                }
             }
-            if (clo != null)
+        }
+
+        private void OnMouseUp(object sender, System.Windows.Forms.MouseEventArgs e)
+        {
+            if (isBoxSelecting)
             {
+                isBoxSelecting = false;
                 if (!Keyboard.IsKeyDown(Key.LeftCtrl) && !Keyboard.IsKeyDown(Key.RightCtrl))
                 {
                     ListObjects.SelectedItems.Clear();
                 }
-                ListObjects.SelectedItems.Add(clo);
+
+                int left = Math.Min(e.X, boxSelectStart.X);
+                int right = Math.Max(e.X, boxSelectStart.X);
+                int top = Math.Min(e.Y, boxSelectStart.Y);
+                int bottom = Math.Max(e.Y, boxSelectStart.Y);
+                foreach (var ob in objects)
+                {
+                    var coords = ob.GetScreenSpaceCoords(camera, GLMain.Width, GLMain.Height);
+                    if (coords.X > left && coords.X < right &&
+                        coords.Y > top && coords.Y < bottom &&
+                        coords.Z > camera.ZNear)
+                    {
+                        ListObjects.SelectedItems.Add(ob);
+                    }
+                }
             }
         }
 

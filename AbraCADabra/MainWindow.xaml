@@ -37,7 +37,7 @@
             <WindowsFormsHost x:Name="WFHost" Grid.Column="0">
                 <otk:GLControl x:Name="GLMain"
                            Load="OnLoad" Paint="OnRender" Disposed="OnDisposed"
-                           MouseMove="OnMouseMove" MouseWheel="OnMouseScroll" MouseDown="OnMouseDown"/>
+                           MouseMove="OnMouseMove" MouseWheel="OnMouseScroll" MouseDown="OnMouseDown" MouseUp="OnMouseUp"/>
             </WindowsFormsHost>
             <ScrollViewer Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                 <StackPanel Margin="3">
@@ -131,6 +131,8 @@
                         <StackPanel>
                             <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
                                   Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
+                            <CheckBox x:Name="CheckBoxPoints" IsChecked="True"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show points</CheckBox>
                             <CheckBox x:Name="CheckBoxRotateOrigin" IsChecked="False">Rotate around cursor</CheckBox>
                         </StackPanel>
                     </Expander>

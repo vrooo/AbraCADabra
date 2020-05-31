@@ -36,6 +36,7 @@ namespace AbraCADabra
         private Patch patch;
         private PolyGrid polyGrid;
 
+        private bool shouldUpdate = false;
         private int pointTexture = GL.GenTexture();
 
         public override float PositionX
@@ -158,6 +159,11 @@ namespace AbraCADabra
 
         public override void Update()
         {
+            shouldUpdate = true;
+        }
+
+        private void ActualUpdate()
+        {
             var (pts, ctr) = GetPointPositions(points, patchType, continuity);
             center = ctr;
             if (divChanged)
@@ -171,6 +177,10 @@ namespace AbraCADabra
 
         public override void Render(ShaderManager shader)
         {
+            if (shouldUpdate)
+            {
+                ActualUpdate();
+            }
             if (DrawPolynet)
             {
                 polyGrid.Render(shader);

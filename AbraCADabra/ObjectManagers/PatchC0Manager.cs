@@ -11,7 +11,10 @@ namespace AbraCADabra
 
         public PatchC0Manager(XmlPatchC0 xmlPatch, Dictionary<string, PointManager> points)
             : this(GetPointsFromDictionary(xmlPatch.Points, xmlPatch.WrapDirection, xmlPatch.RowSlices, xmlPatch.ColumnSlices, points),
-                  xmlPatch.Name) { }
+                  xmlPatch.Name)
+        {
+            DrawPolynet = xmlPatch.ShowControlPolygon;
+        }  
 
         private PatchC0Manager((PointManager[,] points, int xDim, int zDim, PatchType type, int divX, int divZ) data, string name)
             : base(data.points, data.type,
