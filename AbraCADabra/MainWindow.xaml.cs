@@ -10,6 +10,10 @@ using OpenTK.Graphics.OpenGL;
 using Xceed.Wpf.Toolkit;
 using System.Windows.Controls;
 using System.Linq;
+using System.IO;
+using Microsoft.Win32;
+using AbraCADabra.Serialization;
+using System.Xml.Serialization;
 
 namespace AbraCADabra
 {
@@ -44,6 +48,7 @@ namespace AbraCADabra
         bool renderFromWorldCoordsChange = false;
 
         PropertyWindow propertyWindow;
+        private string currentDirectory = Directory.GetCurrentDirectory();
 
         public MainWindow()
         {
@@ -578,6 +583,73 @@ namespace AbraCADabra
             if (ListObjects.SelectedItems.Count == 1 && index < objects.Count - 1)
             {
                 objects.Move(index, index + 1);
+            }
+        }
+
+        private void MenuOpenClick(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.InitialDirectory = currentDirectory;
+            ofd.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
+            if (ofd.ShowDialog() == true)
+            {
+                currentDirectory = Path.GetDirectoryName(ofd.FileName);
+                try
+                {
+                    var ser = new XmlSerializer(typeof(XmlScene));
+                    var sr = new StreamReader(ofd.FileName);
+                    var scene = ser.Deserialize(sr) as XmlScene;
+
+                    objects.Clear();
+                    var pointDict = new Dictionary<string, PointManager>();
+                    foreach (var ob in scene.Items)
+                    {
+                        if (ob is XmlPoint)
+                        {
+                            pointDict.Add(ob.Name, ob.GetTransformManager(null) as PointManager);
+                        }
+                    }
+                    foreach (var ob in scene.Items)
+                    {
+                        objects.Add(ob.GetTransformManager(pointDict));
+                    }
+                }
+                catch (Exception) // TODO: not gud
+                {
+                    System.Windows.MessageBox.Show("Scene file could not be processed.",
+                                                   "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void MenuSaveClick(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.InitialDirectory = currentDirectory;
+            sfd.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
+            if (sfd.ShowDialog() == true)
+            {
+                currentDirectory = Path.GetDirectoryName(sfd.FileName);
+                var sceneObjects = new XmlNamedType[objects.Count];
+                int i = 0;
+                foreach (var ob in objects)
+                {
+                    sceneObjects[i++] = ob.GetSerializable();
+                }
+                var scene = new XmlScene { Items = sceneObjects };
+
+                try
+                {
+                    var ser = new XmlSerializer(typeof(XmlScene));
+                    var sw = new StreamWriter(sfd.FileName);
+                    ser.Serialize(sw, scene);
+                    sw.Close();
+                }
+                catch (Exception) // TODO: not gud
+                {
+                    System.Windows.MessageBox.Show("Scene file could not be processed.",
+                                                   "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 

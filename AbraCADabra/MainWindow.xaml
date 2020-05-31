@@ -21,169 +21,177 @@
         </Style>-->
         <BooleanToVisibilityConverter x:Key="BoolVisConverter"/>
     </Window.Resources>
-    
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="250"/>
-        </Grid.ColumnDefinitions>
-        <WindowsFormsHost x:Name="WFHost" Grid.Column="0">
-            <otk:GLControl x:Name="GLMain"
+
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="File">
+                <MenuItem x:Name="MenuOpen" Header="Open Scene..." Click="MenuOpenClick"/>
+                <MenuItem x:Name="MenuSave" Header="Save Scene..." Click="MenuSaveClick"/>
+            </MenuItem>
+        </Menu>
+        <Grid DockPanel.Dock="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="250"/>
+            </Grid.ColumnDefinitions>
+            <WindowsFormsHost x:Name="WFHost" Grid.Column="0">
+                <otk:GLControl x:Name="GLMain"
                            Load="OnLoad" Paint="OnRender" Disposed="OnDisposed"
                            MouseMove="OnMouseMove" MouseWheel="OnMouseScroll" MouseDown="OnMouseDown"/>
-        </WindowsFormsHost>
-        <ScrollViewer Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-            <StackPanel Margin="3">
-                <Expander Header="Objects" IsExpanded="True">
-                    <StackPanel>
-                        <ScrollViewer VerticalScrollBarVisibility="Hidden">
-                            <ListBox x:Name="ListObjects" ItemsSource="{Binding}" Height="150" SelectionMode="Extended"
+            </WindowsFormsHost>
+            <ScrollViewer Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                <StackPanel Margin="3">
+                    <Expander Header="Objects" IsExpanded="True">
+                        <StackPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                                <ListBox x:Name="ListObjects" ItemsSource="{Binding}" Height="150" SelectionMode="Extended"
                                      SelectionChanged="ListObjectsSelectionChanged">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Margin="1, 0, 0, 0" Text="{Binding Name}"/>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                                <ListBox.ContextMenu>
-                                    <ContextMenu>
-                                        <MenuItem Header="[DEBUG] Empty" Click="Debug_Empty"/>
-                                        <MenuItem Header="[DEBUG] Four points" Click="Debug_FourPoints"/>
-                                    </ContextMenu>
-                                </ListBox.ContextMenu>
-                            </ListBox>
-                        </ScrollViewer>
-                        <DockPanel>
-                            <Button DockPanel.Dock="Left" Margin="0" Click="ButtonMoveUp" Content=" ▲ "/>
-                            <Button DockPanel.Dock="Left" Margin="0" Click="ButtonMoveDown" Content=" ▼ "/>
-                            <Button DockPanel.Dock="Left" Margin="0" Click="ButtonDelete">Delete selected</Button>
-                        </DockPanel>
-                    </StackPanel>
-                </Expander>
-                <Expander Header="Add object" IsExpanded="False">
-                    <WrapPanel>
-                        <Button Click="ButtonCreatePoint">Point</Button>
-                        <Button Click="ButtonCreateBezier3C0">Bezier C0</Button>
-                        <Button Click="ButtonCreateBezier3C2">Bezier C2</Button>
-                        <Button Click="ButtonCreateBezier3Inter">Bezier Interpol.</Button>
-                        <Button Click="ButtonCreatePatchC0">Patch C0</Button>
-                        <Button Click="ButtonCreatePatchC2">Patch C2</Button>
-                        <Button Click="ButtonCreateTorus">Torus</Button>
-                    </WrapPanel>
-                </Expander>
-                <Expander Header="Cursor" IsExpanded="False">
-                    <StackPanel>
-                        <TextBlock Style="{StaticResource TextBlockBasic}">World:</TextBlock>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="1*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="1*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="1*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
-                            <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Margin="1, 0, 0, 0" Text="{Binding Name}"/>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                    <ListBox.ContextMenu>
+                                        <ContextMenu>
+                                            <MenuItem Header="[DEBUG] Empty" Click="Debug_Empty"/>
+                                            <MenuItem Header="[DEBUG] Four points" Click="Debug_FourPoints"/>
+                                        </ContextMenu>
+                                    </ListBox.ContextMenu>
+                                </ListBox>
+                            </ScrollViewer>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Left" Margin="0" Click="ButtonMoveUp" Content=" ▲ "/>
+                                <Button DockPanel.Dock="Left" Margin="0" Click="ButtonMoveDown" Content=" ▼ "/>
+                                <Button DockPanel.Dock="Left" Margin="0" Click="ButtonDelete">Delete selected</Button>
+                            </DockPanel>
+                        </StackPanel>
+                    </Expander>
+                    <Expander Header="Add object" IsExpanded="False">
+                        <WrapPanel>
+                            <Button Click="ButtonCreatePoint">Point</Button>
+                            <Button Click="ButtonCreateBezier3C0">Bezier C0</Button>
+                            <Button Click="ButtonCreateBezier3C2">Bezier C2</Button>
+                            <Button Click="ButtonCreateBezier3Inter">Bezier Interpol.</Button>
+                            <Button Click="ButtonCreatePatchC0">Patch C0</Button>
+                            <Button Click="ButtonCreatePatchC2">Patch C2</Button>
+                            <Button Click="ButtonCreateTorus">Torus</Button>
+                        </WrapPanel>
+                    </Expander>
+                    <Expander Header="Cursor" IsExpanded="False">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource TextBlockBasic}">World:</TextBlock>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
+                                <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
                                                 x:Name="DecimalWorldX" Value="0.0"
                                                 ValueChanged="DecimalWorldValueChanged"></xctk:DecimalUpDown>
-                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
-                            <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
+                                <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
+                                <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
                                                 x:Name="DecimalWorldY" Value="0.0"
                                                 ValueChanged="DecimalWorldValueChanged"></xctk:DecimalUpDown>
-                            <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
-                            <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
+                                <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
+                                <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
                                                 x:Name="DecimalWorldZ" Value="0.0"
                                                 ValueChanged="DecimalWorldValueChanged"></xctk:DecimalUpDown>
-                        </Grid>
-                        <TextBlock Style="{StaticResource TextBlockBasic}">Screen:</TextBlock>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="1*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="1*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="1*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
-                            <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
+                            </Grid>
+                            <TextBlock Style="{StaticResource TextBlockBasic}">Screen:</TextBlock>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
+                                <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
                                                 x:Name="DecimalScreenX" Value="0.0"
                                                 ValueChanged="DecimalScreenValueChanged"></xctk:DecimalUpDown>
-                            <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
-                            <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
+                                <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
+                                <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
                                                 x:Name="DecimalScreenY" Value="0.0"
                                                 ValueChanged="DecimalScreenValueChanged"></xctk:DecimalUpDown>
-                            <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
-                            <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
+                                <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
+                                <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
                                                 x:Name="DecimalScreenZ" Value="0.0"
                                                 ValueChanged="DecimalScreenValueChanged"></xctk:DecimalUpDown>
-                        </Grid>
-                    </StackPanel>
-                </Expander>
-                <Expander Header="Configuration" IsExpanded="False">
-                    <StackPanel>
-                        <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
-                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
-                        <CheckBox x:Name="CheckBoxRotateOrigin" IsChecked="False">Rotate around cursor</CheckBox>
-                    </StackPanel>
-                </Expander>
-                <Expander Header="Anaglyph" IsExpanded="False">
-                    <StackPanel>
-                        <CheckBox x:Name="CheckBoxAnaglyph" IsChecked="False"
-                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Enable anaglyph</CheckBox>
-                        <StackPanel Margin="20, 0, 0, 0"
-                                    Visibility="{Binding IsChecked,ElementName=CheckBoxAnaglyph,Converter={StaticResource BoolVisConverter}}">
-                            <TextBlock Style="{StaticResource TextBlockBasic}">Eye distance:</TextBlock>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="50"/>
-                                </Grid.ColumnDefinitions>
-                                <xctk:DecimalUpDown Grid.Column="1" x:Name="DecimalEyeDistance" DockPanel.Dock="Right"
-                                                    Increment=".1"
-                                                    Value="{Binding ElementName=SliderEyeDistance, Path=Value, Mode=TwoWay}"/>
-                                <Slider x:Name="SliderEyeDistance" DockPanel.Dock="Left"
-                                        Minimum="0" Maximum="5" Value="1"
-                                        ValueChanged="ValueChangedInvalidate"/>
-                            </Grid>
-                            <TextBlock Style="{StaticResource TextBlockBasic}">Projection plane distance:</TextBlock>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="50"/>
-                                </Grid.ColumnDefinitions>
-                                <xctk:DecimalUpDown Grid.Column="1" x:Name="DecimalProjDistance" DockPanel.Dock="Right"
-                                                    Value="{Binding ElementName=SliderProjDistance, Path=Value, Mode=TwoWay}"/>
-                                <Slider x:Name="SliderProjDistance" DockPanel.Dock="Left"
-                                        Minimum="1" Maximum="500" Value="50"
-                                        ValueChanged="ValueChangedInvalidate"/>
-                            </Grid>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="50"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" VerticalAlignment="Center"
-                                           Style="{StaticResource TextBlockBasic}">Left eye color:</TextBlock>
-                                <xctk:ColorPicker Grid.Column="1" x:Name="ColorPickerLeft" SelectedColor="#ff0000"
-                                                  UsingAlphaChannel="False"
-                                                  SelectedColorChanged="ColorChangedInvalidate"/>
-                            </Grid>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="50"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" VerticalAlignment="Center"
-                                           Style="{StaticResource TextBlockBasic}">Right eye color:</TextBlock>
-                                <xctk:ColorPicker Grid.Column="1" x:Name="ColorPickerRight" SelectedColor="#0000ff"
-                                                  UsingAlphaChannel="False"
-                                                  SelectedColorChanged="ColorChangedInvalidate"/>
                             </Grid>
                         </StackPanel>
-                    </StackPanel>
-                </Expander>
-            </StackPanel>
-        </ScrollViewer>
-    </Grid>
+                    </Expander>
+                    <Expander Header="Configuration" IsExpanded="False">
+                        <StackPanel>
+                            <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
+                            <CheckBox x:Name="CheckBoxRotateOrigin" IsChecked="False">Rotate around cursor</CheckBox>
+                        </StackPanel>
+                    </Expander>
+                    <Expander Header="Anaglyph" IsExpanded="False">
+                        <StackPanel>
+                            <CheckBox x:Name="CheckBoxAnaglyph" IsChecked="False"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Enable anaglyph</CheckBox>
+                            <StackPanel Margin="20, 0, 0, 0"
+                                    Visibility="{Binding IsChecked,ElementName=CheckBoxAnaglyph,Converter={StaticResource BoolVisConverter}}">
+                                <TextBlock Style="{StaticResource TextBlockBasic}">Eye distance:</TextBlock>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+                                    <xctk:DecimalUpDown Grid.Column="1" x:Name="DecimalEyeDistance" DockPanel.Dock="Right"
+                                                    Increment=".1"
+                                                    Value="{Binding ElementName=SliderEyeDistance, Path=Value, Mode=TwoWay}"/>
+                                    <Slider x:Name="SliderEyeDistance" DockPanel.Dock="Left"
+                                        Minimum="0" Maximum="5" Value="1"
+                                        ValueChanged="ValueChangedInvalidate"/>
+                                </Grid>
+                                <TextBlock Style="{StaticResource TextBlockBasic}">Projection plane distance:</TextBlock>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+                                    <xctk:DecimalUpDown Grid.Column="1" x:Name="DecimalProjDistance" DockPanel.Dock="Right"
+                                                    Value="{Binding ElementName=SliderProjDistance, Path=Value, Mode=TwoWay}"/>
+                                    <Slider x:Name="SliderProjDistance" DockPanel.Dock="Left"
+                                        Minimum="1" Maximum="500" Value="50"
+                                        ValueChanged="ValueChangedInvalidate"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                           Style="{StaticResource TextBlockBasic}">Left eye color:</TextBlock>
+                                    <xctk:ColorPicker Grid.Column="1" x:Name="ColorPickerLeft" SelectedColor="#ff0000"
+                                                  UsingAlphaChannel="False"
+                                                  SelectedColorChanged="ColorChangedInvalidate"/>
+                                </Grid>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                           Style="{StaticResource TextBlockBasic}">Right eye color:</TextBlock>
+                                    <xctk:ColorPicker Grid.Column="1" x:Name="ColorPickerRight" SelectedColor="#0000ff"
+                                                  UsingAlphaChannel="False"
+                                                  SelectedColorChanged="ColorChangedInvalidate"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </DockPanel>
 </Window>

@@ -1,4 +1,5 @@
-﻿using OpenTK;
+﻿using AbraCADabra.Serialization;
+using OpenTK;
 using System;
 using System.ComponentModel;
 
@@ -6,12 +7,12 @@ namespace AbraCADabra
 {
     public abstract class FloatTransformManager : TransformManager<float>
     {
-        protected FloatTransformManager(FloatTransform transform) : base(transform) { }
+        protected FloatTransformManager(FloatTransform transform, string name = null) : base(transform, name) { }
     }
 
     public abstract class TransformManager<T> : TransformManager where T : struct
     {
-        protected TransformManager(Transform<T> transform) : base(transform) { }
+        protected TransformManager(Transform<T> transform, string name = null) : base(transform, name) { }
     }
 
     public abstract class TransformManager : INotifyPropertyChanged, IDisposable
@@ -129,14 +130,21 @@ namespace AbraCADabra
         public delegate void ManagerDisposingEventHandler(TransformManager sender);
         public event ManagerDisposingEventHandler ManagerDisposing;
 
-        protected TransformManager(Transform transform)
+        protected TransformManager(Transform transform, string name = null)
         {
             Transform = transform;
-            _name = DefaultName;
             int instance = instanceCounter;
-            if (instance > 0)
+            if (name == null)
             {
-                _name += " (" + instance.ToString() + ")";
+                _name = DefaultName;
+                if (instance > 0)
+                {
+                    _name += " (" + instance.ToString() + ")";
+                }
+            }
+            else
+            {
+                _name = name;
             }
         }
 
@@ -186,6 +194,8 @@ namespace AbraCADabra
         {
             Transform.Render(shader);
         }
+
+        public abstract XmlNamedType GetSerializable();
 
         public virtual void Dispose()
         {

@@ -1,5 +1,8 @@
-﻿using OpenTK;
+﻿using AbraCADabra.Serialization;
+using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace AbraCADabra
@@ -14,8 +17,8 @@ namespace AbraCADabra
 
         private const int divDefault = 4;
         private bool divChanged;
-        private int divx = divDefault;
-        private int divz = divDefault;
+        protected int divx;
+        protected int divz;
         public int DivX
         {
             get { return divx; }
@@ -29,7 +32,7 @@ namespace AbraCADabra
 
         private Vector3 center;
 
-        private PatchType patchType;
+        protected PatchType patchType;
         private Patch patch;
         private PolyGrid polyGrid;
 
@@ -53,13 +56,16 @@ namespace AbraCADabra
             set { }
         }
 
-        public PatchManager(PointManager[,] points, PatchType patchType, int patchCountX, int patchCountZ, int continuity)
-            : this(new Patch(patchCountX, patchCountZ, divDefault, divDefault),
-                  new PolyGrid(GetPointPositions(points, patchType, continuity).points, new Vector4(0.7f, 0.7f, 0.0f, 1.0f)))
+        protected PatchManager(PointManager[,] points, PatchType patchType, int patchCountX, int patchCountZ, int continuity,
+            int divX = divDefault, int divZ = divDefault, string name = null)
+            : this(new Patch(patchCountX, patchCountZ, divX, divZ),
+                  new PolyGrid(GetPointPositions(points, patchType, continuity).points, new Vector4(0.7f, 0.7f, 0.0f, 1.0f)), name)
         {
             this.points = points;
             this.patchType = patchType;
             this.continuity = continuity;
+            this.divx = divX;
+            this.divz = divZ;
 
             foreach (var point in points)
             {
@@ -71,7 +77,7 @@ namespace AbraCADabra
             UpdatePointTexture(pts);
         }
 
-        private PatchManager(Patch patch, PolyGrid polyGrid) : base(patch)
+        private PatchManager(Patch patch, PolyGrid polyGrid, string name = null) : base(patch, name)
         {
             this.patch = patch;
             this.polyGrid = polyGrid;
@@ -100,11 +106,54 @@ namespace AbraCADabra
                 {
                     for (int j = 0; j < height; j++)
                     {
-                        res[width + i, j] = points[i, j].Transform.Position;
+                        res[width + i, j] = points[i % width, j].Transform.Position;
                     }
                 }
             }
             return (res, pos);
+        }
+
+        // TODO: base type for XmlPatch pls
+        protected static (PointManager[,] pointManagers, int xDim, int zDim, PatchType type, int divX, int divZ) GetPointsFromDictionary(XmlPatchPointRef[] pointRefs,
+            WrapType wrapType, int rowSlices, int columnSlices, Dictionary<string, PointManager> points)
+        {
+            // normally: point[i, j]: Column = i, Row = j, rowSlices = divX, columnSlices = divZ
+            // if wrapType is Row, all of this needs to be swapped
+            bool swap = wrapType == WrapType.Row;
+            int maxRow = 0, maxCol = 0;
+            foreach (var pr in pointRefs)
+            {
+                maxRow = Math.Max(maxRow, pr.Row);
+                maxCol = Math.Max(maxCol, pr.Column);
+            }
+
+            int xDim = (swap ? maxRow : maxCol) + 1;
+            int zDim = (swap ? maxCol : maxRow) + 1;
+            var pms = new PointManager[xDim, zDim];
+
+            foreach (var pr in pointRefs)
+            {
+                int i = swap ? pr.Row : pr.Column;
+                int j = swap ? pr.Column : pr.Row;
+                if (!points.TryGetValue(pr.Name, out pms[i, j]))
+                {
+                    throw new KeyNotFoundException("Required point was not found in dictionary");
+                }
+            }
+            for (int i = 0; i < xDim; i++)
+            {
+                for (int j = 0; j < zDim; j++)
+                {
+                    if (pms[i, j] == null)
+                    {
+                        throw new KeyNotFoundException("At least one point from patch is missing");
+                    }
+                }
+            }
+
+            int divX = swap ? columnSlices : rowSlices;
+            int divZ = swap ? rowSlices : columnSlices;
+            return (pms, xDim, zDim, wrapType == WrapType.None ? PatchType.Simple : PatchType.Cylinder, divX, divZ);
         }
 
         public override void Update()
@@ -189,6 +238,20 @@ namespace AbraCADabra
             }
             base.RotateAround(xAngle, yAngle, zAngle, center);
             Update();
+        }
+
+        protected XmlPatchPointRef[] GetSerializablePoints()
+        {
+            var pts = new XmlPatchPointRef[points.Length];
+            int ind = 0;
+            for (int j = 0; j < points.GetLength(1); j++)
+            {
+                for (int i = 0; i < points.GetLength(0); i++)
+                {
+                    pts[ind++] = new XmlPatchPointRef { Name = points[i, j].Name, Column = i, Row = j };
+                }
+            }
+            return pts;
         }
 
         public override void Dispose()

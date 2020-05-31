@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace AbraCADabra.Serialization
@@ -16,16 +17,21 @@ namespace AbraCADabra.Serialization
 
         public XmlVector3 Scale { get; set; }
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public float MajorRadius { get; set; }
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public float MinorRadius { get; set; }
 
-        [XmlAttribute(DataType = "integer")]
+        [XmlAttribute]
         public int VerticalSlices { get; set; }
 
-        [XmlAttribute(DataType = "integer")]
+        [XmlAttribute]
         public int HorizontalSlices { get; set; }
+
+        public override TransformManager GetTransformManager(Dictionary<string, PointManager> points)
+        {
+            return new TorusManager(this);
+        }
     }
 }

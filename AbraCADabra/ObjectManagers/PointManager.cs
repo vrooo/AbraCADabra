@@ -1,4 +1,5 @@
-﻿using OpenTK;
+﻿using AbraCADabra.Serialization;
+using OpenTK;
 
 namespace AbraCADabra
 {
@@ -16,12 +17,20 @@ namespace AbraCADabra
         public PointManager(Vector3 position, bool isSurface = false)
             : this(new Point(position, new Vector4(1.0f, 1.0f, 0.0f, 1.0f)), isSurface) { }
 
-        public PointManager(Point point, bool isSurface = false) : base(point)
+        public PointManager(XmlPoint point)
+            : this(new Point(point.Position.ToVector3(), new Vector4(1.0f, 1.0f, 0.0f, 1.0f)), false, point.Name) { }
+
+        public PointManager(Point point, bool isSurface = false, string name = null) : base(point, name)
         {
             this.point = point;
             IsSurface = isSurface;
         }
 
         public override void Update() { }
+
+        public override XmlNamedType GetSerializable()
+        {
+            return new XmlPoint { Name = Name, Position = new XmlVector3(Transform.Position) };
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using OpenTK;
+﻿using AbraCADabra.Serialization;
+using OpenTK;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -11,10 +12,16 @@ namespace AbraCADabra
         private static int counter = 0;
         protected override int instanceCounter => counter++;
 
-        public Bezier3InterManager(IEnumerable<PointManager> points)
+        public Bezier3InterManager(XmlBezierInter xmlBezier, Dictionary<string, PointManager> points)
+            : this(GetPointsFromDictionary(xmlBezier.Points, points), xmlBezier.Name)
+        {
+            DrawPolygon = xmlBezier.ShowControlPolygon;
+        }
+
+        public Bezier3InterManager(IEnumerable<PointManager> points, string name = null)
             : base(new Bezier3(GetBernsteinFromInterpolation(points.Select(p => p.Transform.Position))),
                    new PolyLine(GetBernsteinFromInterpolation(points.Select(p => p.Transform.Position)),
-                                new Vector4(0.7f, 0.7f, 0.0f, 1.0f)))
+                                new Vector4(0.7f, 0.7f, 0.0f, 1.0f)), name)
         {
             Points = new ObservableCollection<PointManager>();
             foreach (var point in points)
@@ -131,6 +138,16 @@ namespace AbraCADabra
             }
             base.RotateAround(xAngle, yAngle, zAngle, center);
             Update();
+        }
+
+        public override XmlNamedType GetSerializable()
+        {
+            return new XmlBezierInter
+            {
+                Name = Name,
+                ShowControlPolygon = DrawPolygon,
+                Points = GetSerializablePoints()
+            };
         }
     }
 }

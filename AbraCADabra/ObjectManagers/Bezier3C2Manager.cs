@@ -1,4 +1,5 @@
-﻿using OpenTK;
+﻿using AbraCADabra.Serialization;
+using OpenTK;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -29,9 +30,17 @@ namespace AbraCADabra
         private List<PointWrapper> virtualPoints = new List<PointWrapper>();
         private PointWrapper selected;
 
-        public Bezier3C2Manager(IEnumerable<PointManager> points)
+        public Bezier3C2Manager(XmlBezierC2 xmlBezier, Dictionary<string, PointManager> points)
+            : this(GetPointsFromDictionary(xmlBezier.Points, points), xmlBezier.Name)
+        {
+            DrawPolygon = xmlBezier.ShowDeBoorPolygon;
+            DrawVirtualPoints = xmlBezier.ShowBernsteinPoints;
+            DrawVirtualPolygon = xmlBezier.ShowBernsteinPolygon;
+        }
+
+        public Bezier3C2Manager(IEnumerable<PointManager> points, string name = null)
             : base(new Bezier3(GetBernsteinFromDeBoor(points.Select(p => p.Transform.Position))),
-                   new PolyLine(points.Select(p => p.Transform.Position), new Vector4(0.5f, 0.5f, 0.0f, 1.0f)))
+                   new PolyLine(points.Select(p => p.Transform.Position), new Vector4(0.5f, 0.5f, 0.0f, 1.0f)), name)
         {
             Points = new ObservableCollection<PointManager>();
             foreach (var point in points)
@@ -202,6 +211,18 @@ namespace AbraCADabra
             }
             base.RotateAround(xAngle, yAngle, zAngle, center);
             Update();
+        }
+
+        public override XmlNamedType GetSerializable()
+        {
+            return new XmlBezierC2
+            {
+                Name = Name,
+                ShowDeBoorPolygon = DrawPolygon,
+                ShowBernsteinPoints = DrawVirtualPoints,
+                ShowBernsteinPolygon = DrawVirtualPolygon,
+                Points = GetSerializablePoints()
+            };
         }
     }
 }

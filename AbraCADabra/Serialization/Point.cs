@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace AbraCADabra.Serialization
@@ -11,5 +12,16 @@ namespace AbraCADabra.Serialization
     public partial class XmlPoint : XmlNamedType
     {
         public XmlVector3 Position { get; set; }
+
+        private PointManager pointManager;
+
+        public override TransformManager GetTransformManager(Dictionary<string, PointManager> points)
+        {
+            if (pointManager == null)
+            {
+                pointManager = new PointManager(this);
+            }
+            return pointManager;
+        }
     }
 }

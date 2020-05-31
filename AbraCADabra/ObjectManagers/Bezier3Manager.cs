@@ -1,4 +1,6 @@
-﻿using OpenTK;
+﻿using AbraCADabra.Serialization;
+using OpenTK;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -13,10 +15,27 @@ namespace AbraCADabra
         protected Bezier3 bezier;
         protected PolyLine polyLine;
 
-        protected Bezier3Manager(Bezier3 bezier, PolyLine polyLine) : base(bezier)
+        protected Bezier3Manager(Bezier3 bezier, PolyLine polyLine, string name = null) : base(bezier, name)
         {
             this.bezier = bezier;
             this.polyLine = polyLine;
+        }
+
+        protected static IEnumerable<PointManager> GetPointsFromDictionary(XmlBezierPointRef[] pointRefs, Dictionary<string, PointManager> points)
+        {
+            var pms = new List<PointManager>();
+            foreach (var pointRef in pointRefs)
+            {
+                if (points.TryGetValue(pointRef.Name, out PointManager pm))
+                {
+                    pms.Add(pm);
+                }
+                else
+                {
+                    throw new KeyNotFoundException("Required point was not found in dictionary");
+                }
+            }
+            return pms;
         }
 
         public override void Update()
@@ -70,6 +89,17 @@ namespace AbraCADabra
         {
             Points.Move(oldIndex, newIndex);
             Update();
+        }
+
+        protected XmlBezierPointRef[] GetSerializablePoints()
+        {
+            var pts = new XmlBezierPointRef[Points.Count];
+            int i = 0;
+            foreach (var point in Points)
+            {
+                pts[i++] = new XmlBezierPointRef { Name = point.Name };
+            }
+            return pts;
         }
     }
 }

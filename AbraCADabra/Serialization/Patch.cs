@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Xml.Serialization;
 
 namespace AbraCADabra.Serialization
@@ -13,24 +14,24 @@ namespace AbraCADabra.Serialization
 
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.1055.0")]
     [Serializable]
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [XmlType(AnonymousType = true, Namespace = "http://mini.pw.edu.pl/mg1")]
     public partial class XmlPatchPointRef
     {
-        [XmlAttribute()]
+        [XmlAttribute]
         public string Name { get; set; }
 
-        [XmlAttribute(DataType = "integer")]
+        [XmlAttribute]
         public int Row { get; set; }
 
-        [XmlAttribute(DataType = "integer")]
+        [XmlAttribute]
         public int Column { get; set; }
     }
 
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.1055.0")]
     [Serializable]
-    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.Diagnostics.DebuggerStepThroughAttribute]
     [System.ComponentModel.DesignerCategoryAttribute("code")]
     [XmlType(AnonymousType = true, Namespace = "http://mini.pw.edu.pl/mg1")]
     public partial class XmlPatchC0 : XmlNamedType
@@ -38,17 +39,22 @@ namespace AbraCADabra.Serialization
         [XmlArrayItem("PointRef", IsNullable = false)]
         public XmlPatchPointRef[] Points { get; set; }
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public bool ShowControlPolygon { get; set; }
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public WrapType WrapDirection { get; set; }
 
-        [XmlAttribute(DataType = "integer")]
+        [XmlAttribute]
         public int RowSlices { get; set; }
 
-        [XmlAttribute(DataType = "integer")]
+        [XmlAttribute]
         public int ColumnSlices { get; set; }
+
+        public override TransformManager GetTransformManager(Dictionary<string, PointManager> points)
+        {
+            return new PatchC0Manager(this, points);
+        }
     }
 
     [System.CodeDom.Compiler.GeneratedCodeAttribute("xsd", "4.6.1055.0")]
@@ -61,16 +67,21 @@ namespace AbraCADabra.Serialization
         [XmlArrayItem("PointRef", IsNullable = false)]
         public XmlPatchPointRef[] Points { get; set; }
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public bool ShowControlPolygon { get; set; }
 
-        [XmlAttribute()]
+        [XmlAttribute]
         public WrapType WrapDirection { get; set; }
 
-        [XmlAttribute(DataType = "integer")]
+        [XmlAttribute]
         public int RowSlices { get; set; }
 
-        [XmlAttribute(DataType = "integer")]
+        [XmlAttribute]
         public int ColumnSlices { get; set; }
+
+        public override TransformManager GetTransformManager(Dictionary<string, PointManager> points)
+        {
+            return new PatchC2Manager(this, points);
+        }
     }
 }
