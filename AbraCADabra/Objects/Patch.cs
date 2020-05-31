@@ -7,6 +7,8 @@ namespace AbraCADabra
 {
     public class Patch : Transform<PatchVertex>
     {
+        private static Random colorRandom = new Random();
+
         private PatchVertex[] vertexArray;
         protected override PatchVertex[] vertices => vertexArray;
         private uint[] indexArray;
@@ -18,7 +20,12 @@ namespace AbraCADabra
         public Patch(int patchesCountX, int patchesCountZ, int divX, int divZ)
         {
             primitiveType = PrimitiveType.Lines;
-            Color = new Vector4(0.5f, 0.95f, 0.4f, 1.0f);
+            //Color = new Vector4(0.5f, 0.95f, 0.4f, 1.0f);
+            double minColor = 0.1, colorMult = 1 - minColor;
+            float r = (float)(colorRandom.NextDouble() * colorMult + minColor);
+            float g = (float)(colorRandom.NextDouble() * colorMult + minColor);
+            float b = (float)(colorRandom.NextDouble() * colorMult + minColor);
+            Color = new Vector4(r, g, b, 1.0f);
 
             patchCountX = patchesCountX;
             patchCountZ = patchesCountZ;
