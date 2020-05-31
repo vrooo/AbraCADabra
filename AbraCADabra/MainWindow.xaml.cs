@@ -594,13 +594,13 @@ namespace AbraCADabra
             if (ofd.ShowDialog() == true)
             {
                 currentDirectory = Path.GetDirectoryName(ofd.FileName);
+                List<TransformManager> objectBuffer = new List<TransformManager>();
                 try
                 {
                     var ser = new XmlSerializer(typeof(XmlScene));
                     var sr = new StreamReader(ofd.FileName);
                     var scene = ser.Deserialize(sr) as XmlScene;
 
-                    objects.Clear();
                     var pointDict = new Dictionary<string, PointManager>();
                     foreach (var ob in scene.Items)
                     {
@@ -611,7 +611,13 @@ namespace AbraCADabra
                     }
                     foreach (var ob in scene.Items)
                     {
-                        objects.Add(ob.GetTransformManager(pointDict));
+                        objectBuffer.Add(ob.GetTransformManager(pointDict));
+                    }
+
+                    objects.Clear();
+                    foreach (var ob in objectBuffer)
+                    {
+                        objects.Add(ob);
                     }
                 }
                 catch (Exception) // TODO: not gud
