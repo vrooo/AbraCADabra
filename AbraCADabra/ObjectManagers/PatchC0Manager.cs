@@ -104,6 +104,31 @@ namespace AbraCADabra
             AddEdgesFrom(graph, pm); // TODO: other options
         }
 
+        public void AddAllEdges(PatchGraph graph)
+        {
+            int last1 = 3 * patchCountX, last2 = 3 * patchCountZ;
+            int xlen = points.GetLength(0);
+            int last1mod = last1 % xlen;
+
+            for (int i = 0; i < patchCountX; i++)
+            {
+                int ii = 3 * i;
+                graph.AddEdge(new PatchGraphEdge(this, points[ii, 0], points[ii + 1, 0], points[ii + 2, 0], points[(ii + 3) % xlen, 0],
+                                                       points[ii, 1], points[ii + 1, 1], points[ii + 2, 1], points[(ii + 3) % xlen, 1]));
+                graph.AddEdge(new PatchGraphEdge(this, points[ii, last2], points[ii + 1, last2], points[ii + 2, last2], points[(ii + 3) % xlen, last2],
+                                                       points[ii, last2 - 1], points[ii + 1, last2 - 1], points[ii + 2, last2 - 1], points[(ii + 3) % xlen, last2 - 1]));
+            }
+
+            for (int i = 0; i < patchCountZ; i++)
+            {
+                int ii = 3 * i;
+                graph.AddEdge(new PatchGraphEdge(this, points[0, ii], points[0, ii + 1], points[0, ii + 2], points[0, ii + 3],
+                                                       points[1, ii], points[1, ii + 1], points[1, ii + 2], points[1, ii + 3]));
+                graph.AddEdge(new PatchGraphEdge(this, points[last1mod, ii], points[last1mod, ii + 1], points[last1mod, ii + 2], points[last1mod, ii + 3],
+                                                       points[last1 - 1, ii], points[last1 - 1, ii + 1], points[last1 - 1, ii + 2], points[last1 - 1, ii + 3]));
+            }
+        }
+
         public override XmlNamedType GetSerializable()
         {
             return new XmlPatchC0

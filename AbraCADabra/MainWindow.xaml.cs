@@ -778,17 +778,35 @@ namespace AbraCADabra
         private void FillTriangle(object sender, RoutedEventArgs e)
         {
             PatchGraph graph = new PatchGraph();
-            foreach (var ob in objects)
+            //foreach (var ob in objects)
+            //{
+            //    if (ob is PatchC0Manager pcm)
+            //    {
+            //        foreach (var sob in ListObjects.SelectedItems)
+            //        {
+            //            if (sob is PointManager pm)
+            //            {
+            //                pcm.AddEdgesIncluding(graph, pm);
+            //            }
+            //        }
+            //    }
+            //}
+
+            foreach (var sob in ListObjects.SelectedItems)
             {
-                if (ob is PatchC0Manager pcm)
+                if (sob is PointManager pm)
                 {
-                    foreach (var sob in ListObjects.SelectedItems)
+                    foreach (var ob in objects)
                     {
-                        if (sob is PointManager pm)
+                        if (ob is PatchC0Manager pcm)
                         {
                             pcm.AddEdgesIncluding(graph, pm);
                         }
                     }
+                }
+                else if (sob is PatchC0Manager pcm)
+                {
+                    pcm.AddAllEdges(graph);
                 }
             }
 
@@ -801,9 +819,15 @@ namespace AbraCADabra
                     {
                         foreach (var e1 in graph.GetEdgesBetween(u, edge.From))
                         {
-                            foreach (var e2 in graph.GetEdgesBetween(u, edge.To))
+                            if (!edge.Equals(e1))
                             {
-                                triangles.Add(new PatchGraphTriangle(edge, e1, e2));
+                                foreach (var e2 in graph.GetEdgesBetween(u, edge.To))
+                                {
+                                    if (!edge.Equals(e2) && !e1.Equals(e2))
+                                    {
+                                        triangles.Add(new PatchGraphTriangle(edge, e1, e2));
+                                    }
+                                }
                             }
                         }
                     }

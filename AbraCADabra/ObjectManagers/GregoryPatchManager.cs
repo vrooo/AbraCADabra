@@ -225,6 +225,19 @@ namespace AbraCADabra
                 vectors.Add(res[end + 2, 1]);
                 vectors.Add(res[start + 3, 2]);
                 vectors.Add(res[start + 2, 2]);
+
+                for (int j = 1; j < 4; j++)
+                {
+                    vectors.Add(res[start + j - 1, 0]);
+                    vectors.Add(res[start + j, 0]);
+                    vectors.Add(res[start + j - 1, 3]);
+                    vectors.Add(res[start + j, 3]);
+
+                    vectors.Add(res[start, j - 1]);
+                    vectors.Add(res[start, j]);
+                    vectors.Add(res[start + 3, j - 1]);
+                    vectors.Add(res[start + 3, j]);
+                }
             }
 
             return (res, vectors, P);
@@ -313,7 +326,35 @@ namespace AbraCADabra
 
         private void HandlePointReplaced(PointManager oldPoint, PointManager newPoint)
         {
-            Dispose();
+            bool changed = false;
+            foreach (var edge in triangle.Edges)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    if (edge.P[i] == oldPoint)
+                    {
+                        changed = true;
+                        oldPoint.PropertyChanged -= PointChanged;
+                        oldPoint.PointReplaced -= HandlePointReplaced;
+                        edge.P[i] = newPoint;
+                        newPoint.PropertyChanged += PointChanged;
+                        newPoint.PointReplaced += HandlePointReplaced;
+                    }
+                    if (edge.Q[i] == oldPoint)
+                    {
+                        changed = true;
+                        oldPoint.PropertyChanged -= PointChanged;
+                        oldPoint.PointReplaced -= HandlePointReplaced;
+                        edge.Q[i] = newPoint;
+                        newPoint.PropertyChanged += PointChanged;
+                        newPoint.PointReplaced += HandlePointReplaced;
+                    }
+                }
+            }
+            if (changed)
+            {
+                Update();
+            }
         }
 
         private void HandlePatchDisposing(TransformManager sender)

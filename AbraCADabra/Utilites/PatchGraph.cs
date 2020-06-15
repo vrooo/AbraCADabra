@@ -67,7 +67,13 @@ namespace AbraCADabra
 
         public override int GetHashCode()
         {
-            return 0; // TODO
+            int hash = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                hash ^= P[i].GetHashCode();
+                hash ^= Q[i].GetHashCode();
+            }
+            return hash;
         }
     }
 
