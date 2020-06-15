@@ -8,7 +8,7 @@
         xmlns:local="clr-namespace:AbraCADabra"
         mc:Ignorable="d"
         x:Name="_this" Title="AbraCADabra" Height="800" Width="1200" MinHeight="200" MinWidth="400"
-        >
+        KeyDown="OnKeyDown">
 
     <Window.Resources>
         <Style TargetType="{x:Type ListBoxItem}">
@@ -38,6 +38,17 @@
                 <otk:GLControl x:Name="GLMain"
                            Load="OnLoad" Paint="OnRender" Disposed="OnDisposed"
                            MouseMove="OnMouseMove" MouseWheel="OnMouseScroll" MouseDown="OnMouseDown" MouseUp="OnMouseUp"/>
+                <WindowsFormsHost.ContextMenu>
+                    <ContextMenu x:Name="ContextMain">
+                        <MenuItem Header="Merge points">
+                            <MenuItem x:Name="ContextMergeToFirst" Header="To first"/>
+                            <MenuItem x:Name="ContextMergeToLast" Header="To last"/>
+                            <MenuItem x:Name="ContextMergeToCursor" Header="To cursor"/>
+                            <MenuItem x:Name="ContextMergeToCenter" Header="To center"/>
+                        </MenuItem>
+                        <MenuItem Header="Fill gaps" Click="FillTriangle"/>
+                    </ContextMenu>
+                </WindowsFormsHost.ContextMenu>
             </WindowsFormsHost>
             <ScrollViewer Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                 <StackPanel Margin="3">

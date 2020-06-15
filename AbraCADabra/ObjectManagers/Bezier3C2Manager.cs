@@ -48,6 +48,7 @@ namespace AbraCADabra
                 Points.Add(point);
                 point.PropertyChanged += PointChanged;
                 point.ManagerDisposing += PointDisposing;
+                point.PointReplaced += ReplacePoint;
             }
 
             var bPoints = UpdateVirtualPoints(points.Select(p => p.Transform.Position));
@@ -107,7 +108,7 @@ namespace AbraCADabra
             return bPoints;
         }
 
-        public override void Update()
+        protected override void ActualUpdate()
         {
             var points = Points.Select(p => p.Transform.Position);
             polyLine.Update(points);
@@ -119,6 +120,11 @@ namespace AbraCADabra
 
         public override void Render(ShaderManager shader)
         {
+            if (shouldUpdate)
+            {
+                shouldUpdate = false;
+                ActualUpdate();
+            }
             base.Render(shader);
             if (DrawVirtualPolygon)
             {

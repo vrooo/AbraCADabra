@@ -14,6 +14,7 @@ namespace AbraCADabra
 
         protected Bezier3 bezier;
         protected PolyLine polyLine;
+        protected bool shouldUpdate = false;
 
         protected Bezier3Manager(Bezier3 bezier, PolyLine polyLine, string name = null) : base(bezier, name)
         {
@@ -40,13 +41,18 @@ namespace AbraCADabra
 
         public override void Update()
         {
-            var points = Points.Select(p => p.Transform.Position);
-            bezier.Update(points);
-            polyLine.Update(points);
+            shouldUpdate = true;
         }
+
+        protected abstract void ActualUpdate();
 
         public override void Render(ShaderManager shader)
         {
+            if (shouldUpdate)
+            {
+                shouldUpdate = false;
+                ActualUpdate();
+            }
             if (DrawPolygon)
             {
                 polyLine.Render(shader);
@@ -71,18 +77,34 @@ namespace AbraCADabra
             Points.Remove(point);
             point.PropertyChanged -= PointChanged;
             point.ManagerDisposing -= PointDisposing;
+            point.PointReplaced -= ReplacePoint;
             Update();
         }
 
-        public void AddPoint(PointManager point)
+        public void AddPoint(PointManager point, int index = -1)
         {
             if (!Points.Contains(point))
             {
-                Points.Add(point);
+                if (index == -1)
+                {
+                    Points.Add(point);
+                }
+                else
+                {
+                    Points.Insert(index, point);
+                }
                 point.PropertyChanged += PointChanged;
                 point.ManagerDisposing += PointDisposing;
+                point.PointReplaced += ReplacePoint;
                 Update();
             }
+        }
+
+        public void ReplacePoint(PointManager oldPoint, PointManager newPoint)
+        {
+            int index = Points.IndexOf(oldPoint);
+            RemovePoint(oldPoint);
+            AddPoint(newPoint, index);
         }
 
         public void MovePoint(int oldIndex, int newIndex)

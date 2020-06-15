@@ -313,6 +313,27 @@
                     </DockPanel>
                 </StackPanel>
             </GroupBox>
+
+            <GroupBox x:Name="GroupGregoryPatch" Header="Gregory Patch">
+                <StackPanel>
+                    <CheckBox IsChecked="{Binding DrawVectors}"
+                              Style="{StaticResource CheckBoxUpdating}">Show continuity vectors</CheckBox>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="1,5,5,0" Text="Divisions X:"/>
+                        <xctk:IntegerUpDown DockPanel.Dock="Left" VerticalAlignment="Center"
+                                            x:Name="IntegerGregPatchDivX" Style="{StaticResource IntegerUpdating}"
+                                            Minimum="1"
+                                            Value="{Binding DivX, Mode=TwoWay}"></xctk:IntegerUpDown>
+                    </DockPanel>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Margin="1,5,5,0" Text="Divisions Z:"/>
+                        <xctk:IntegerUpDown DockPanel.Dock="Left" VerticalAlignment="Center"
+                                            x:Name="IntegerGregPatchDivZ" Style="{StaticResource IntegerUpdating}"
+                                            Minimum="1"
+                                            Value="{Binding DivZ, Mode=TwoWay}"></xctk:IntegerUpDown>
+                    </DockPanel>
+                </StackPanel>
+            </GroupBox>
         </StackPanel>
     </ScrollViewer>
 </Window>

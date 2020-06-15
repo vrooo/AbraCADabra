@@ -9,10 +9,13 @@ namespace AbraCADabra
         private static int counter = 0;
         protected override int instanceCounter => counter++;
 
-        public override bool Deletable => !IsSurface;
-        public bool IsSurface { get; set; }
+        public override bool Deletable => SurfaceCount == 0;
+        public int SurfaceCount { get; set; }
 
         private Point point;
+
+        public delegate void PointReplacedEventHandler(PointManager oldPoint, PointManager newPoint);
+        public event PointReplacedEventHandler PointReplaced;
 
         public PointManager(Vector3 position, bool isSurface = false)
             : this(new Point(position, new Vector4(1.0f, 1.0f, 0.0f, 1.0f)), isSurface) { }
@@ -23,7 +26,12 @@ namespace AbraCADabra
         public PointManager(Point point, bool isSurface = false, string name = null) : base(point, name)
         {
             this.point = point;
-            IsSurface = isSurface;
+            SurfaceCount = isSurface ? 1 : 0;
+        }
+
+        public void Replace(PointManager newPoint)
+        {
+            PointReplaced?.Invoke(this, newPoint);
         }
 
         public override void Update() { }

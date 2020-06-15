@@ -22,6 +22,11 @@ namespace AbraCADabra
     /// </summary>
     public partial class MainWindow : Window
     {
+        private enum MergeMode
+        {
+            ToFirst, ToLast, ToCursor, ToCenter
+        }
+
         const uint wireframeMax = 100;
 
         ShaderManager shader;
@@ -59,6 +64,10 @@ namespace AbraCADabra
             InitializeComponent();
 
             ListObjects.DataContext = objects;
+            ContextMergeToFirst.Click += (sender, e) => MergePoints(MergeMode.ToFirst);
+            ContextMergeToLast.Click += (sender, e) => MergePoints(MergeMode.ToLast);
+            ContextMergeToCursor.Click += (sender, e) => MergePoints(MergeMode.ToCursor);
+            ContextMergeToCenter.Click += (sender, e) => MergePoints(MergeMode.ToCenter);
         }
 
         public IEnumerable<TransformManager> GetObjectsOfType(Type type) => objects.Where(tm => tm.GetType() == type);
@@ -389,12 +398,15 @@ namespace AbraCADabra
                 int bottom = Math.Max(e.Y, boxSelectStart.Y);
                 foreach (var ob in objects)
                 {
-                    var coords = ob.GetScreenSpaceCoords(camera, GLMain.Width, GLMain.Height);
-                    if (coords.X > left && coords.X < right &&
-                        coords.Y > top && coords.Y < bottom &&
-                        coords.Z > camera.ZNear)
+                    if (ob is PointManager)
                     {
-                        ListObjects.SelectedItems.Add(ob);
+                        var coords = ob.GetScreenSpaceCoords(camera, GLMain.Width, GLMain.Height);
+                        if (coords.X > left && coords.X < right &&
+                            coords.Y > top && coords.Y < bottom &&
+                            coords.Z > camera.ZNear)
+                        {
+                            ListObjects.SelectedItems.Add(ob);
+                        }
                     }
                 }
             }
@@ -404,9 +416,14 @@ namespace AbraCADabra
         {
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-            foreach (var ob in objects)
+            for (int i = objects.Count - 1; i >= 0; i--)
             {
-                ob.Dispose();
+                var ob = objects[i];
+                if (ob is GregoryPatchManager)
+                {
+                    ob.ManagerDisposing -= HandleManagerDisposing;
+                }
+                objects[i].Dispose();
             }
             anaglyphQuad.Dispose();
             centerMarker.Dispose();
@@ -642,6 +659,10 @@ namespace AbraCADabra
                         var removing = selected[i] as TransformManager;
                         if (removing.Deletable)
                         {
+                            if (removing is GregoryPatchManager)
+                            {
+                                removing.ManagerDisposing -= HandleManagerDisposing;
+                            }
                             objects.Remove(removing);
                             removing.Dispose();
                         }
@@ -702,12 +723,21 @@ namespace AbraCADabra
                     {
                         objects.Add(ob);
                     }
+                    RefreshView();
                 }
-                catch (Exception) // TODO: not gud
+                catch (Exception ex) // TODO: not gud
                 {
-                    System.Windows.MessageBox.Show("Scene file could not be processed.",
+                    System.Windows.MessageBox.Show($"Scene file could not be processed.\n{ex.Message}",
                                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
+            }
+        }
+
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.M)
+            {
+                ContextMain.IsOpen = !ContextMain.IsOpen;
             }
         }
 
@@ -719,13 +749,16 @@ namespace AbraCADabra
             if (sfd.ShowDialog() == true)
             {
                 currentDirectory = Path.GetDirectoryName(sfd.FileName);
-                var sceneObjects = new XmlNamedType[objects.Count];
-                int i = 0;
+                var sceneObjects = new List<XmlNamedType>();
                 foreach (var ob in objects)
                 {
-                    sceneObjects[i++] = ob.GetSerializable();
+                    var serOb = ob.GetSerializable();
+                    if (serOb != null)
+                    {
+                        sceneObjects.Add(serOb);
+                    }
                 }
-                var scene = new XmlScene { Items = sceneObjects };
+                var scene = new XmlScene { Items = sceneObjects.ToArray() };
 
                 try
                 {
@@ -734,12 +767,113 @@ namespace AbraCADabra
                     ser.Serialize(sw, scene);
                     sw.Close();
                 }
-                catch (Exception) // TODO: not gud
+                catch (Exception ex) // TODO: not gud
                 {
-                    System.Windows.MessageBox.Show("Scene file could not be processed.",
+                    System.Windows.MessageBox.Show($"Scene file could not be processed.\n{ex.Message}",
                                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
+        }
+
+        private void FillTriangle(object sender, RoutedEventArgs e)
+        {
+            PatchGraph graph = new PatchGraph();
+            foreach (var ob in objects)
+            {
+                if (ob is PatchC0Manager pcm)
+                {
+                    foreach (var sob in ListObjects.SelectedItems)
+                    {
+                        if (sob is PointManager pm)
+                        {
+                            pcm.AddEdgesIncluding(graph, pm);
+                        }
+                    }
+                }
+            }
+
+            var triangles = new HashSet<PatchGraphTriangle>();
+            foreach (var vert in graph.Vertices.Values)
+            {
+                foreach (var edge in vert)
+                {
+                    foreach (var u in graph.Vertices.Keys)
+                    {
+                        foreach (var e1 in graph.GetEdgesBetween(u, edge.From))
+                        {
+                            foreach (var e2 in graph.GetEdgesBetween(u, edge.To))
+                            {
+                                triangles.Add(new PatchGraphTriangle(edge, e1, e2));
+                            }
+                        }
+                    }
+                }
+            }
+            if (triangles.Count > 0)
+            {
+                foreach (var triangle in triangles)
+                {
+                    var gpm = new GregoryPatchManager(triangle);
+                    gpm.ManagerDisposing += HandleManagerDisposing;
+                    objects.Add(gpm);
+                }
+                RefreshView();
+            }
+            else
+            {
+                System.Windows.MessageBox.Show("No gaps selected.", "Fill gaps", MessageBoxButton.OK);
+            }
+        }
+
+        private void HandleManagerDisposing(TransformManager sender)
+        {
+            sender.ManagerDisposing -= HandleManagerDisposing;
+            objects.Remove(sender);
+        }
+
+        private void MergePoints(MergeMode mode)
+        {
+            var selectedPoints = new List<PointManager>();
+            foreach (var ob in ListObjects.SelectedItems)
+            {
+                if (ob is PointManager pm)
+                {
+                    selectedPoints.Add(pm);
+                }
+            }
+            if (selectedPoints.Count == 0)
+            {
+                return;
+            }
+
+            Vector3 pos;
+            switch (mode)
+            {
+                case MergeMode.ToFirst:
+                    pos = selectedPoints[0].Transform.Position;
+                    break;
+                case MergeMode.ToLast:
+                    pos = selectedPoints[selectedPoints.Count - 1].Transform.Position;
+                    break;
+                case MergeMode.ToCursor:
+                    pos = cursor.Position;
+                    break;
+                case MergeMode.ToCenter:
+                    pos = centerMarker.Position;
+                    break;
+                default:
+                    return;
+            }
+
+            var newPoint = new PointManager(pos);
+            foreach (var point in selectedPoints)
+            {
+                point.Replace(newPoint);
+                objects.Remove(point);
+                point.Dispose();
+            }
+            objects.Add(newPoint);
+            RefreshView();
         }
 
         private void Debug_Empty(object sender, RoutedEventArgs e)

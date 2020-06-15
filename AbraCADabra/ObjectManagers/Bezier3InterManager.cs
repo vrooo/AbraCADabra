@@ -29,6 +29,7 @@ namespace AbraCADabra
                 Points.Add(point);
                 point.PropertyChanged += PointChanged;
                 point.ManagerDisposing += PointDisposing;
+                point.PointReplaced += ReplacePoint;
             }
         }
 
@@ -104,16 +105,11 @@ namespace AbraCADabra
             return points;
         }
 
-        public override void Update()
+        protected override void ActualUpdate()
         {
             var bPoints = GetBernsteinFromInterpolation(Points.Select(p => p.Transform.Position));
             bezier.Update(bPoints);
             polyLine.Update(bPoints);
-        }
-
-        public override void Render(ShaderManager shader)
-        {
-            base.Render(shader);
         }
 
         public override void Translate(float x, float y, float z) // TODO: put it in Bezier3Manager

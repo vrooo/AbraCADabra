@@ -29,7 +29,14 @@ namespace AbraCADabra
                 Points.Add(point);
                 point.PropertyChanged += PointChanged;
                 point.ManagerDisposing += PointDisposing;
+                point.PointReplaced += ReplacePoint;
             }
+        }
+        protected override void ActualUpdate()
+        {
+            var points = Points.Select(p => p.Transform.Position);
+            bezier.Update(points);
+            polyLine.Update(points);
         }
 
         public override void Translate(float x, float y, float z)

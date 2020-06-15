@@ -11,14 +11,14 @@ namespace AbraCADabra
     {
         protected int continuity;
 
-        private PointManager[,] points;
+        protected PointManager[,] points;
 
         public bool DrawPolynet { get; set; }
 
         private const int divDefault = 4;
         private bool divChanged;
-        protected int divx;
-        protected int divz;
+        protected int divx, divz;
+        protected int patchCountX, patchCountZ;
         public int DivX
         {
             get { return divx; }
@@ -65,12 +65,15 @@ namespace AbraCADabra
             this.points = points;
             this.patchType = patchType;
             this.continuity = continuity;
+            this.patchCountX = patchCountX;
+            this.patchCountZ = patchCountZ;
             this.divx = divX;
             this.divz = divZ;
 
             foreach (var point in points)
             {
                 point.PropertyChanged += PointChanged;
+                point.PointReplaced += ReplacePoint;
             }
 
             var (pts, ctr) = GetPointPositions(points, patchType, continuity);
@@ -179,6 +182,7 @@ namespace AbraCADabra
         {
             if (shouldUpdate)
             {
+                shouldUpdate = false;
                 ActualUpdate();
             }
             if (DrawPolynet)
@@ -226,6 +230,33 @@ namespace AbraCADabra
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
         }
 
+        private void ReplacePoint(PointManager oldPoint, PointManager newPoint)
+        {
+            int ii = -1, jj = -1;
+            for (int i = 0; i < points.GetLength(0); i++)
+            {
+                for (int j = 0; j < points.GetLength(1); j++)
+                {
+                    if (points[i, j] == oldPoint)
+                    {
+                        ii = i;
+                        jj = j;
+                        break;
+                    }
+                }
+                if (ii != -1) break;
+            }
+
+            oldPoint.PropertyChanged -= PointChanged;
+            oldPoint.PointReplaced -= ReplacePoint;
+            oldPoint.SurfaceCount--;
+            points[ii, jj] = newPoint;
+            newPoint.PropertyChanged += PointChanged;
+            newPoint.PointReplaced += ReplacePoint;
+            newPoint.SurfaceCount++;
+            Update();
+        }
+
         public override void Translate(float x, float y, float z)
         {
             foreach (var pm in points)
@@ -268,7 +299,9 @@ namespace AbraCADabra
         {
             foreach (var point in points)
             {
-                point.IsSurface = false;
+                point.SurfaceCount--;
+                point.PropertyChanged -= PointChanged;
+                point.PointReplaced -= ReplacePoint;
             }
             base.Dispose();
         }

@@ -15,6 +15,7 @@ namespace AbraCADabra
         private const string vertPathBezier = "../../Shaders/bezier.vert";
         private const string geomPathBezier = "../../Shaders/bezier.geom";
         private const string vertPathPatch = "../../Shaders/patch.vert";
+        private const string vertPathGregory = "../../Shaders/gregory.vert";
         private const string vertPathMultitex = "../../Shaders/multitex.vert";
         private const string fragPathMultitex = "../../Shaders/multitex.frag";
 
@@ -24,6 +25,7 @@ namespace AbraCADabra
         private Shader shaderBasic;
         private Shader shaderBezier;
         private Shader shaderPatch;
+        private Shader shaderGregory;
         private Shader shaderMultitex;
 
         private Shader shaderCurrent;
@@ -34,9 +36,10 @@ namespace AbraCADabra
 
         public ShaderManager(Camera camera, GLControl glControl)
         {
-            shaderBasic = new Shader(vertPath, fragPath);
-            shaderBezier = new Shader(vertPathBezier, fragPath, geomPathBezier);
-            shaderPatch = new Shader(vertPathPatch, fragPath);
+            shaderBasic    = new Shader(vertPath, fragPath);
+            shaderBezier   = new Shader(vertPathBezier, fragPath, geomPathBezier);
+            shaderPatch    = new Shader(vertPathPatch, fragPath);
+            shaderGregory  = new Shader(vertPathGregory, fragPath);
             shaderMultitex = new Shader(vertPathMultitex, fragPathMultitex);
             this.camera = camera;
             this.glControl = glControl;
@@ -55,6 +58,11 @@ namespace AbraCADabra
         public void UsePatch()
         {
             Use(shaderPatch);
+        }
+
+        public void UseGregory()
+        {
+            Use(shaderGregory);
         }
 
         public void UseMultitex()

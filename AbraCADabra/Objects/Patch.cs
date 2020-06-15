@@ -18,14 +18,24 @@ namespace AbraCADabra
         private int patchCountZ;
 
         public Patch(int patchesCountX, int patchesCountZ, int divX, int divZ)
+            : this(patchesCountX, patchesCountZ, divX, divZ, new Vector4(-1.0f)) { }
+
+        public Patch(int patchesCountX, int patchesCountZ, int divX, int divZ, Vector4 color)
         {
             primitiveType = PrimitiveType.Lines;
             //Color = new Vector4(0.5f, 0.95f, 0.4f, 1.0f);
-            double minColor = 0.1, colorMult = 1 - minColor;
-            float r = (float)(colorRandom.NextDouble() * colorMult + minColor);
-            float g = (float)(colorRandom.NextDouble() * colorMult + minColor);
-            float b = (float)(colorRandom.NextDouble() * colorMult + minColor);
-            Color = new Vector4(r, g, b, 1.0f);
+            if (color.W <= 0.0f)
+            {
+                double minColor = 0.1, colorMult = 1 - minColor;
+                float r = (float)(colorRandom.NextDouble() * colorMult + minColor);
+                float g = (float)(colorRandom.NextDouble() * colorMult + minColor);
+                float b = (float)(colorRandom.NextDouble() * colorMult + minColor);
+                Color = new Vector4(r, g, b, 1.0f);
+            }
+            else
+            {
+                Color = color;
+            }
 
             patchCountX = patchesCountX;
             patchCountZ = patchesCountZ;

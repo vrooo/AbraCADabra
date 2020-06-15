@@ -68,7 +68,6 @@ namespace AbraCADabra
 
         private int CompileShader(string path, ShaderType type)
         {
-            // TODO: error checking
             string source;
             using (StreamReader sr = new StreamReader(path, Encoding.UTF8))
             {
