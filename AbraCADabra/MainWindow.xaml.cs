@@ -775,22 +775,9 @@ namespace AbraCADabra
             }
         }
 
-        private void FillTriangle(object sender, RoutedEventArgs e)
+        private void FillTriangles(object sender, RoutedEventArgs e)
         {
             PatchGraph graph = new PatchGraph();
-            //foreach (var ob in objects)
-            //{
-            //    if (ob is PatchC0Manager pcm)
-            //    {
-            //        foreach (var sob in ListObjects.SelectedItems)
-            //        {
-            //            if (sob is PointManager pm)
-            //            {
-            //                pcm.AddEdgesIncluding(graph, pm);
-            //            }
-            //        }
-            //    }
-            //}
 
             foreach (var sob in ListObjects.SelectedItems)
             {
@@ -846,6 +833,26 @@ namespace AbraCADabra
             else
             {
                 System.Windows.MessageBox.Show("No gaps selected.", "Fill gaps", MessageBoxButton.OK);
+            }
+        }
+
+        private void FindIntersections(object sender, RoutedEventArgs e)
+        {
+            var surfaces = objects.OfType<ISurface>().ToList();
+            if (surfaces.Count == 0)
+            {
+                System.Windows.MessageBox.Show("No possible surfaces to intersect.", "Find intersections", MessageBoxButton.OK);
+            }
+            else
+            {
+                var selected = ListObjects.SelectedItems.OfType<ISurface>().ToList();
+                IntersectionFinderWindow ifw = new IntersectionFinderWindow(surfaces, selected);
+                bool? res = ifw.ShowDialog();
+                if (res == true)
+                {
+                    var start = new Vector4(0.5f); // TODO - cursor?
+                    var temp = IntersectionFinder.FindIntersection(ifw.SelectedFirst, ifw.SelectedSecond, start);
+                }
             }
         }
 

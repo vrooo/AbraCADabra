@@ -5,6 +5,16 @@ namespace AbraCADabra
 {
     public static class MathHelper
     {
+        public static Vector3 MakeVector3(double x, double y, double z)
+        {
+            return new Vector3((float)x, (float)y, (float)z);
+        }
+
+        public static Vector4 MakeVector4(double x, double y, double z, double w)
+        {
+            return new Vector4((float)x, (float)y, (float)z, (float)w);
+        }
+
         public static Vector3[] SolveTriDiag(IList<float> a, IList<float> b, IList<float> c, IList<Vector3> g)
         {
             int n = b.Count;

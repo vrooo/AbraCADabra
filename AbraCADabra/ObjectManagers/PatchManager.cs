@@ -160,6 +160,12 @@ namespace AbraCADabra
             return (pms, xDim, zDim, wrapType == WrapType.None ? PatchType.Simple : PatchType.Cylinder, divX, divZ);
         }
 
+        public Vector3 GetUVPoint(float u, float v)
+        {
+            // TODO
+            return Vector3.Zero;
+        }
+
         public override void Update()
         {
             shouldUpdate = true;

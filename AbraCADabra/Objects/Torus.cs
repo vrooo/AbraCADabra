@@ -43,24 +43,24 @@ namespace AbraCADabra
             vertexList.Clear();
             indexList.Clear();
 
-            float thetaStep = (float)(2 * Math.PI / divMinorR);
-            float phiStep = (float)(2 * Math.PI / divMajorR);
+            double thetaStep = 2 * Math.PI / divMinorR;
+            double phiStep = 2 * Math.PI / divMajorR;
             uint maxInd = (divMajorR + 1) * (divMinorR + 1);
             for (uint iTheta = 0; iTheta < divMinorR + 1; iTheta++)
             {
-                float theta = iTheta * thetaStep;
-                float sinTheta = (float)Math.Sin(theta), cosTheta = (float)Math.Cos(theta);
-                float y = minorR * sinTheta;
+                double theta = iTheta * thetaStep;
+                double sinTheta = Math.Sin(theta), cosTheta = Math.Cos(theta);
+                double y = minorR * sinTheta;
                 for (uint iPhi = 0; iPhi < divMajorR + 1; iPhi++)
                 {
-                    float phi = iPhi * phiStep;
-                    float sinPhi = (float)Math.Sin(phi), cosPhi = (float)Math.Cos(phi);
-                    float d = majorR + minorR * cosTheta;
-                    float x = d * cosPhi, z = d * sinPhi;
+                    double phi = iPhi * phiStep;
+                    double sinPhi = Math.Sin(phi), cosPhi = Math.Cos(phi);
+                    double d = majorR + minorR * cosTheta;
+                    double x = d * cosPhi, z = d * sinPhi;
 
-                    vertexList.Add(x);
-                    vertexList.Add(y);
-                    vertexList.Add(z);
+                    vertexList.Add((float)x);
+                    vertexList.Add((float)y);
+                    vertexList.Add((float)z);
 
                     uint index = iPhi * (divMinorR + 1) + iTheta;
                     if (index + 1 < maxInd)

@@ -83,7 +83,7 @@ namespace AbraCADabra
 
         public void AddPoint(PointManager point, int index = -1)
         {
-            if (!Points.Contains(point))
+            //if (!Points.Contains(point))
             {
                 if (index == -1)
                 {

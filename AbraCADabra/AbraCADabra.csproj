@@ -100,6 +100,8 @@
     </ApplicationDefinition>
     <Compile Include="ObjectManagers\CerealFactory.cs" />
     <Compile Include="ObjectManagers\GregoryPatchManager.cs" />
+    <Compile Include="ObjectManagers\IntersectionCurveManager.cs" />
+    <Compile Include="ObjectManagers\ISurface.cs" />
     <Compile Include="ObjectManagers\PatchC0Manager.cs" />
     <Compile Include="ObjectManagers\PatchC2Manager.cs" />
     <Compile Include="ObjectManagers\PatchManager.cs" />
@@ -112,6 +114,9 @@
     <Compile Include="Serialization\Point.cs" />
     <Compile Include="Serialization\Scene.cs" />
     <Compile Include="Serialization\Torus.cs" />
+    <Compile Include="UI\IntersectionFinderWindow.xaml.cs">
+      <DependentUpon>IntersectionFinderWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\ItemSelectionWindow.xaml.cs">
       <DependentUpon>ItemSelectionWindow.xaml</DependentUpon>
     </Compile>
@@ -144,9 +149,14 @@
     <Compile Include="ObjectManagers\TransformManager.cs" />
     <Compile Include="ObjectManagers\TorusManager.cs" />
     <Compile Include="Rendering\Vertex.cs" />
+    <Compile Include="Utilites\IntersectionFinder.cs" />
     <Compile Include="Utilites\ListExtender.cs" />
     <Compile Include="Utilites\MathHelper.cs" />
     <Compile Include="Utilites\PatchGraph.cs" />
+    <Page Include="UI\IntersectionFinderWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\ItemSelectionWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

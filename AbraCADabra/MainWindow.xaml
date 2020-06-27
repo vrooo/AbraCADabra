@@ -46,7 +46,8 @@
                             <MenuItem x:Name="ContextMergeToCursor" Header="To cursor"/>
                             <MenuItem x:Name="ContextMergeToCenter" Header="To center"/>
                         </MenuItem>
-                        <MenuItem Header="Fill gaps" Click="FillTriangle"/>
+                        <MenuItem Header="Fill gaps" Click="FillTriangles"/>
+                        <MenuItem Header="Find intersections..." Click="FindIntersections"/>
                     </ContextMenu>
                 </WindowsFormsHost.ContextMenu>
             </WindowsFormsHost>
