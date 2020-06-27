@@ -22,5 +22,12 @@ namespace AbraCADabra
             Assert.AreEqual(0.2f, res[2].X, eps);
             Assert.AreEqual(0.4f, res[3].X, eps);
         }
+
+        private (TorusManager, TorusManager) MakeToruses()
+        {
+            var t1 = new TorusManager(new Vector3(-8, 0, 0), 100, 100);
+            var t2 = new TorusManager(new Vector3(8, 0, 0), 100, 100);
+            return (t1, t2);
+        }
     }
 }

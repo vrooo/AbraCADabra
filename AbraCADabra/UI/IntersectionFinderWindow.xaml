@@ -6,7 +6,7 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:AbraCADabra"
         mc:Ignorable="d"
-        x:Name="_this" Title="Find intersection" Width="200" SizeToContent="Height" ResizeMode="NoResize" WindowStyle="ToolWindow">
+        x:Name="_this" Title="Find intersection" Width="220" SizeToContent="Height" ResizeMode="NoResize" WindowStyle="ToolWindow">
     <DockPanel Margin="5">
         <Grid DockPanel.Dock="Top">
             <Grid.RowDefinitions>
@@ -47,18 +47,41 @@
                 <RowDefinition/>
                 <RowDefinition/>
                 <RowDefinition/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="80"/>
+                <ColumnDefinition Width="100"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
-                       Style="{StaticResource TextBlockBasic}" Text="Curve step:"/>
+                       Style="{StaticResource TextBlockBasic}" Text="Convergence eps:"/>
             <xctk:DecimalUpDown Grid.Row="0" Grid.Column="1"
+                                Minimum="1e-8" Increment="0.0001" FormatString="F8"
+                                Value="{Binding Eps, ElementName=_this}"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                       Style="{StaticResource TextBlockBasic}" Text="Point eps:"/>
+            <xctk:DecimalUpDown Grid.Row="1" Grid.Column="1"
+                                Minimum="1e-8" Increment="0.0001" FormatString="F8"
+                                Value="{Binding PointEps, ElementName=_this}"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
+                       Style="{StaticResource TextBlockBasic}" Text="Curve step:"/>
+            <xctk:DecimalUpDown Grid.Row="2" Grid.Column="1"
                                 Minimum="0.001" Increment="0.1" Value="{Binding CurveStep, ElementName=_this}"/>
+            
+            <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
+                       Style="{StaticResource TextBlockBasic}" Text="Max iterations:"/>
+            <xctk:IntegerUpDown Grid.Row="3" Grid.Column="1"
+                                Minimum="1" Value="{Binding MaxIterations, ElementName=_this}"/>
+            
+            <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"
+                       Style="{StaticResource TextBlockBasic}" Text="Init values per dim:"/>
+            <xctk:IntegerUpDown Grid.Row="4" Grid.Column="1"
+                                Minimum="1" Value="{Binding StartDims, ElementName=_this}"/>
         </Grid>
-        
+
         <Grid DockPanel.Dock="Top">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>

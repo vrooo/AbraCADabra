@@ -60,7 +60,6 @@ namespace AbraCADabra
             var (sinPhi, cosPhi) = SinCos(TWO_PI * v);
             double d = MajorR + MinorR * cosTheta;
             //return MathHelper.MakeVector3(d * cosPhi, MinorR * sinTheta, d * sinPhi);
-            var tmp = MathHelper.MakeVector4(d * cosPhi, MinorR * sinTheta, d * sinPhi, 1) * torus.GetModelMatrix();
             return (MathHelper.MakeVector4(d * cosPhi, MinorR * sinTheta, d * sinPhi, 1) * torus.GetModelMatrix()).Xyz;
         }
 

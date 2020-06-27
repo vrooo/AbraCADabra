@@ -334,6 +334,13 @@
                     </DockPanel>
                 </StackPanel>
             </GroupBox>
+
+            <GroupBox x:Name="GroupIntersectionCurve" Header="Intersection Curve">
+                <StackPanel>
+                    <CheckBox IsChecked="{Binding Draw}"
+                              Style="{StaticResource CheckBoxUpdating}">Show curve</CheckBox>
+                </StackPanel>
+            </GroupBox>
         </StackPanel>
     </ScrollViewer>
 </Window>

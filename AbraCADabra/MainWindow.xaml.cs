@@ -848,10 +848,31 @@ namespace AbraCADabra
                 var selected = ListObjects.SelectedItems.OfType<ISurface>().ToList();
                 IntersectionFinderWindow ifw = new IntersectionFinderWindow(surfaces, selected);
                 bool? res = ifw.ShowDialog();
-                if (res == true)
+                if (res == true && !ifw.IsSingleSurface)
                 {
-                    var start = new Vector4(0.5f); // TODO - cursor?
-                    var temp = IntersectionFinder.FindIntersection(ifw.SelectedFirst, ifw.SelectedSecond, start);
+                    int divs = ifw.StartDims;
+                    float fdivs = divs;
+                    for (int x = 0; x < divs; x++)
+                        for (int y = 0; y < divs; y++)
+                            for (int z = 0; z < divs; z++)
+                                for (int w = 0; w < divs; w++)
+                                {
+                                    Vector4 start = divs > 1 ? new Vector4(x / fdivs, y / fdivs, z / fdivs, w / fdivs)
+                                                             : new Vector4(0.5f);
+                                    var icm = IntersectionFinder.FindIntersection(ifw.SelectedFirst, ifw.SelectedSecond, start,
+                                                                                  ifw.MaxIterations, ifw.Eps, ifw.PointEps);
+                                    if (icm != null)
+                                    {
+                                        objects.Add(icm);
+                                        RefreshView();
+                                        return;
+                                    }
+                                }
+                    System.Windows.MessageBox.Show("No intersections found.", "Find intersections", MessageBoxButton.OK);
+                }
+                else if (res == true)
+                {
+                    System.Windows.MessageBox.Show("Self intersections are currently unsupported.", "Find intersections", MessageBoxButton.OK);
                 }
             }
         }

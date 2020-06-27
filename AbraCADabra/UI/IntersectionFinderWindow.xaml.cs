@@ -14,6 +14,10 @@ namespace AbraCADabra
         public bool IsSingleSurface => SelectedFirst == SelectedSecond;
         public bool UseCursorPosition { get; set; }
         public float CurveStep { get; set; } = 1.0f;
+        public float Eps { get; set; } = 1e-6f;
+        public float PointEps { get; set; } = 1e-2f;
+        public int MaxIterations { get; set; } = 30;
+        public int StartDims { get; set; } = 4;
 
         public IntersectionFinderWindow(List<ISurface> managers, List<ISurface> selected = null)
         {

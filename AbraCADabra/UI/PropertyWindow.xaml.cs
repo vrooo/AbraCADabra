@@ -49,7 +49,8 @@ namespace AbraCADabra
                 { typeof(Bezier3InterManager), new DisplayParams(GroupBezier3Inter, false, false, false) },
                 { typeof(PatchC0Manager), new DisplayParams(GroupPatchC0, false, false, false) },
                 { typeof(PatchC2Manager), new DisplayParams(GroupPatchC2, false, false, false) },
-                { typeof(GregoryPatchManager), new DisplayParams(GroupGregoryPatch, false, false, false) }
+                { typeof(GregoryPatchManager), new DisplayParams(GroupGregoryPatch, false, false, false) },
+                { typeof(IntersectionCurveManager), new DisplayParams(GroupIntersectionCurve, false, false, false) }
             };
         }
 

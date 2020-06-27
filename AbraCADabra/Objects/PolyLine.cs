@@ -12,10 +12,13 @@ namespace AbraCADabra
         private List<uint> indexList = new List<uint>();
         protected override uint[] indices => indexList.ToArray();
 
-        public PolyLine(IEnumerable<Vector3> points, Vector4 color, bool loop = false)
+        private int thickness;
+
+        public PolyLine(IEnumerable<Vector3> points, Vector4 color, int thickness = 1, bool loop = false)
         {
             primitiveType = loop ? PrimitiveType.LineLoop : PrimitiveType.LineStrip;
             Color = color;
+            this.thickness = thickness;
 
             CalculateVertices(points);
             Initialize();
@@ -44,6 +47,13 @@ namespace AbraCADabra
                 position += point;
             }
             Position = position / (i > 0 ? i : 1);
+        }
+
+        public override void Render(ShaderManager shader)
+        {
+            GL.LineWidth(thickness);
+            base.Render(shader);
+            GL.LineWidth(1);
         }
 
         public override Matrix4 GetModelMatrix()
