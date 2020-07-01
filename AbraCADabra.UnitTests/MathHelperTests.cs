@@ -6,10 +6,10 @@ namespace AbraCADabra
     [TestClass]
     public class MathHelperTests
     {
+        private float eps = 1e-6f;
         [TestMethod]
         public void SolveTriDiag_OnesAndTwos()
         {
-            float eps = 0.001f;
             float[] a = { 1.0f, 1.0f, 1.0f };
             float[] b = { 2.0f, 2.0f, 2.0f, 2.0f };
             float[] c = { 1.0f, 1.0f, 1.0f };
@@ -23,11 +23,19 @@ namespace AbraCADabra
             Assert.AreEqual(0.4f, res[3].X, eps);
         }
 
-        private (TorusManager, TorusManager) MakeToruses()
+        [TestMethod]
+        public void Solve_Simple()
         {
-            var t1 = new TorusManager(new Vector3(-8, 0, 0), 100, 100);
-            var t2 = new TorusManager(new Vector3(8, 0, 0), 100, 100);
-            return (t1, t2);
+            var A = new Matrix4(1, 2, -1, 1,
+                                -1, 1, 2, -1,
+                                2, -1, 2, 2,
+                                1, 1, -1, 2);
+            var b = new Vector4(6, 3, 14, 8);
+            var x = MathHelper.Solve4(A, b);
+            for (int i = 0; i < 4; i++)
+            {
+                Assert.AreEqual(i + 1, x[i], eps);
+            }
         }
     }
 }

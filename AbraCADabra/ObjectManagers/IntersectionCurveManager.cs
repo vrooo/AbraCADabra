@@ -1,5 +1,6 @@
 ﻿using AbraCADabra.Serialization;
 using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using System.Collections.Generic;
 
 namespace AbraCADabra
@@ -10,12 +11,12 @@ namespace AbraCADabra
         private static int counter = 0;
         protected override int instanceCounter => counter++;
 
-        public bool Draw { get; set; } = false;
+        public bool Draw { get; set; } = true;
 
         private PolyLine polyLine;
 
         public IntersectionCurveManager(IEnumerable<Vector3> points)
-            : this(new PolyLine(points, new Vector4(0.9f, 0.1f, 0.1f, 1.0f), 2)) { } // TODO: true param
+            : this(new PolyLine(points, new Vector4(0.9f, 0.1f, 0.1f, 1.0f), 2, true)) { }
 
         public IntersectionCurveManager(PolyLine polyLine) : base(polyLine)
         {
@@ -27,7 +28,9 @@ namespace AbraCADabra
         {
             if (Draw)
             {
+                GL.Disable(EnableCap.DepthTest);
                 base.Render(shader);
+                GL.Enable(EnableCap.DepthTest);
             }
         }
 

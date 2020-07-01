@@ -852,23 +852,42 @@ namespace AbraCADabra
                 {
                     int divs = ifw.StartDims;
                     float fdivs = divs;
+                    bool noCurve = false;
                     for (int x = 0; x < divs; x++)
+                    {
                         for (int y = 0; y < divs; y++)
+                        {
                             for (int z = 0; z < divs; z++)
+                            {
                                 for (int w = 0; w < divs; w++)
                                 {
                                     Vector4 start = divs > 1 ? new Vector4(x / fdivs, y / fdivs, z / fdivs, w / fdivs)
                                                              : new Vector4(0.5f);
-                                    var icm = IntersectionFinder.FindIntersection(ifw.SelectedFirst, ifw.SelectedSecond, start,
-                                                                                  ifw.MaxIterations, ifw.Eps, ifw.PointEps);
-                                    if (icm != null)
+                                    var (intRes, icm) = IntersectionFinder.FindIntersection(ifw.SelectedFirst, ifw.SelectedSecond, start,
+                                                                                  ifw.MaxIterations, ifw.CurveStep,
+                                                                                  ifw.Eps, ifw.PointEps);
+                                    if (intRes == IntersectionResult.OK)
                                     {
                                         objects.Add(icm);
                                         RefreshView();
                                         return;
                                     }
+                                    else if (intRes == IntersectionResult.NoCurve)
+                                    {
+                                        noCurve = true;
+                                    }
                                 }
-                    System.Windows.MessageBox.Show("No intersections found.", "Find intersections", MessageBoxButton.OK);
+                            }
+                        }
+                    }
+                    if (noCurve)
+                    {
+                        System.Windows.MessageBox.Show("Failed to find intersection curve.", "Find intersections", MessageBoxButton.OK);
+                    }
+                    else
+                    {
+                        System.Windows.MessageBox.Show("No intersections found.", "Find intersections", MessageBoxButton.OK);
+                    }
                 }
                 else if (res == true)
                 {
