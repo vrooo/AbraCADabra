@@ -54,6 +54,24 @@ namespace AbraCADabra
             return (Math.Sin(val), Math.Cos(val));
         }
 
+        public Vector2 ScaleUV(float u, float v)
+        {
+            return new Vector2(u, v);
+        }
+
+        public Vector2 ClampUV(float u, float v)
+        {
+            if (u < 0 || u > 1)
+            {
+                u -= (float)Math.Floor(u);
+            }
+            if (v < 0 || v > 1)
+            {
+                v -= (float)Math.Floor(v);
+            }
+            return new Vector2(u, v);
+        }
+
         public Vector3 GetUVPoint(float u, float v)
         {
             var (sinTheta, cosTheta) = SinCos(TWO_PI * u);

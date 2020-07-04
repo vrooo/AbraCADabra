@@ -14,5 +14,9 @@ namespace AbraCADabra
         Vector3 GetDuDu(float u, float v);
         Vector3 GetDuDv(float u, float v);
         Vector3 GetDvDv(float u, float v);
+
+        // from [0; 1] to actual
+        Vector2 ScaleUV(float u, float v);
+        Vector2 ClampUV(float u, float v);
     }
 }

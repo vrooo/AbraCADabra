@@ -1,4 +1,5 @@
 ﻿using AbraCADabra.Serialization;
+using OpenTK;
 using System.Collections.Generic;
 
 namespace AbraCADabra
@@ -24,6 +25,34 @@ namespace AbraCADabra
 
         public PatchC2Manager(PointManager[,] points, PatchType patchType, int patchCountX, int patchCountZ)
             : base(points, patchType, patchCountX, patchCountZ, 2) { }
+
+        protected override Vector3 CalcPoint(float t, IList<Vector3> pts)
+        {
+            // de Boor
+            int n = pts.Count;
+            float[] N = new float[n], A = new float[n - 1], B = new float[n - 1];
+            N[0] = 1.0f;
+            for (int i = 0; i < n - 1; i++)
+            {
+                A[i] = i - t + 1.0f;
+                B[i] = i + t;
+                float saved = 0.0f;
+                for (int j = 0; j <= i; j++)
+                {
+                    float term = N[j] / (A[j] + B[i - j]);
+                    N[j] = saved + A[j] * term;
+                    saved = B[i - j] * term;
+                }
+                N[i + 1] = saved;
+            }
+
+            Vector3 pos = Vector3.Zero;
+            for (int i = 0; i < n; i++)
+            {
+                pos += N[i] * pts[i];
+            }
+            return pos;
+        }
 
         public override XmlNamedType GetSerializable()
         {

@@ -339,6 +339,8 @@
                 <StackPanel>
                     <CheckBox IsChecked="{Binding Draw}"
                               Style="{StaticResource CheckBoxUpdating}">Show curve</CheckBox>
+                    <Button Click="ButtonIntersectionShowParameter">Show in Parameter Space Explorer</Button>
+                    <Button Click="ButtonIntersectionGenCurve">Generate interpolating curve</Button>
                 </StackPanel>
             </GroupBox>
         </StackPanel>

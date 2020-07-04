@@ -1,4 +1,5 @@
 ﻿using AbraCADabra.Serialization;
+using OpenTK;
 using System.Collections.Generic;
 
 namespace AbraCADabra
@@ -24,6 +25,25 @@ namespace AbraCADabra
 
         public PatchC0Manager(PointManager[,] points, PatchType patchType, int patchCountX, int patchCountZ)
             : base(points, patchType, patchCountX, patchCountZ, 0) { }
+
+        protected override Vector3 CalcPoint(float t, IList<Vector3> pts)
+        {
+            // de Casteljau
+            int n = pts.Count;
+            var arr = new Vector3[n, n];
+            for (int j = 0; j < n; j++)
+            {
+                arr[0, j] = pts[j];
+            }
+            for (int i = 1; i < n; i++)
+            {
+                for (int j = 0; j < n - i; j++)
+                {
+                    arr[i, j] = (1 - t) * arr[i - 1, j] + t * arr[i - 1, j + 1];
+                }
+            }
+            return arr[n - 1, 0];
+        }
 
         public void AddEdgesFrom(PatchGraph graph, PointManager pm)
         {

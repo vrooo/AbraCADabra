@@ -38,49 +38,97 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </Grid>
-        <CheckBox DockPanel.Dock="Top"
-                  IsChecked="{Binding UseCursorPosition, ElementName=_this}">Use cursor as starting point</CheckBox>
 
-        <Grid DockPanel.Dock="Top">
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="100"/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
+        <GroupBox DockPanel.Dock="Top" Header="Starting point">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                
+                <CheckBox Grid.ColumnSpan="2" IsChecked="{Binding UseCursorPosition, ElementName=_this}">Use cursor as starting point</CheckBox>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
-                       Style="{StaticResource TextBlockBasic}" Text="Convergence eps:"/>
-            <xctk:DecimalUpDown Grid.Row="0" Grid.Column="1"
+                <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                           Style="{StaticResource TextBlockBasic}" Text="Init values per dim:"
+                           ToolTip="Number of initial values for each dimension in parameter space."/>
+                <xctk:IntegerUpDown Grid.Row="1" Grid.Column="1"
+                                    Minimum="1" Value="{Binding StartDims, ElementName=_this}"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
+                           Style="{StaticResource TextBlockBasic}" Text="Max iterations:"
+                           ToolTip="Maximum number of iterations for finding initial intersection point."/>
+                <xctk:IntegerUpDown Grid.Row="2" Grid.Column="1"
+                                    Minimum="1" Value="{Binding StartMaxIterations, ElementName=_this}"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
+                           Style="{StaticResource TextBlockBasic}" Text="Convergence eps:"
+                           ToolTip="Tolerance for initial intersection point convergence in parameter space."/>
+                <xctk:DecimalUpDown Grid.Row="3" Grid.Column="1"
                                 Minimum="1e-8" Increment="0.0001" FormatString="F8"
-                                Value="{Binding Eps, ElementName=_this}"/>
+                                Value="{Binding StartEps, ElementName=_this}"/>
 
-            <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
-                       Style="{StaticResource TextBlockBasic}" Text="Point eps:"/>
-            <xctk:DecimalUpDown Grid.Row="1" Grid.Column="1"
+                <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"
+                           Style="{StaticResource TextBlockBasic}" Text="Point eps:"
+                           ToolTip="Maximum distance between points that can be considered equal."/>
+                <xctk:DecimalUpDown Grid.Row="4" Grid.Column="1"
                                 Minimum="1e-8" Increment="0.0001" FormatString="F8"
-                                Value="{Binding PointEps, ElementName=_this}"/>
+                                Value="{Binding StartPointEps, ElementName=_this}"/>
+            </Grid>
+        </GroupBox>
 
-            <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
-                       Style="{StaticResource TextBlockBasic}" Text="Curve step:"/>
-            <xctk:DecimalUpDown Grid.Row="2" Grid.Column="1"
-                                Minimum="0.001" Increment="0.1" Value="{Binding CurveStep, ElementName=_this}"/>
-            
-            <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
-                       Style="{StaticResource TextBlockBasic}" Text="Max iterations:"/>
-            <xctk:IntegerUpDown Grid.Row="3" Grid.Column="1"
-                                Minimum="1" Value="{Binding MaxIterations, ElementName=_this}"/>
-            
-            <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"
-                       Style="{StaticResource TextBlockBasic}" Text="Init values per dim:"/>
-            <xctk:IntegerUpDown Grid.Row="4" Grid.Column="1"
-                                Minimum="1" Value="{Binding StartDims, ElementName=_this}"/>
-        </Grid>
+        <GroupBox DockPanel.Dock="Top" Header="Curve">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                           Style="{StaticResource TextBlockBasic}" Text="Max points:"
+                           ToolTip="Maximum number of points on the intersection curve."/>
+                <xctk:IntegerUpDown Grid.Row="0" Grid.Column="1"
+                                    Minimum="1" Value="{Binding CurveMaxPoints, ElementName=_this}"/>
+
+                <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                           Style="{StaticResource TextBlockBasic}" Text="Max iterations:"
+                           ToolTip="Maximum number of iterations for each intersection point on the curve."/>
+                <xctk:IntegerUpDown Grid.Row="1" Grid.Column="1"
+                                    Minimum="1" Value="{Binding CurveMaxIterations, ElementName=_this}"/>
+
+                <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
+                           Style="{StaticResource TextBlockBasic}" Text="Curve step:"
+                           ToolTip="Distance along tangent vector between consecutive intersection curve points."/>
+                <xctk:DecimalUpDown Grid.Row="2" Grid.Column="1"
+                                    Minimum="0.001" Increment="0.1" Value="{Binding CurveStep, ElementName=_this}"/>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
+                           Style="{StaticResource TextBlockBasic}" Text="Convergence eps:"
+                           ToolTip="Tolerance for each intersection curve point convergence in parameter space."/>
+                <xctk:DecimalUpDown Grid.Row="3" Grid.Column="1"
+                                    Minimum="1e-8" Increment="0.0001" FormatString="F8"
+                                    Value="{Binding CurveEps, ElementName=_this}"/>
+
+                <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center"
+                           Style="{StaticResource TextBlockBasic}" Text="Endpoint distance:"
+                           ToolTip="Maximum distance between first and last points that can be considered equal (forming a loop).&#x0a;The second point is excluded from this check."/>
+                <xctk:DecimalUpDown Grid.Row="4" Grid.Column="1"
+                                    Minimum="0.001" Increment="0.1" Value="{Binding CurveEndDist, ElementName=_this}"/>
+            </Grid>
+        </GroupBox>
 
         <Grid DockPanel.Dock="Top">
             <Grid.ColumnDefinitions>

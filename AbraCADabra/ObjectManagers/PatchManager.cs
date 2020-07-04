@@ -7,7 +7,7 @@ using System.ComponentModel;
 
 namespace AbraCADabra
 {
-    public abstract class PatchManager : TransformManager<PatchVertex>
+    public abstract class PatchManager : TransformManager<PatchVertex>, ISurface
     {
         protected int continuity;
 
@@ -160,10 +160,144 @@ namespace AbraCADabra
             return (pms, xDim, zDim, wrapType == WrapType.None ? PatchType.Simple : PatchType.Cylinder, divX, divZ);
         }
 
+        protected abstract Vector3 CalcPoint(float t, IList<Vector3> pts);
+
+        public Vector2 ScaleUV(float u, float v)
+        {
+            return new Vector2(patchCountX * u, patchCountZ * v);
+        }
+
+        public Vector2 ClampUV(float u, float v)
+        {
+            if (patchType == PatchType.Cylinder && (u < 0 || u > patchCountX))
+            {
+                u -= (float)Math.Floor(u);
+            }
+            else
+            {
+                u = Math.Max(0, Math.Min(patchCountX, u));
+            }
+            v = Math.Max(0, Math.Min(patchCountZ, v));
+            return new Vector2(u, v);
+        }
+
+        private (float u, float v, int sx, int sz) TranslateUV(float u, float v)
+        {
+            int indexX = (int)Math.Floor(u), indexZ = (int)Math.Floor(v);
+            indexX = Math.Max(0, Math.Min(patchCountX - 1, indexX));
+            indexZ = Math.Max(0, Math.Min(patchCountZ - 1, indexZ));
+            int mult = 3 - continuity;
+            return (u - indexX, v - indexZ, mult * indexX, mult * indexZ);
+        }
+
         public Vector3 GetUVPoint(float u, float v)
         {
-            // TODO
-            return Vector3.Zero;
+            var (pts, _) = GetPointPositions(points, patchType, continuity);
+            int sx, sz;
+            (u, v, sx, sz) = TranslateUV(u, v);
+            Vector3[] p = new Vector3[4], q = new Vector3[4];
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    p[j] = pts[sx + i, sz + j];
+                }
+                q[i] = CalcPoint(u, p);
+            }
+            return CalcPoint(v, q);
+        }
+
+        public Vector3 GetDu(float u, float v)
+        {
+            var (pts, _) = GetPointPositions(points, patchType, continuity);
+            int sx, sz;
+            (u, v, sx, sz) = TranslateUV(u, v);
+            float coef = 3 - continuity;
+            Vector3[] p = new Vector3[3], q = new Vector3[4];
+            for (int i = 0; i < q.Length; i++)
+            {
+                for (int j = 0; j < p.Length; j++)
+                {
+                    p[j] = coef * (pts[sx + i, sz + j + 1] - pts[sx + i, sz + j]);
+                }
+                q[i] = CalcPoint(u, p);
+            }
+            return CalcPoint(v, q);
+        }
+
+        public Vector3 GetDv(float u, float v)
+        {
+            var (pts, _) = GetPointPositions(points, patchType, continuity);
+            int sx, sz;
+            (u, v, sx, sz) = TranslateUV(u, v);
+            float coef = 3 - continuity;
+            Vector3[] p = new Vector3[3], q = new Vector3[4];
+            for (int i = 0; i < q.Length; i++)
+            {
+                for (int j = 0; j < p.Length; j++)
+                {
+                    p[j] = coef * (pts[sx + j + 1, sz + i] - pts[sx + j, sz + i]);
+                }
+                q[i] = CalcPoint(v, p);
+            }
+            return CalcPoint(u, q);
+        }
+
+        public Vector3 GetDuDu(float u, float v)
+        {
+            var (pts, _) = GetPointPositions(points, patchType, continuity);
+            int sx, sz;
+            (u, v, sx, sz) = TranslateUV(u, v);
+            float coef = (3 - continuity) * (3 - continuity);
+            Vector3[] p = new Vector3[2], q = new Vector3[4];
+            for (int i = 0; i < q.Length; i++)
+            {
+                for (int j = 0; j < p.Length; j++)
+                {
+                    p[j] = coef * (pts[sx + i, sz + j + 2] - 2 * pts[sx + i, sz + j + 1] + pts[sx + i, sz + j]);
+                }
+                q[i] = CalcPoint(u, p);
+            }
+            return CalcPoint(v, q);
+        }
+
+        public Vector3 GetDvDv(float u, float v)
+        {
+            var (pts, _) = GetPointPositions(points, patchType, continuity);
+            int sx, sz;
+            (u, v, sx, sz) = TranslateUV(u, v);
+            float coef = (3 - continuity) * (3 - continuity);
+            Vector3[] p = new Vector3[2], q = new Vector3[4];
+            for (int i = 0; i < q.Length; i++)
+            {
+                for (int j = 0; j < p.Length; j++)
+                {
+                    p[j] = coef * (pts[sx + j + 2, sz + i] - 2 * pts[sx + j + 1, sz + i] + pts[sx + j, sz + i]);
+                }
+                q[i] = CalcPoint(v, p);
+            }
+            return CalcPoint(u, q);
+        }
+
+        public Vector3 GetDuDv(float u, float v)
+        {
+            var (pts, _) = GetPointPositions(points, patchType, continuity);
+            int sx, sz;
+            (u, v, sx, sz) = TranslateUV(u, v);
+            float coef = (3 - continuity) * (3 - continuity);
+            Vector3[] p = new Vector3[3], q = new Vector3[3];
+            for (int i = 0; i < q.Length; i++)
+            {
+                for (int j = 0; j < p.Length; j++)
+                {
+                    p[j] = coef * (pts[sx + i + 1, sz + j + 1] 
+                                 - pts[sx + i + 1, sz + j]
+                                 - pts[sx + i, sz + j + 1]
+                                 + pts[sx + i, sz + j]);
+                }
+                q[i] = CalcPoint(u, p);
+            }
+            return CalcPoint(v, q);
         }
 
         public override void Update()

@@ -512,6 +512,12 @@ namespace AbraCADabra
             RefreshView();
         }
 
+        public void AddManager(TransformManager tm)
+        {
+            objects.Add(tm);
+            RefreshView();
+        }
+
         private void ButtonCreatePoint(object sender, RoutedEventArgs e)
         {
             var point = new PointManager(cursor.Position);
@@ -848,9 +854,9 @@ namespace AbraCADabra
                 var selected = ListObjects.SelectedItems.OfType<ISurface>().ToList();
                 IntersectionFinderWindow ifw = new IntersectionFinderWindow(surfaces, selected);
                 bool? res = ifw.ShowDialog();
-                if (res == true && !ifw.IsSingleSurface)
+                if (res == true && !IntersectionFinderWindow.IsSingleSurface)
                 {
-                    int divs = ifw.StartDims;
+                    int divs = IntersectionFinderWindow.StartDims;
                     float fdivs = divs;
                     bool noCurve = false;
                     for (int x = 0; x < divs; x++)
@@ -863,9 +869,9 @@ namespace AbraCADabra
                                 {
                                     Vector4 start = divs > 1 ? new Vector4(x / fdivs, y / fdivs, z / fdivs, w / fdivs)
                                                              : new Vector4(0.5f);
-                                    var (intRes, icm) = IntersectionFinder.FindIntersection(ifw.SelectedFirst, ifw.SelectedSecond, start,
-                                                                                  ifw.MaxIterations, ifw.CurveStep,
-                                                                                  ifw.Eps, ifw.PointEps);
+                                    var (intRes, icm) = IntersectionFinder.FindIntersection(IntersectionFinderWindow.SelectedFirst,
+                                                                                            IntersectionFinderWindow.SelectedSecond,
+                                                                                            start);
                                     if (intRes == IntersectionResult.OK)
                                     {
                                         objects.Add(icm);

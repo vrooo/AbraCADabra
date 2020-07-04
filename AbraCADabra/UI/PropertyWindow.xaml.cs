@@ -165,5 +165,21 @@ namespace AbraCADabra
             }
             PropertyUpdated?.Invoke(DataContext as TransformManager);
         }
+
+        private void ButtonIntersectionShowParameter(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void ButtonIntersectionGenCurve(object sender, RoutedEventArgs e)
+        {
+            var mw = Owner as MainWindow;
+            var (points, curve) = (DataContext as IntersectionCurveManager).ToBezierInter();
+            foreach (var point in points)
+            {
+                mw.AddManager(point);
+            }
+            mw.AddManager(curve);
+        }
     }
 }

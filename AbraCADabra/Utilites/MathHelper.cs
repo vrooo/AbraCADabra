@@ -16,6 +16,11 @@ namespace AbraCADabra
             return new Vector4((float)x, (float)y, (float)z, (float)w);
         }
 
+        public static Vector4 MakeVector4(Vector2 v1, Vector2 v2)
+        {
+            return new Vector4(v1.X, v1.Y, v2.X, v2.Y);
+        }
+
         public static float Sum(this Vector3 v)
         {
             return v.X + v.Y + v.Z;

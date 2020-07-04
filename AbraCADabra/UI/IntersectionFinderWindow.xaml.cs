@@ -9,15 +9,21 @@ namespace AbraCADabra
     /// </summary>
     public partial class IntersectionFinderWindow : Window
     {
-        public ISurface SelectedFirst { get; set; }
-        public ISurface SelectedSecond { get; set; }
-        public bool IsSingleSurface => SelectedFirst == SelectedSecond;
-        public bool UseCursorPosition { get; set; }
-        public float CurveStep { get; set; } = 0.1f;
-        public float Eps { get; set; } = 1e-6f;
-        public float PointEps { get; set; } = 1e-2f;
-        public int MaxIterations { get; set; } = 30;
-        public int StartDims { get; set; } = 4;
+        public static ISurface SelectedFirst { get; set; }
+        public static ISurface SelectedSecond { get; set; }
+        public static bool IsSingleSurface => SelectedFirst == SelectedSecond;
+        public static bool UseCursorPosition { get; set; }
+
+        public static int StartDims { get; set; } = 4;
+        public static int StartMaxIterations { get; set; } = 30;
+        public static float StartEps { get; set; } = 1e-6f;
+        public static float StartPointEps { get; set; } = 1e-2f;
+
+        public static int CurveMaxPoints { get; set; } = 10000;
+        public static int CurveMaxIterations { get; set; } = 30;
+        public static float CurveStep { get; set; } = 1.0f;
+        public static float CurveEps { get; set; } = 1e-6f;
+        public static float CurveEndDist { get; set; } = 0.5f;
 
         public IntersectionFinderWindow(List<ISurface> managers, List<ISurface> selected = null)
         {

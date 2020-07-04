@@ -11,19 +11,39 @@ namespace AbraCADabra
         private static int counter = 0;
         protected override int instanceCounter => counter++;
 
+        private bool isLoop;
+        IEnumerable<Vector3> points;
+
         public bool Draw { get; set; } = true;
 
         private PolyLine polyLine;
 
-        public IntersectionCurveManager(IEnumerable<Vector3> points)
-            : this(new PolyLine(points, new Vector4(0.9f, 0.1f, 0.1f, 1.0f), 2, true)) { }
+        public IntersectionCurveManager(IEnumerable<Vector3> points, bool loop)
+            : this(new PolyLine(points, new Vector4(0.9f, 0.1f, 0.1f, 1.0f), 2, loop))
+        {
+            isLoop = loop;
+            this.points = points;
+        }
 
-        public IntersectionCurveManager(PolyLine polyLine) : base(polyLine)
+        private IntersectionCurveManager(PolyLine polyLine) : base(polyLine)
         {
             this.polyLine = polyLine;
         }
 
-        public override void Update() { }
+        public (List<PointManager> points, Bezier3InterManager curve) ToBezierInter()
+        {
+            var pms = new List<PointManager>();
+            foreach (var point in points)
+            {
+                pms.Add(new PointManager(point));
+            }
+            if (isLoop && pms.Count > 1)
+            {
+                pms.Add(pms[0]);
+            }
+            return (pms, new Bezier3InterManager(pms));
+        }
+
         public override void Render(ShaderManager shader)
         {
             if (Draw)
@@ -33,6 +53,7 @@ namespace AbraCADabra
                 GL.Enable(EnableCap.DepthTest);
             }
         }
+        public override void Update() { }
 
         public override void Translate(float x, float y, float z) { }
         public override void Rotate(float x, float y, float z) { }
