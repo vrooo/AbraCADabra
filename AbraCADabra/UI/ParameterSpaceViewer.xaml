@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AbraCADabra"
         mc:Ignorable="d"
-        Title="Parameter Space Viewer" Height="450" Width="800" SizeChanged="OnSizeChanged">
+        Title="Parameter Space Viewer" Height="450" Width="800" MinHeight="150" MinWidth="200" SizeChanged="OnSizeChanged">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

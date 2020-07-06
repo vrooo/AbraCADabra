@@ -162,8 +162,8 @@ namespace AbraCADabra
 
         protected abstract Vector3 CalcPoint(float t, IList<Vector3> pts);
 
-        public float UScale => patchCountX;
-        public float VScale => patchCountZ;
+        public int UScale => patchCountX;
+        public int VScale => patchCountZ;
 
         public bool IsUVValid(float u, float v)
         {
