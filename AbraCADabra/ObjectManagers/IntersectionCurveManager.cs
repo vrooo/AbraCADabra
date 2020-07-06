@@ -11,18 +11,24 @@ namespace AbraCADabra
         private static int counter = 0;
         protected override int instanceCounter => counter++;
 
-        private bool isLoop;
-        IEnumerable<Vector3> points;
+        private IEnumerable<Vector3> points;
+        public bool IsLoop { get; }
+        public IList<Vector4> Xs { get; }
+        public ISurface P { get; }
+        public ISurface Q { get; }
 
         public bool Draw { get; set; } = true;
 
         private PolyLine polyLine;
 
-        public IntersectionCurveManager(IEnumerable<Vector3> points, bool loop)
+        public IntersectionCurveManager(ISurface p, ISurface q, IEnumerable<Vector3> points, IList<Vector4> xs, bool loop)
             : this(new PolyLine(points, new Vector4(0.9f, 0.1f, 0.1f, 1.0f), 2, loop))
         {
-            isLoop = loop;
+            IsLoop = loop;
+            P = p;
+            Q = q;
             this.points = points;
+            Xs = xs;
         }
 
         private IntersectionCurveManager(PolyLine polyLine) : base(polyLine)
@@ -37,7 +43,7 @@ namespace AbraCADabra
             {
                 pms.Add(new PointManager(point));
             }
-            if (isLoop && pms.Count > 1)
+            if (IsLoop && pms.Count > 1)
             {
                 pms.Add(pms[0]);
             }

@@ -18,7 +18,7 @@ namespace AbraCADabra
 
         public static (IntersectionResult intRes, IntersectionCurveManager icm) FindIntersection(ISurface P, ISurface Q, Vector4 x0)
         {
-            x0 = MathHelper.MakeVector4(P.ScaleUV(x0.X, x0.Y), Q.ScaleUV(x0.Z, x0.W));
+            x0 = new Vector4(x0.X * P.UScale, x0.Y * P.VScale, x0.Z * Q.UScale, x0.W * Q.VScale);
             Vector4 x = x0, xprev, grad = GetDistGradient(P, Q, x0), r = -grad, p = r, rnew;
             float a, b;
 
@@ -57,15 +57,20 @@ namespace AbraCADabra
             }
 
             var first = (startP + startQ) / 2.0f;
-            var points = new List<Vector3> { first };
+            List<Vector3> points = new List<Vector3> { first }, pointsEnd = null;
+            List<Vector4> xs = new List<Vector4> { x }, xsEnd = null;
             float endDist = IFW.CurveEndDist * IFW.CurveEndDist;
             eps = IFW.CurveEps * IFW.CurveEps;
-            bool loop = false;
+            bool loop = false, afterReverse = false;
             for (int pointCounter = 0; pointCounter < IFW.CurveMaxPoints; pointCounter++)
             {
                 var nP = Vector3.Cross(P.GetDu(x.X, x.Y), P.GetDv(x.X, x.Y));
                 var nQ = Vector3.Cross(Q.GetDu(x.Z, x.W), Q.GetDv(x.Z, x.W));
                 var tan = Vector3.Normalize(Vector3.Cross(nP, nQ));
+                if (afterReverse)
+                {
+                    tan = -tan;
+                }
 
                 Vector3 pP = startP, pQ = startQ;
                 int iterCounter = 0;
@@ -88,28 +93,62 @@ namespace AbraCADabra
                     {
                         return (IntersectionResult.NoCurve, null);
                     }
-                    x = MathHelper.MakeVector4(P.ClampUV(x.X, x.Y), Q.ClampUV(x.Z, x.W));
+                    //x = MathHelper.MakeVector4(P.ClampUV(x.X, x.Y), Q.ClampUV(x.Z, x.W));
                     pP = P.GetUVPoint(x.X, x.Y);
                     pQ = Q.GetUVPoint(x.Z, x.W);
                 } while ((xprev - x).LengthSquared > eps);
-
+                
                 if (IsAnyNaN(x))
                 {
                     return (IntersectionResult.NoCurve, null);
+                }
+                if (!P.IsUVValid(x.X, x.Y) || !Q.IsUVValid(x.Z, x.W))
+                {
+                    if (afterReverse)
+                    {
+                        points.Reverse();
+                        points.AddRange(pointsEnd);
+                        xs.Reverse();
+                        xs.AddRange(xsEnd);
+                        break;
+                    }
+                    else
+                    {
+                        afterReverse = true;
+
+                        pointsEnd = points;
+                        points = new List<Vector3>();
+                        xsEnd = xs;
+                        xs = new List<Vector4>();
+
+                        first = pointsEnd[pointsEnd.Count - 1];
+                        x = xsEnd[0];
+                        startP = P.GetUVPoint(x.X, x.Y);
+                        startQ = Q.GetUVPoint(x.Z, x.W);
+                        continue;
+                    }
                 }
 
                 startP = pP;
                 startQ = pQ;
                 var point = (startP + startQ) / 2.0f;
                 points.Add(point);
+                xs.Add(x);
                 if (points.Count > 2 && (point - first).LengthSquared < endDist)
                 {
                     loop = true;
+                    if (pointsEnd != null)
+                    {
+                        points.Reverse();
+                        points.AddRange(pointsEnd);
+                        xs.Reverse();
+                        xs.AddRange(xsEnd);
+                    }
                     break;
                 }
             }
 
-            return (IntersectionResult.OK, new IntersectionCurveManager(points, loop));
+            return (IntersectionResult.OK, new IntersectionCurveManager(P, Q, points, xs, loop));
         }
 
         private static float GetDistD(ISurface P, ISurface Q, float u, float v, float s, float t, bool useU)
@@ -214,12 +253,7 @@ namespace AbraCADabra
             var Qs = Q.GetDu(s, t);
             var Qt = Q.GetDv(s, t);
 
-            float tanu = 0.0f, tanv = 0.0f;
-            for (int i = 0; i < 3; i++)
-            {
-                tanu += tan[i] * Pu[i];
-                tanv += tan[i] * Pv[i];
-            }
+            float tanu = Vector3.Dot(tan, Pu), tanv = Vector3.Dot(tan, Pv);
 
             return new Matrix4(Pu.X, Pv.X, -Qs.X, -Qt.X,
                                Pu.Y, Pv.Y, -Qs.Y, -Qt.Y,

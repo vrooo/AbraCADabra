@@ -38,7 +38,8 @@ namespace AbraCADabra
                 GroupBezier3Inter,
                 GroupPatchC0,
                 GroupPatchC2,
-                GroupGregoryPatch
+                GroupGregoryPatch,
+                GroupIntersectionCurve
             };
             typeMap = new Dictionary<Type, DisplayParams>
             {
@@ -168,7 +169,11 @@ namespace AbraCADabra
 
         private void ButtonIntersectionShowParameter(object sender, RoutedEventArgs e)
         {
-
+            ParameterSpaceViewer psv = new ParameterSpaceViewer
+            {
+                DataContext = DataContext
+            };
+            psv.Show();
         }
 
         private void ButtonIntersectionGenCurve(object sender, RoutedEventArgs e)

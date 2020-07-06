@@ -54,10 +54,10 @@ namespace AbraCADabra
             return (Math.Sin(val), Math.Cos(val));
         }
 
-        public Vector2 ScaleUV(float u, float v)
-        {
-            return new Vector2(u, v);
-        }
+        public float UScale => 1;
+        public float VScale => 1;
+
+        public bool IsUVValid(float u, float v) => true;
 
         public Vector2 ClampUV(float u, float v)
         {

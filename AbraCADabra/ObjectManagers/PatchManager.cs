@@ -162,16 +162,25 @@ namespace AbraCADabra
 
         protected abstract Vector3 CalcPoint(float t, IList<Vector3> pts);
 
-        public Vector2 ScaleUV(float u, float v)
+        public float UScale => patchCountX;
+        public float VScale => patchCountZ;
+
+        public bool IsUVValid(float u, float v)
         {
-            return new Vector2(patchCountX * u, patchCountZ * v);
+            if (v > 0 && v < patchCountZ)
+            {
+                return patchType == PatchType.Cylinder || (u > 0 && u < patchCountX);
+            }
+            return false;
         }
 
         public Vector2 ClampUV(float u, float v)
         {
             if (patchType == PatchType.Cylinder && (u < 0 || u > patchCountX))
             {
+                u /= patchCountX;
                 u -= (float)Math.Floor(u);
+                u *= patchCountX;
             }
             else
             {

@@ -135,6 +135,9 @@
     <Compile Include="Objects\Transform.cs" />
     <Compile Include="Objects\Plane.cs" />
     <Compile Include="Objects\Torus.cs" />
+    <Compile Include="UI\ParameterSpaceViewer.xaml.cs">
+      <DependentUpon>ParameterSpaceViewer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UI\PatchWindow.xaml.cs">
       <DependentUpon>PatchWindow.xaml</DependentUpon>
     </Compile>
@@ -173,6 +176,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="UI\ParameterSpaceViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\PatchWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

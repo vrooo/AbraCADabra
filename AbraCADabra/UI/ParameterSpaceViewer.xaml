@@ -1,0 +1,61 @@
+﻿<Window x:Class="AbraCADabra.ParameterSpaceViewer"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AbraCADabra"
+        mc:Ignorable="d"
+        Title="Parameter Space Viewer" Height="450" Width="800" SizeChanged="OnSizeChanged">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        
+        <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" FontSize="20"
+                   Text="{Binding Path=P.Name}"/>
+        <TextBlock Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center" FontSize="20"
+                   Text="{Binding Path=Q.Name}"/>
+
+        <Grid Grid.Row="1" Grid.Column="0" Margin="5, 0, 5, 5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Canvas Grid.Row="0" Grid.Column="1" Margin="3, 14, 8, 0" x:Name="CanvasLeft"/>
+            <TextBlock Grid.Row="1" Grid.Column="0">0</TextBlock>
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Top">1</TextBlock>
+            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right">1</TextBlock>
+            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center">u</TextBlock>
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">v</TextBlock>
+        </Grid>
+
+        <Grid Grid.Row="1" Grid.Column="1" Margin="5, 0, 5, 5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Canvas Grid.Row="0" Grid.Column="1" Margin="3, 14, 8, 0" x:Name="CanvasRight"/>
+            <TextBlock Grid.Row="1" Grid.Column="0">0</TextBlock>
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Top">1</TextBlock>
+            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right">1</TextBlock>
+            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center">u</TextBlock>
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">v</TextBlock>
+        </Grid>
+    </Grid>
+</Window>

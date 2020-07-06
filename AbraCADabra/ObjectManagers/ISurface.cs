@@ -16,7 +16,9 @@ namespace AbraCADabra
         Vector3 GetDvDv(float u, float v);
 
         // from [0; 1] to actual
-        Vector2 ScaleUV(float u, float v);
+        float UScale { get; }
+        float VScale { get; }
         Vector2 ClampUV(float u, float v);
+        bool IsUVValid(float u, float v);
     }
 }
