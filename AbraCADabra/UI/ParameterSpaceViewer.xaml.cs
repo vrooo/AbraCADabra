@@ -51,6 +51,7 @@ namespace AbraCADabra
             var listRight = new List<PathFigure>();
             bool first = true;
             var prevX = new Vector4();
+            int pointCounter = 0;
             foreach (var tmpx in xs)
             {
                 var pointP = icm.P.ClampUV(tmpx.X, tmpx.Y);
@@ -61,13 +62,12 @@ namespace AbraCADabra
                 var pointRight = new System.Windows.Point(TranslateU(pointQ.X / icm.Q.UScale),
                                                           TranslateV(pointQ.Y / icm.Q.VScale));
                 var x = new Vector4(tmpx.X / icm.P.UScale, tmpx.Y / icm.P.VScale, tmpx.Z / icm.Q.UScale, tmpx.W / icm.Q.VScale);
-                if (first)
+                if (pointCounter == 0)
                 {
-                    first = false;
                     listLeft.Add(new PathFigure { StartPoint = pointLeft });
                     listRight.Add(new PathFigure { StartPoint = pointRight });
                 }
-                else
+                else if (pointCounter != xs.Count - 1)
                 {
                     if ((int)Math.Floor(x.X) != (int)Math.Floor(prevX.X))
                     {
@@ -141,6 +141,7 @@ namespace AbraCADabra
                     listRight[listRight.Count - 1].Segments.Add(new LineSegment(pointRight, true));
                 }
                 prevX = x;
+                pointCounter++;
             }
 
             var paths = new Path[2];

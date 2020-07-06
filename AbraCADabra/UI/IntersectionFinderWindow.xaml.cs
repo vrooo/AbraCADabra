@@ -23,7 +23,7 @@ namespace AbraCADabra
         public static int CurveMaxIterations { get; set; } = 30;
         public static float CurveStep { get; set; } = 0.1f;
         public static float CurveEps { get; set; } = 1e-6f;
-        public static float CurveEndDist { get; set; } = 0.05f;
+        public static float CurveEndDist { get; set; } = 0.1f;
 
         public IntersectionFinderWindow(List<ISurface> managers, List<ISurface> selected = null)
         {
