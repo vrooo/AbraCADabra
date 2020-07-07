@@ -214,7 +214,6 @@ namespace AbraCADabra
             {
                 for (int j = 0; j < 4; j++)
                 {
-                    //p[j] = pts[sx + i, sz + j];
                     p[j] = pts[sx + j, sz + i];
                 }
                 q[i] = CalcPoint(u, p);
@@ -233,14 +232,11 @@ namespace AbraCADabra
             {
                 for (int j = 0; j < p.Length; j++)
                 {
-                    //p[j] = coef * (pts[sx + i, sz + j + 1] - pts[sx + i, sz + j]);
                     p[j] = coef * (pts[sx + j + 1, sz + i] - pts[sx + j, sz + i]);
                 }
                 q[i] = CalcPoint(u, p);
-                //q[i] = CalcPoint(v, p);
             }
             return CalcPoint(v, q);
-            //return CalcPoint(u, q);
         }
 
         public Vector3 GetDv(float u, float v)
@@ -254,14 +250,11 @@ namespace AbraCADabra
             {
                 for (int j = 0; j < p.Length; j++)
                 {
-                    //p[j] = coef * (pts[sx + j + 1, sz + i] - pts[sx + j, sz + i]);
                     p[j] = coef * (pts[sx + i, sz + j + 1] - pts[sx + i, sz + j]);
                 }
                 q[i] = CalcPoint(v, p);
-                //q[i] = CalcPoint(u, p);
             }
             return CalcPoint(u, q);
-            //return CalcPoint(v, q);
         }
 
         public Vector3 GetDuDu(float u, float v)
@@ -275,14 +268,11 @@ namespace AbraCADabra
             {
                 for (int j = 0; j < p.Length; j++)
                 {
-                    //p[j] = coef * (pts[sx + i, sz + j + 2] - 2 * pts[sx + i, sz + j + 1] + pts[sx + i, sz + j]);
                     p[j] = coef * (pts[sx + j + 2, sz + i] - 2 * pts[sx + j + 1, sz + i] + pts[sx + j, sz + i]);
                 }
                 q[i] = CalcPoint(u, p);
-                //q[i] = CalcPoint(v, p);
             }
             return CalcPoint(v, q);
-            //return CalcPoint(u, q);
         }
 
         public Vector3 GetDvDv(float u, float v)
@@ -296,14 +286,11 @@ namespace AbraCADabra
             {
                 for (int j = 0; j < p.Length; j++)
                 {
-                    //p[j] = coef * (pts[sx + j + 2, sz + i] - 2 * pts[sx + j + 1, sz + i] + pts[sx + j, sz + i]);
                     p[j] = coef * (pts[sx + i, sz + j + 2] - 2 * pts[sx + i, sz + j + 1] + pts[sx + i, sz + j]);
                 }
                 q[i] = CalcPoint(v, p);
-                //q[i] = CalcPoint(u, p);
             }
             return CalcPoint(u, q);
-            //return CalcPoint(v, q);
         }
 
         public Vector3 GetDuDv(float u, float v)
@@ -317,10 +304,6 @@ namespace AbraCADabra
             {
                 for (int j = 0; j < p.Length; j++)
                 {
-                    //p[j] = coef * (pts[sx + i + 1, sz + j + 1] 
-                    //             - pts[sx + i + 1, sz + j]
-                    //             - pts[sx + i, sz + j + 1]
-                    //             + pts[sx + i, sz + j]);
                     p[j] = coef * (pts[sx + j + 1, sz + i + 1] 
                                  - pts[sx + j + 1, sz + i]
                                  - pts[sx + j, sz + i + 1]

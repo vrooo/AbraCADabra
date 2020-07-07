@@ -859,28 +859,72 @@ namespace AbraCADabra
                     int divs = IntersectionFinderWindow.StartDims;
                     float fdivs = divs;
                     bool noCurve = false;
-                    for (int x = 0; x < divs; x++)
+                    if (IntersectionFinderWindow.UseCursorPosition)
                     {
-                        for (int y = 0; y < divs; y++)
+                        var pointSurface = new PointSurface(cursor.Position);
+                        bool foundStart = false;
+                        for (int x = 0; x < divs; x++)
                         {
-                            for (int z = 0; z < divs; z++)
+                            for (int y = 0; y < divs; y++)
                             {
-                                for (int w = 0; w < divs; w++)
+                                Vector4 preStart = divs > 1 ? new Vector4(x / fdivs, y / fdivs, 0.0f, 0.0f)
+                                                            : new Vector4(0.5f, 0.5f, 0.0f, 0.0f);
+                                var (boolIntRes1, start1) = IntersectionFinder.FindIntersectionPoint(IntersectionFinderWindow.SelectedFirst,
+                                                                                                    pointSurface,
+                                                                                                    preStart);
+                                if (!boolIntRes1) continue;
+                                var (boolIntRes2, start2) = IntersectionFinder.FindIntersectionPoint(IntersectionFinderWindow.SelectedSecond,
+                                                                                                    pointSurface,
+                                                                                                    preStart);
+                                if (!boolIntRes2) continue;
+                                foundStart = true;
+                                Vector4 start = new Vector4(start1.X, start1.Y, start2.X, start2.Y);
+                                var (intRes, icm) = IntersectionFinder.FindIntersection(IntersectionFinderWindow.SelectedFirst,
+                                                                                        IntersectionFinderWindow.SelectedSecond,
+                                                                                        start, false);
+                                if (intRes == IntersectionResult.OK)
                                 {
-                                    Vector4 start = divs > 1 ? new Vector4(x / fdivs, y / fdivs, z / fdivs, w / fdivs)
-                                                             : new Vector4(0.5f);
-                                    var (intRes, icm) = IntersectionFinder.FindIntersection(IntersectionFinderWindow.SelectedFirst,
-                                                                                            IntersectionFinderWindow.SelectedSecond,
-                                                                                            start);
-                                    if (intRes == IntersectionResult.OK)
+                                    objects.Add(icm);
+                                    RefreshView();
+                                    return;
+                                }
+                                else if (intRes == IntersectionResult.NoCurve)
+                                {
+                                    noCurve = true;
+                                }
+                            }
+                        }
+                        if (!foundStart)
+                        {
+                            System.Windows.MessageBox.Show("Failed to find starting point.", "Find intersections", MessageBoxButton.OK);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        for (int x = 0; x < divs; x++)
+                        {
+                            for (int y = 0; y < divs; y++)
+                            {
+                                for (int z = 0; z < divs; z++)
+                                {
+                                    for (int w = 0; w < divs; w++)
                                     {
-                                        objects.Add(icm);
-                                        RefreshView();
-                                        return;
-                                    }
-                                    else if (intRes == IntersectionResult.NoCurve)
-                                    {
-                                        noCurve = true;
+                                        Vector4 start = divs > 1 ? new Vector4(x / fdivs, y / fdivs, z / fdivs, w / fdivs)
+                                                                 : new Vector4(0.5f);
+                                        var (intRes, icm) = IntersectionFinder.FindIntersection(IntersectionFinderWindow.SelectedFirst,
+                                                                                                IntersectionFinderWindow.SelectedSecond,
+                                                                                                start);
+                                        if (intRes == IntersectionResult.OK)
+                                        {
+                                            objects.Add(icm);
+                                            RefreshView();
+                                            return;
+                                        }
+                                        else if (intRes == IntersectionResult.NoCurve)
+                                        {
+                                            noCurve = true;
+                                        }
                                     }
                                 }
                             }

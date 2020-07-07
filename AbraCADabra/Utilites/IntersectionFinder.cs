@@ -16,9 +16,20 @@ namespace AbraCADabra
             return false;
         }
 
-        public static (IntersectionResult intRes, IntersectionCurveManager icm) FindIntersection(ISurface P, ISurface Q, Vector4 x0)
+        public static (bool res, Vector4 x) FindIntersectionPoint(ISurface P, ISurface Q, Vector4 x0, bool scale = true)
         {
-            x0 = new Vector4(x0.X * P.UScale, x0.Y * P.VScale, x0.Z * Q.UScale, x0.W * Q.VScale);
+            Vector2 x1, x2;
+            if (scale)
+            {
+                x1 = P.ClampUV(x0.X * P.UScale, x0.Y * P.VScale);
+                x2 = Q.ClampUV(x0.Z * Q.UScale, x0.W * Q.VScale);
+            }
+            else
+            {
+                x1 = P.ClampUV(x0.X, x0.Y);
+                x2 = Q.ClampUV(x0.Z, x0.W);
+            }
+            x0 = MathHelper.MakeVector4(x1, x2);
             Vector4 x = x0, xprev, grad = GetDistGradient(P, Q, x0), r = -grad, p = r, rnew;
             float a, b;
 
@@ -28,7 +39,7 @@ namespace AbraCADabra
             {
                 if (startCounter >= IFW.StartMaxIterations || IsAnyNaN(x))
                 {
-                    return (IntersectionResult.NoIntersection, null);
+                    return (false, x);
                 }
                 startCounter++;
                 xprev = x;
@@ -46,6 +57,46 @@ namespace AbraCADabra
 
             if (IsAnyNaN(x))
             {
+                return (false, x);
+            }
+            return (true, x);
+        }
+
+        public static (IntersectionResult intRes, IntersectionCurveManager icm) FindIntersection(ISurface P, ISurface Q, Vector4 x0, bool scale = true)
+        {
+            //x0 = new Vector4(x0.X * P.UScale, x0.Y * P.VScale, x0.Z * Q.UScale, x0.W * Q.VScale);
+            //Vector4 x = x0, xprev, grad = GetDistGradient(P, Q, x0), r = -grad, p = r, rnew;
+            //float a, b;
+
+            //float eps = IFW.StartEps * IFW.StartEps;
+            //int startCounter = 0;
+            //do
+            //{
+            //    if (startCounter >= IFW.StartMaxIterations || IsAnyNaN(x))
+            //    {
+            //        return (IntersectionResult.NoIntersection, null);
+            //    }
+            //    startCounter++;
+            //    xprev = x;
+
+            //    a = -Vector4.Dot(grad, p) / Vector4.Dot(p, GetDistHessian(P, Q, x) * p);
+            //    x += a * p;
+            //    x = MathHelper.MakeVector4(P.ClampUV(x.X, x.Y), Q.ClampUV(x.Z, x.W));
+            //    grad = GetDistGradient(P, Q, x);
+
+            //    rnew = -grad;
+            //    b = Math.Max(0.0f, Vector4.Dot(rnew, rnew - r) / r.LengthSquared);
+            //    r = rnew;
+            //    p = r + b * p;
+            //} while ((xprev - x).LengthSquared > eps);
+
+            //if (IsAnyNaN(x))
+            //{
+            //    return (IntersectionResult.NoIntersection, null);
+            //}
+            (bool res, Vector4 x) = FindIntersectionPoint(P, Q, x0, scale);
+            if (!res)
+            {
                 return (IntersectionResult.NoIntersection, null);
             }
 
@@ -60,7 +111,8 @@ namespace AbraCADabra
             List<Vector3> points = new List<Vector3> { first }, pointsEnd = null;
             List<Vector4> xs = new List<Vector4> { x }, xsEnd = null;
             float endDist = IFW.CurveEndDist * IFW.CurveEndDist;
-            eps = IFW.CurveEps * IFW.CurveEps;
+            float eps = IFW.CurveEps * IFW.CurveEps;
+            Vector4 xprev;
             bool loop = false, afterReverse = false;
             for (int pointCounter = 0; pointCounter < IFW.CurveMaxPoints; pointCounter++)
             {
