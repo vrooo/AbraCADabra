@@ -13,15 +13,16 @@ namespace AbraCADabra
         protected override int instanceCounter => counter++;
 
         private IEnumerable<Vector3> points;
-        public bool IsLoop { get; }
-        public IList<Vector4> Xs { get; }
-
-        // scaled to [0; 1]
-        public List<List<Vector2>> SegmentsP { get; private set; }
-        public List<List<Vector2>> SegmentsQ { get; private set; }
+        private IList<Vector4> xs;
 
         public ISurface P { get; }
         public ISurface Q { get; }
+        // scaled to [0; 1]
+        public List<List<Vector2>> SegmentsP { get; private set; }
+        public List<List<Vector2>> SegmentsQ { get; private set; }
+        public bool IsLoop { get; }
+        public bool IsClosedP { get; private set; }
+        public bool IsClosedQ { get; private set; }
 
         public bool Draw { get; set; } = true;
 
@@ -35,7 +36,7 @@ namespace AbraCADabra
             P = p;
             Q = q;
             this.points = points;
-            Xs = xs;
+            this.xs = xs;
             CalculateSegments();
         }
 
@@ -49,17 +50,12 @@ namespace AbraCADabra
             SegmentsP = new List<List<Vector2>>();
             SegmentsQ = new List<List<Vector2>>();
             Vector4 prevX = new Vector4();
-            for (int i = 0; i < Xs.Count; i++)
+            for (int i = 0; i < xs.Count; i++)
             {
-                var x = Xs[i];
+                var x = new Vector4(xs[i].X / P.UScale, xs[i].Y / P.VScale, xs[i].Z / Q.UScale, xs[i].W / Q.VScale);
                 var pointP = P.ClampScaledUV(x.X, x.Y);
-                pointP.X /= P.UScale;
-                pointP.Y /= P.VScale;
                 var pointQ = Q.ClampScaledUV(x.Z, x.W);
-                pointQ.X /= Q.UScale;
-                pointQ.Y /= Q.VScale;
 
-                x = new Vector4(x.X / P.UScale, x.Y / P.VScale, x.Z / Q.UScale, x.W / Q.VScale);
                 if (i == 0)
                 {
                     SegmentsP.Add(new List<Vector2> { pointP });
@@ -140,10 +136,38 @@ namespace AbraCADabra
                 }
                 prevX = x;
             }
-            // TODO: if loop, join first and last
             if (IsLoop)
             {
-
+                double maxDistSq = 0.25;
+                bool IsZeroOne(float x1, float x2)
+                {
+                    return (x1 == 0 && x2 == 1) || (x2 == 0 && x1 == 1);
+                }
+                bool ConnectFirstLast(List<List<Vector2>> segments)
+                {
+                    if (segments.Count > 1)
+                    {
+                        int segLast = segments.Count - 1, pointLast = segments[segLast].Count - 1;
+                        Vector2 first = segments[0][0], last = segments[segLast][pointLast];
+                        if (Vector2.DistanceSquared(first, last) < maxDistSq)
+                        {
+                            segments[segLast].AddRange(segments[0]);
+                            segments.RemoveAt(0);
+                        }
+                    }
+                    if (segments.Count == 1 && segments[0].Count > 1)
+                    {
+                        int pointLast = segments[0].Count - 1;
+                        Vector2 first = segments[0][0], last = segments[0][pointLast];
+                        if (!IsZeroOne(first.X, last.X) && !IsZeroOne(first.Y, last.Y))
+                        {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                IsClosedP = ConnectFirstLast(SegmentsP);
+                IsClosedQ = ConnectFirstLast(SegmentsQ);
             }
         }
 

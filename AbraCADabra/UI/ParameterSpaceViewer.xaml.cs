@@ -40,110 +40,25 @@ namespace AbraCADabra
             var icm = DataContext as IntersectionCurveManager;
             Func<double, double> TranslateU = u => width * u;
             Func<double, double> TranslateV = v => height * (1 - v);
-
-            var xs = new List<Vector4>(icm.Xs);
-            if (icm.IsLoop && xs.Count > 0)
+            List<PathFigure> MakeList(List<List<Vector2>> segmentList, bool close)
             {
-                xs.Add(xs[0]);
-            }
-
-            var listLeft = new List<PathFigure>();
-            var listRight = new List<PathFigure>();
-            var prevX = new Vector4();
-            int pointCounter = 0;
-            foreach (var tmpx in xs)
-            {
-                var pointP = icm.P.ClampUV(tmpx.X, tmpx.Y);
-                var pointQ = icm.Q.ClampUV(tmpx.Z, tmpx.W);
-
-                var pointLeft = new System.Windows.Point(TranslateU(pointP.X / icm.P.UScale),
-                                                         TranslateV(pointP.Y / icm.P.VScale));
-                var pointRight = new System.Windows.Point(TranslateU(pointQ.X / icm.Q.UScale),
-                                                          TranslateV(pointQ.Y / icm.Q.VScale));
-                var x = new Vector4(tmpx.X / icm.P.UScale, tmpx.Y / icm.P.VScale, tmpx.Z / icm.Q.UScale, tmpx.W / icm.Q.VScale);
-                if (pointCounter == 0)
+                var list = new List<PathFigure>();
+                foreach (var segment in segmentList)
                 {
-                    listLeft.Add(new PathFigure { StartPoint = pointLeft });
-                    listRight.Add(new PathFigure { StartPoint = pointRight });
-                }
-                else
-                {
-                    if (!icm.IsLoop || pointCounter != xs.Count - 1)
+                    var fig = new PathFigure
                     {
-                        if ((int)Math.Floor(x.X) != (int)Math.Floor(prevX.X))
-                        {
-                            double t = (Math.Max(Math.Floor(x.X), Math.Floor(prevX.X)) - x.X) / (prevX.X - x.X);
-                            var midVec = icm.P.ClampUV(0, (float)(x.Y + t * (prevX.Y - x.Y)));
-                            var midPointZero = new System.Windows.Point(TranslateU(0), TranslateV(midVec.Y));
-                            var midPointOne = new System.Windows.Point(TranslateU(1), TranslateV(midVec.Y));
-                            if (x.X > prevX.X)
-                            {
-                                listLeft[listLeft.Count - 1].Segments.Add(new LineSegment(midPointOne, true));
-                                listLeft.Add(new PathFigure { StartPoint = midPointZero });
-                            }
-                            else
-                            {
-                                listLeft[listLeft.Count - 1].Segments.Add(new LineSegment(midPointZero, true));
-                                listLeft.Add(new PathFigure { StartPoint = midPointOne });
-                            }
-                        }
-                        if ((int)Math.Floor(x.Y) != (int)Math.Floor(prevX.Y))
-                        {
-                            double t = (Math.Max(Math.Floor(x.Y), Math.Floor(prevX.Y)) - x.Y) / (prevX.Y - x.Y);
-                            var midVec = icm.P.ClampUV((float)(x.X + t * (prevX.X - x.X)), 0);
-                            var midPointZero = new System.Windows.Point(TranslateU(midVec.X), TranslateV(0));
-                            var midPointOne = new System.Windows.Point(TranslateU(midVec.X), TranslateV(1));
-                            if (x.Y > prevX.Y)
-                            {
-                                listLeft[listLeft.Count - 1].Segments.Add(new LineSegment(midPointOne, true));
-                                listLeft.Add(new PathFigure { StartPoint = midPointZero });
-                            }
-                            else
-                            {
-                                listLeft[listLeft.Count - 1].Segments.Add(new LineSegment(midPointZero, true));
-                                listLeft.Add(new PathFigure { StartPoint = midPointOne });
-                            }
-                        }
-                        if ((int)Math.Floor(x.Z) != (int)Math.Floor(prevX.Z))
-                        {
-                            double t = (Math.Max(Math.Floor(x.Z), Math.Floor(prevX.Z)) - x.Z) / (prevX.Z - x.Z);
-                            var midVec = icm.P.ClampUV(0, (float)(x.W + t * (prevX.W - x.W)));
-                            var midPointZero = new System.Windows.Point(TranslateU(0), TranslateV(midVec.Y));
-                            var midPointOne = new System.Windows.Point(TranslateU(1), TranslateV(midVec.Y));
-                            if (x.Z > prevX.Z)
-                            {
-                                listRight[listRight.Count - 1].Segments.Add(new LineSegment(midPointOne, true));
-                                listRight.Add(new PathFigure { StartPoint = midPointZero });
-                            }
-                            else
-                            {
-                                listRight[listRight.Count - 1].Segments.Add(new LineSegment(midPointZero, true));
-                                listRight.Add(new PathFigure { StartPoint = midPointOne });
-                            }
-                        }
-                        if ((int)Math.Floor(x.W) != (int)Math.Floor(prevX.W))
-                        {
-                            double t = (Math.Max(Math.Floor(x.W), Math.Floor(prevX.W)) - x.W) / (prevX.W - x.W);
-                            var midVec = icm.P.ClampUV((float)(x.Z + t * (prevX.Z - x.Z)), 0);
-                            var midPointZero = new System.Windows.Point(TranslateU(midVec.X), TranslateV(0));
-                            var midPointOne = new System.Windows.Point(TranslateU(midVec.X), TranslateV(1));
-                            if (x.W > prevX.W)
-                            {
-                                listRight[listRight.Count - 1].Segments.Add(new LineSegment(midPointOne, true));
-                                listRight.Add(new PathFigure { StartPoint = midPointZero });
-                            }
-                            else
-                            {
-                                listRight[listRight.Count - 1].Segments.Add(new LineSegment(midPointZero, true));
-                                listRight.Add(new PathFigure { StartPoint = midPointOne });
-                            }
-                        }
+                        StartPoint = new System.Windows.Point(TranslateU(segment[0].X),
+                                                              TranslateV(segment[0].Y)),
+                        IsClosed = close
+                    };
+                    for (int i = 1; i < segment.Count; i++)
+                    {
+                        fig.Segments.Add(new LineSegment(new System.Windows.Point(TranslateU(segment[i].X),
+                                                                                  TranslateV(segment[i].Y)), true));
                     }
-                    listLeft[listLeft.Count - 1].Segments.Add(new LineSegment(pointLeft, true));
-                    listRight[listRight.Count - 1].Segments.Add(new LineSegment(pointRight, true));
+                    list.Add(fig);
                 }
-                prevX = x;
-                pointCounter++;
+                return list;
             }
 
             var paths = new Path[2];
@@ -151,13 +66,13 @@ namespace AbraCADabra
             {
                 Stroke = Brushes.Red,
                 StrokeThickness = 2,
-                Data = new PathGeometry(listLeft)
+                Data = new PathGeometry(MakeList(icm.SegmentsP, icm.IsClosedP))
             };
             paths[1] = new Path
             {
                 Stroke = Brushes.Red,
                 StrokeThickness = 2,
-                Data = new PathGeometry(listRight)
+                Data = new PathGeometry(MakeList(icm.SegmentsQ, icm.IsClosedQ))
             };
             return paths;
         }
