@@ -21,6 +21,7 @@ namespace AbraCADabra
         public int UScale => 0;
         public int VScale => 0;
         public Vector2 ClampUV(float u, float v) => Vector2.Zero;
+        public Vector2 ClampScaledUV(float u, float v) => Vector2.Zero;
         public bool IsUVValid(float u, float v) => true;
     }
 }

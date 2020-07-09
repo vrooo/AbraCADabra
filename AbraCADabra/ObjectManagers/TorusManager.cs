@@ -72,6 +72,8 @@ namespace AbraCADabra
             return new Vector2(u, v);
         }
 
+        public Vector2 ClampScaledUV(float u, float v) => ClampUV(u, v);
+
         public Vector3 GetUVPoint(float u, float v)
         {
             var (sinTheta, cosTheta) = SinCos(TWO_PI * u);

@@ -19,6 +19,7 @@ namespace AbraCADabra
         int UScale { get; }
         int VScale { get; }
         Vector2 ClampUV(float u, float v);
+        Vector2 ClampScaledUV(float u, float v);
         bool IsUVValid(float u, float v);
     }
 }

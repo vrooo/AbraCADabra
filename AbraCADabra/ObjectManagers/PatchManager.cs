@@ -176,19 +176,30 @@ namespace AbraCADabra
 
         public Vector2 ClampUV(float u, float v)
         {
-            u = Math.Max(0, Math.Min(patchCountX, WrapU(u)));
-            v = Math.Max(0, Math.Min(patchCountZ, v));
+            return ClampUV(u, v, false);
+        }
+
+        public Vector2 ClampScaledUV(float u, float v)
+        {
+            return ClampUV(u, v, true);
+        }
+
+        private Vector2 ClampUV(float u, float v, bool scaled)
+        {
+            u = Math.Max(0, Math.Min(scaled ? 1 : patchCountX, WrapU(u, scaled)));
+            v = Math.Max(0, Math.Min(scaled ? 1 : patchCountZ, v));
             return new Vector2(u, v);
         }
 
-        private float WrapU(float u)
+        private float WrapU(float u, bool scaled = false)
         {
-            if (patchType == PatchType.Cylinder && (u < 0 || u > patchCountX))
+            int uMax = scaled ? 1 : patchCountX;
+            if (patchType == PatchType.Cylinder && (u < 0 || u > uMax))
             {
-                u = u % patchCountX;
+                u = u % uMax;
                 if (u < 0)
                 {
-                    u += patchCountX;
+                    u += uMax;
                 }
             }
             return u;
@@ -196,7 +207,7 @@ namespace AbraCADabra
 
         private (float u, float v, int sx, int sz) TranslateUV(float u, float v)
         {
-            u = WrapU(u);
+            u = WrapU(u); // TODO: check with clamping?
             int indexX = (int)Math.Floor(u), indexZ = (int)Math.Floor(v);
             indexX = Math.Max(0, Math.Min(patchCountX - 1, indexX));
             indexZ = Math.Max(0, Math.Min(patchCountZ - 1, indexZ));

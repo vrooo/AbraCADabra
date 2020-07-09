@@ -64,36 +64,6 @@ namespace AbraCADabra
 
         public static (IntersectionResult intRes, IntersectionCurveManager icm) FindIntersection(ISurface P, ISurface Q, Vector4 x0, bool scale = true)
         {
-            //x0 = new Vector4(x0.X * P.UScale, x0.Y * P.VScale, x0.Z * Q.UScale, x0.W * Q.VScale);
-            //Vector4 x = x0, xprev, grad = GetDistGradient(P, Q, x0), r = -grad, p = r, rnew;
-            //float a, b;
-
-            //float eps = IFW.StartEps * IFW.StartEps;
-            //int startCounter = 0;
-            //do
-            //{
-            //    if (startCounter >= IFW.StartMaxIterations || IsAnyNaN(x))
-            //    {
-            //        return (IntersectionResult.NoIntersection, null);
-            //    }
-            //    startCounter++;
-            //    xprev = x;
-
-            //    a = -Vector4.Dot(grad, p) / Vector4.Dot(p, GetDistHessian(P, Q, x) * p);
-            //    x += a * p;
-            //    x = MathHelper.MakeVector4(P.ClampUV(x.X, x.Y), Q.ClampUV(x.Z, x.W));
-            //    grad = GetDistGradient(P, Q, x);
-
-            //    rnew = -grad;
-            //    b = Math.Max(0.0f, Vector4.Dot(rnew, rnew - r) / r.LengthSquared);
-            //    r = rnew;
-            //    p = r + b * p;
-            //} while ((xprev - x).LengthSquared > eps);
-
-            //if (IsAnyNaN(x))
-            //{
-            //    return (IntersectionResult.NoIntersection, null);
-            //}
             (bool res, Vector4 x) = FindIntersectionPoint(P, Q, x0, scale);
             if (!res)
             {
