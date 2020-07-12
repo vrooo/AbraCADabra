@@ -1,20 +1,59 @@
 ﻿using AbraCADabra.Serialization;
 using OpenTK;
 using System;
+using System.Collections.Generic;
 
 namespace AbraCADabra
 {
     public class TorusManager : FloatTransformManager, ISurface
     {
-        private const double TWO_PI = Math.PI * 2;
         public override string DefaultName => "Torus";
         private static int counter = 0;
         protected override int instanceCounter => counter++;
 
-        public float MajorR { get; set; } = 6;
-        public float MinorR { get; set; } = 4;
-        public uint DivMajorR { get; set; } = 50;
-        public uint DivMinorR { get; set; } = 50;
+        private bool shouldUpdate;
+        private float majorR = 6;
+        public float MajorR
+        {
+            get { return majorR; }
+            set
+            {
+                shouldUpdate = true;
+                majorR = value;
+            }
+        }
+        private float minorR = 4;
+        public float MinorR
+        {
+            get { return minorR; }
+            set
+            {
+                shouldUpdate = true;
+                minorR = value;
+            }
+        }
+        private uint divMajorR = 50;
+        public uint DivMajorR
+        {
+            get { return divMajorR; }
+            set
+            {
+                shouldUpdate = true;
+                divMajorR = value;
+            }
+        }
+        private uint divMinorR = 50;
+        public uint DivMinorR
+        {
+            get { return divMinorR; }
+            set
+            {
+                shouldUpdate = true;
+                divMinorR = value;
+            }
+        }
+
+        private List<IntersectionCurveManager> curves = new List<IntersectionCurveManager>();
 
         private Torus torus;
 
@@ -25,7 +64,7 @@ namespace AbraCADabra
         public TorusManager(XmlTorus torus)
             : this(torus, new Torus(torus.Position.ToVector3(), 100, 100), torus.Name) { }
 
-        public TorusManager(Torus torus) : base(torus)
+        private TorusManager(Torus torus) : base(torus)
         {
             this.torus = torus;
             Update();
@@ -44,20 +83,37 @@ namespace AbraCADabra
             Update();
         }
 
+        public void UpdateMesh() => Update();
+
         public override void Update()
         {
-            torus.Update(MajorR, MinorR, DivMajorR, DivMinorR);
+            shouldUpdate = true;
         }
 
-        private (double sin, double cos) SinCos(double val)
+        private void ActualUpdate()
         {
-            return (Math.Sin(val), Math.Cos(val));
+            torus.Update(MajorR, MinorR, DivMajorR, DivMinorR, this, curves);
+        }
+
+        public override void Render(ShaderManager shader)
+        {
+            if (shouldUpdate)
+            {
+                shouldUpdate = false;
+                ActualUpdate();
+            }
+            base.Render(shader);
         }
 
         public int UScale => 1;
         public int VScale => 1;
 
         public bool IsUVValid(float u, float v) => true;
+        public Vector2 GetClosestValidUV(float u, float v, float uPrev, float vPrev, out double t)
+        {
+            t = 1;
+            return new Vector2(u, v);
+        }
 
         public Vector2 ClampUV(float u, float v)
         {
@@ -76,56 +132,66 @@ namespace AbraCADabra
 
         public Vector3 GetUVPoint(float u, float v)
         {
-            var (sinTheta, cosTheta) = SinCos(TWO_PI * u);
-            var (sinPhi, cosPhi) = SinCos(TWO_PI * v);
-            double d = MajorR + MinorR * cosTheta;
-            //return MathHelper.MakeVector3(d * cosPhi, MinorR * sinTheta, d * sinPhi);
-            return (MathHelper.MakeVector4(d * cosPhi, MinorR * sinTheta, d * sinPhi, 1) * torus.GetModelMatrix()).Xyz;
+            return (new Vector4(torus.GetUVPointUntransformed(u, v, MajorR, MinorR), 1) * torus.GetModelMatrix()).Xyz;
         }
 
         public Vector3 GetDu(float u, float v)
         {
-            var (sinTheta, cosTheta) = SinCos(TWO_PI * u);
-            var (sinPhi, cosPhi) = SinCos(TWO_PI * v);
-            double pir = TWO_PI * MinorR;
+            var (sinTheta, cosTheta) = MathHelper.SinCos(MathHelper.TWO_PI * u);
+            var (sinPhi, cosPhi) = MathHelper.SinCos(MathHelper.TWO_PI * v);
+            double pir = MathHelper.TWO_PI * MinorR;
             //return MathHelper.MakeVector3(-pir * cosPhi * sinTheta, pir * cosTheta, -pir * sinPhi * sinTheta);
             return (MathHelper.MakeVector4(-pir * cosPhi * sinTheta, pir * cosTheta, -pir * sinPhi * sinTheta, 0) * torus.GetModelMatrix()).Xyz;
         }
 
         public Vector3 GetDv(float u, float v)
         {
-            double cosTheta = Math.Cos(TWO_PI * u);
-            var (sinPhi, cosPhi) = SinCos(TWO_PI * v);
-            double pid = TWO_PI * (MajorR + MinorR * cosTheta);
+            double cosTheta = Math.Cos(MathHelper.TWO_PI * u);
+            var (sinPhi, cosPhi) = MathHelper.SinCos(MathHelper.TWO_PI * v);
+            double pid = MathHelper.TWO_PI * (MajorR + MinorR * cosTheta);
             //return MathHelper.MakeVector3(-pid * sinPhi, 0, pid * cosPhi);
             return (MathHelper.MakeVector4(-pid * sinPhi, 0, pid * cosPhi, 0) * torus.GetModelMatrix()).Xyz;
         }
 
         public Vector3 GetDuDu(float u, float v)
         {
-            var (sinTheta, cosTheta) = SinCos(TWO_PI * u);
-            var (sinPhi, cosPhi) = SinCos(TWO_PI * v);
-            double pir = TWO_PI * TWO_PI * MinorR;
+            var (sinTheta, cosTheta) = MathHelper.SinCos(MathHelper.TWO_PI * u);
+            var (sinPhi, cosPhi) = MathHelper.SinCos(MathHelper.TWO_PI * v);
+            double pir = MathHelper.TWO_PI * MathHelper.TWO_PI * MinorR;
             //return MathHelper.MakeVector3(-pir * cosPhi * cosTheta, -pir * sinTheta, -pir * sinPhi * cosTheta);
             return (MathHelper.MakeVector4(-pir * cosPhi * cosTheta, -pir * sinTheta, -pir * sinPhi * cosTheta, 0) * torus.GetModelMatrix()).Xyz;
         }
 
         public Vector3 GetDvDv(float u, float v)
         {
-            double cosTheta = Math.Cos(TWO_PI * u);
-            var (sinPhi, cosPhi) = SinCos(TWO_PI * v);
-            double pid = TWO_PI * TWO_PI * (MajorR + MinorR * cosTheta);
+            double cosTheta = Math.Cos(MathHelper.TWO_PI * u);
+            var (sinPhi, cosPhi) = MathHelper.SinCos(MathHelper.TWO_PI * v);
+            double pid = MathHelper.TWO_PI * MathHelper.TWO_PI * (MajorR + MinorR * cosTheta);
             //return MathHelper.MakeVector3(-pid * cosPhi, 0, -pid * sinPhi);
             return (MathHelper.MakeVector4(-pid * cosPhi, 0, -pid * sinPhi, 0) * torus.GetModelMatrix()).Xyz;
         }
 
         public Vector3 GetDuDv(float u, float v)
         {
-            double sinTheta = Math.Sin(TWO_PI * u);
-            var (sinPhi, cosPhi) = SinCos(TWO_PI * v);
-            double pid = TWO_PI * TWO_PI * MinorR * sinTheta;
+            double sinTheta = Math.Sin(MathHelper.TWO_PI * u);
+            var (sinPhi, cosPhi) = MathHelper.SinCos(MathHelper.TWO_PI * v);
+            double pid = MathHelper.TWO_PI * MathHelper.TWO_PI * MinorR * sinTheta;
             //return MathHelper.MakeVector3(pid * sinPhi, 0, -pid * cosPhi);
             return (MathHelper.MakeVector4(pid * sinPhi, 0, -pid * cosPhi, 0) * torus.GetModelMatrix()).Xyz;
+        }
+
+        public void AddIntersectionCurve(IntersectionCurveManager icm)
+        {
+            icm.ManagerDisposing += CurveDisposing;
+            curves.Add(icm);
+        }
+
+        private void CurveDisposing(TransformManager sender)
+        {
+            sender.ManagerDisposing -= CurveDisposing;
+            curves.Remove(sender as IntersectionCurveManager);
+            shouldUpdate = true;
+            Update();
         }
 
         public override XmlNamedType GetSerializable()

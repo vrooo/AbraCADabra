@@ -28,51 +28,42 @@ namespace AbraCADabra
 
         public Transform(Vector3 position) : base(position) { }
 
-        protected override void Initialize(int maxVertices = -1, int maxIndices = -1)
+        protected override void Initialize()
         {
             vao = GL.GenVertexArray();
             GL.BindVertexArray(vao);
 
             vbo = GL.GenBuffer();
             ebo = GL.GenBuffer();
-            CreateBuffers(maxVertices, maxIndices);
+            CreateBuffers();
 
             SetVertexAttribPointer();
 
             GL.BindVertexArray(0);
         }
 
-        protected override void CreateBuffers(int maxVertices = -1, int maxIndices = -1)
+        protected override void CreateBuffers()
         {
-            if (maxVertices == -1)
-            {
-                maxVertices = vertices.Length;
-            }
-            if (maxIndices == -1)
-            {
-                maxIndices = indices.Length;
-            }
-
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer,
-                          maxVertices * Marshal.SizeOf<T>(), vertices,
+                          vertices.Length * Marshal.SizeOf<T>(), vertices,
                           BufferUsageHint.DynamicDraw);
 
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
             GL.BufferData(BufferTarget.ElementArrayBuffer,
-                          maxIndices * sizeof(uint), indices,
+                          indices.Length * sizeof(uint), indices,
                           BufferUsageHint.DynamicDraw);
         }
 
-        protected override void UpdateBuffers()
-        {
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferSubData(BufferTarget.ArrayBuffer, (System.IntPtr)0,
-                             vertices.Length * Marshal.SizeOf<T>(), vertices);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
-            GL.BufferSubData(BufferTarget.ElementArrayBuffer, (System.IntPtr)0,
-                             indices.Length * sizeof(uint), indices);
-        }
+        //protected override void UpdateBuffers()
+        //{
+        //    GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+        //    GL.BufferSubData(BufferTarget.ArrayBuffer, (System.IntPtr)0,
+        //                     vertices.Length * Marshal.SizeOf<T>(), vertices);
+        //    GL.BindBuffer(BufferTarget.ElementArrayBuffer, ebo);
+        //    GL.BufferSubData(BufferTarget.ElementArrayBuffer, (System.IntPtr)0,
+        //                     indices.Length * sizeof(uint), indices);
+        //}
 
         public override void Render(ShaderManager shader)
         {
@@ -105,13 +96,14 @@ namespace AbraCADabra
             Position = position;
         }
 
-        protected abstract void Initialize(int maxVertices = -1, int maxIndices = -1);
+        protected abstract void Initialize();
 
         protected abstract void SetVertexAttribPointer();
 
-        protected abstract void CreateBuffers(int maxVertices = -1, int maxIndices = -1);
+        //protected abstract void CreateBuffers(int maxVertices = -1, int maxIndices = -1);
+        protected abstract void CreateBuffers();
 
-        protected abstract void UpdateBuffers();
+        //protected abstract void UpdateBuffers();
 
         public abstract void Render(ShaderManager shader);
 

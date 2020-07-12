@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Collections.Generic;
+using System.Windows.Controls.Primitives;
 
 namespace AbraCADabra
 {
@@ -53,6 +54,21 @@ namespace AbraCADabra
                 { typeof(GregoryPatchManager), new DisplayParams(GroupGregoryPatch, false, false, false) },
                 { typeof(IntersectionCurveManager), new DisplayParams(GroupIntersectionCurve, false, false, false) }
             };
+
+            ToggleIntersectionFirstA.Checked += (sender, e) => ToggleIntersectionTrim(ToggleIntersectionFirstA, ToggleIntersectionFirstB);
+            ToggleIntersectionFirstB.Checked += (sender, e) => ToggleIntersectionTrim(ToggleIntersectionFirstB, ToggleIntersectionFirstA);
+            ToggleIntersectionSecondA.Checked += (sender, e) => ToggleIntersectionTrim(ToggleIntersectionSecondA, ToggleIntersectionSecondB);
+            ToggleIntersectionSecondB.Checked += (sender, e) => ToggleIntersectionTrim(ToggleIntersectionSecondB, ToggleIntersectionSecondA);
+
+            ToggleIntersectionFirstA.Checked += (sender, e) => UpdateSurface(true);
+            ToggleIntersectionFirstA.Unchecked += (sender, e) => UpdateSurface(true);
+            ToggleIntersectionFirstB.Checked += (sender, e) => UpdateSurface(true);
+            ToggleIntersectionFirstB.Unchecked += (sender, e) => UpdateSurface(true);
+
+            ToggleIntersectionSecondA.Checked += (sender, e) => UpdateSurface(false);
+            ToggleIntersectionSecondA.Unchecked += (sender, e) => UpdateSurface(false);
+            ToggleIntersectionSecondB.Checked += (sender, e) => UpdateSurface(false);
+            ToggleIntersectionSecondB.Unchecked += (sender, e) => UpdateSurface(false);
         }
 
         public delegate void PropertyUpdatedEventHandler(TransformManager context);
@@ -80,6 +96,37 @@ namespace AbraCADabra
                     GridPosition.IsEnabled = dp.ShowPosition;
                     GridRotation.IsEnabled = dp.ShowRotation;
                     GridScale.IsEnabled = dp.ShowScale;
+                }
+
+                if (DataContext is IntersectionCurveManager icm)
+                {
+                    if (icm.TrimModeP == TrimMode.SideA)
+                    {
+                        ToggleIntersectionFirstA.IsChecked = true;
+                    }
+                    else if (icm.TrimModeP == TrimMode.SideB)
+                    {
+                        ToggleIntersectionFirstB.IsChecked = true;
+                    }
+                    else
+                    {
+                        ToggleIntersectionFirstA.IsChecked = false;
+                        ToggleIntersectionFirstB.IsChecked = false;
+                    }
+
+                    if (icm.TrimModeQ == TrimMode.SideA)
+                    {
+                        ToggleIntersectionSecondA.IsChecked = true;
+                    }
+                    else if (icm.TrimModeQ == TrimMode.SideB)
+                    {
+                        ToggleIntersectionSecondB.IsChecked = true;
+                    }
+                    else
+                    {
+                        ToggleIntersectionSecondA.IsChecked = false;
+                        ToggleIntersectionSecondB.IsChecked = false;
+                    }
                 }
             }
             else
@@ -185,6 +232,66 @@ namespace AbraCADabra
                 mw.AddManager(point);
             }
             mw.AddManager(curve);
+        }
+
+        private void ToggleIntersectionTrim(ToggleButton sender, ToggleButton twin)
+        {
+            if (sender.IsChecked == true)
+            {
+                twin.IsChecked = false;
+            }
+        }
+
+        private void UpdateSurface(bool useP)
+        {
+            var icm = DataContext as IntersectionCurveManager;
+            ISurface surface;
+            if (useP)
+            {
+                surface = icm.P;
+                SetTrimModeP();
+            }
+            else
+            {
+                surface = icm.Q;
+                SetTrimModeQ();
+            }
+            surface.UpdateMesh();
+            PropertyUpdated?.Invoke(DataContext as TransformManager);
+        }
+
+        private void SetTrimModeP()
+        {
+            var icm = DataContext as IntersectionCurveManager;
+            if (ToggleIntersectionFirstA.IsChecked == true)
+            {
+                icm.TrimModeP = TrimMode.SideA;
+            }
+            else if (ToggleIntersectionFirstB.IsChecked == true)
+            {
+                icm.TrimModeP = TrimMode.SideB;
+            }
+            else
+            {
+                icm.TrimModeP = TrimMode.None;
+            }
+        }
+
+        private void SetTrimModeQ()
+        {
+            var icm = DataContext as IntersectionCurveManager;
+            if (ToggleIntersectionSecondA.IsChecked == true)
+            {
+                icm.TrimModeQ = TrimMode.SideA;
+            }
+            else if (ToggleIntersectionSecondB.IsChecked == true)
+            {
+                icm.TrimModeQ = TrimMode.SideB;
+            }
+            else
+            {
+                icm.TrimModeQ = TrimMode.None;
+            }
         }
     }
 }

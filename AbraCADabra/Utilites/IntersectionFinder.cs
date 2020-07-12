@@ -82,7 +82,7 @@ namespace AbraCADabra
             List<Vector4> xs = new List<Vector4> { x }, xsEnd = null;
             float endDist = IFW.CurveEndDist * IFW.CurveEndDist;
             float eps = IFW.CurveEps * IFW.CurveEps;
-            Vector4 xprev;
+            Vector4 xprev, xprevValid;
             bool loop = false, afterReverse = false;
             for (int pointCounter = 0; pointCounter < IFW.CurveMaxPoints; pointCounter++)
             {
@@ -94,6 +94,7 @@ namespace AbraCADabra
                     tan = -tan;
                 }
 
+                xprevValid = x;
                 Vector3 pP = startP, pQ = startQ;
                 int iterCounter = 0;
                 do
@@ -124,8 +125,32 @@ namespace AbraCADabra
                 {
                     return (IntersectionResult.NoCurve, null);
                 }
-                if (!P.IsUVValid(x.X, x.Y) || !Q.IsUVValid(x.Z, x.W))
+                bool valid = true;
+                Vector2 closestP, closestQ;
+                if (!P.IsUVValid(x.X, x.Y))
                 {
+                    valid = false;
+                    closestP = P.GetClosestValidUV(x.X, x.Y, xprevValid.X, xprevValid.Y, out double t);
+                    closestQ = MathHelper.FindPointAtT(xprevValid.Zw, x.Zw, t);
+                    x = MathHelper.MakeVector4(closestP, closestQ);
+                }
+                if (!Q.IsUVValid(x.Z, x.W))
+                {
+                    valid = false;
+                    closestQ = Q.GetClosestValidUV(x.Z, x.W, xprevValid.Z, xprevValid.W, out double t);
+                    closestP = MathHelper.FindPointAtT(xprevValid.Xy, x.Xy, t);
+                    x = MathHelper.MakeVector4(closestP, closestQ);
+                }
+
+                if (!valid)
+                {
+                    if (P.IsUVValid(x.X, x.Y) && Q.IsUVValid(x.Z, x.W))
+                    {
+                        pP = P.GetUVPoint(x.X, x.Y);
+                        pQ = Q.GetUVPoint(x.Z, x.W);
+                        points.Add((pP + pQ) / 2.0f);
+                        xs.Add(x);
+                    }
                     if (afterReverse)
                     {
                         points.Reverse();

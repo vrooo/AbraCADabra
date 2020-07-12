@@ -1,5 +1,4 @@
 ﻿using OpenTK;
-using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
@@ -12,19 +11,29 @@ namespace AbraCADabra
     /// </summary>
     public partial class ParameterSpaceViewer : Window
     {
-        public int UDivs { get; set; } = 10;
-        public int VDivs { get; set; } = 10;
+        public int UDivs { get; set; } = 50;
+        public int VDivs { get; set; } = 50;
+        public bool DrawPoints { get; set; } = true;
+        private double width => CanvasLeft.ActualWidth;
+        private double height => CanvasLeft.ActualHeight;
+
         public ParameterSpaceViewer()
         {
             InitializeComponent();
         }
 
-        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            double width = CanvasLeft.ActualWidth, height = CanvasLeft.ActualHeight;
+        private double TranslateU(double u) => width * u;
+        private double TranslateV(double v) => height * (1 - v);
 
-            var gridPaths = MakeGridPaths(width, height);
-            var curvePaths = MakeCurvePaths(width, height);
+        private void Update()
+        {
+            if (DataContext == null || width <= 0 || height <= 0)
+            {
+                return;
+            }
+
+            var gridPaths = MakeGridPaths();
+            var curvePaths = MakeCurvePaths();
 
             // add all objects
             CanvasLeft.Children.Clear();
@@ -33,13 +42,74 @@ namespace AbraCADabra
             CanvasRight.Children.Clear();
             CanvasRight.Children.Add(gridPaths[1]);
             CanvasRight.Children.Add(curvePaths[1]);
+
+            if (DrawPoints)
+            {
+                var pointPaths = MakeDebugPoints();
+                CanvasLeft.Children.Add(pointPaths[0]);
+                CanvasRight.Children.Add(pointPaths[1]);
+            }
         }
 
-        private Path[] MakeCurvePaths(double width, double height)
+        private Path[] MakeDebugPoints()
         {
             var icm = DataContext as IntersectionCurveManager;
-            Func<double, double> TranslateU = u => width * u;
-            Func<double, double> TranslateV = v => height * (1 - v);
+            List<PathFigure> MakeList(List<List<Vector2>> polygons)
+            {
+                var list = new List<PathFigure>();
+                double uStep = 1.0 / UDivs, vStep = 1.0 / VDivs;
+                for (int i = 0; i < UDivs + 1; i++)
+                {
+                    for (int j = 0; j < VDivs + 1; j++)
+                    {
+                        double u = i * uStep, v = j * vStep;
+                        bool isInside = false;
+                        foreach (var polygon in polygons)
+                        {
+                            if (MathHelper.IsPointInPolygon(new Vector2((float)u, (float)v), polygon))
+                            {
+                                isInside = !isInside;
+                            }
+                        }
+                        if (isInside)
+                        {
+                            double x = TranslateU(u), y = TranslateV(v);
+                            var fig1 = new PathFigure
+                            {
+                                StartPoint = new System.Windows.Point(x - 0.5, y - 0.5)
+                            };
+                            fig1.Segments.Add(new LineSegment(new System.Windows.Point(x + 0.5, y + 0.5), true));
+                            var fig2 = new PathFigure
+                            {
+                                StartPoint = new System.Windows.Point(x - 0.5, y + 0.5)
+                            };
+                            fig2.Segments.Add(new LineSegment(new System.Windows.Point(x + 0.5, y - 0.5), true));
+                            list.AddMany(fig1, fig2);
+                        }
+                    }
+                }
+                return list;
+            }
+
+            var paths = new Path[2];
+            paths[0] = new Path
+            {
+                Stroke = Brushes.DarkRed,
+                StrokeThickness = 4,
+                Data = new PathGeometry(MakeList(icm.PolygonsP))
+            };
+            paths[1] = new Path
+            {
+                Stroke = Brushes.DarkRed,
+                StrokeThickness = 4,
+                Data = new PathGeometry(MakeList(icm.PolygonsQ))
+            };
+            return paths;
+        }
+
+        private Path[] MakeCurvePaths()
+        {
+            var icm = DataContext as IntersectionCurveManager;
             List<PathFigure> MakeList(List<List<Vector2>> segmentList, bool close)
             {
                 var list = new List<PathFigure>();
@@ -67,17 +137,19 @@ namespace AbraCADabra
                 Stroke = Brushes.Red,
                 StrokeThickness = 2,
                 Data = new PathGeometry(MakeList(icm.SegmentsP, icm.IsClosedP))
+                //Data = new PathGeometry(MakeList(icm.PolygonsP, true)) // debug
             };
             paths[1] = new Path
             {
                 Stroke = Brushes.Red,
                 StrokeThickness = 2,
                 Data = new PathGeometry(MakeList(icm.SegmentsQ, icm.IsClosedQ))
+                //Data = new PathGeometry(MakeList(icm.PolygonsQ, true)) // debug
             };
             return paths;
         }
 
-        private Path[] MakeGridPaths(double width, double height)
+        private Path[] MakeGridPaths()
         {
             double xStep = width / UDivs, yStep = height / VDivs;
             var gridList = new List<PathFigure>();
@@ -118,5 +190,13 @@ namespace AbraCADabra
             }
             return paths;
         }
+
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e) => Update();
+
+        private void SliderDivChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => Update();
+
+        private void IntegerDivChanged(object sender, RoutedPropertyChangedEventArgs<object> e) => Update();
+
+        private void CheckBoxPointsChanged(object sender, RoutedEventArgs e) => Update();
     }
 }

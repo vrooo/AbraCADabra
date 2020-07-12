@@ -257,7 +257,7 @@ namespace AbraCADabra
                 divChanged = false;
                 foreach (var patch in patches)
                 {
-                    patch.Update(DivX, DivZ);
+                    patch.Update(DivX, DivZ, null, null);
                 }
             }
             vectors.Update(vecs);

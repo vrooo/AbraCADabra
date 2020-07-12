@@ -23,5 +23,13 @@ namespace AbraCADabra
         public Vector2 ClampUV(float u, float v) => Vector2.Zero;
         public Vector2 ClampScaledUV(float u, float v) => Vector2.Zero;
         public bool IsUVValid(float u, float v) => true;
+        public Vector2 GetClosestValidUV(float u, float v, float uPrev, float vPrev, out double t)
+        {
+            t = 1;
+            return Vector2.Zero;
+        }
+
+        public void AddIntersectionCurve(IntersectionCurveManager icm) { }
+        public void UpdateMesh() { }
     }
 }

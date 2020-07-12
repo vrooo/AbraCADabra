@@ -54,19 +54,20 @@ namespace AbraCADabra
             GL.VertexAttribIPointer(2, 1, VertexAttribIntegerType.Int, PatchVertex.Size, (IntPtr)PatchVertex.OffsetIndexZ);
         }
 
-        public void Update(int divX, int divZ)
+        public void Update(int divX, int divZ, ISurface parent, List<IntersectionCurveManager> curves)
         {
-            CalculateVertices(divX, divZ);
+            CalculateVertices(divX, divZ, parent, curves);
             CreateBuffers();
         }
 
-        private void CalculateVertices(int divX, int divZ)
+        private void CalculateVertices(int divX, int divZ, ISurface parent = null, List<IntersectionCurveManager> curves = null)
         {
             var vertexList = new List<PatchVertex>();
             var indexList = new List<uint>();
+            var uvs = new List<Vector2>();
 
-            int width = divX + 1; // for now
-            int height = divZ + 1; // for now
+            int width = divX + 1;
+            int height = divZ + 1;
             Func<int, int, int, int, uint> ind = (i, j, px, pz)
                 => (uint)(((pz * patchCountX + px) * width + i) * height + j);
 
@@ -79,6 +80,7 @@ namespace AbraCADabra
                     {
                         for (int j = 0; j < height; j++)
                         {
+                            uvs.Add(new Vector2(px + i * stepX, pz + j * stepZ));
                             vertexList.Add(new PatchVertex(i * stepX, j * stepZ, px, pz));
                             if (i < width - 1)
                             {
@@ -90,6 +92,23 @@ namespace AbraCADabra
                             }
                         }
                     }
+                }
+            }
+
+            if (curves != null)
+            {
+                foreach (var curve in curves)
+                {
+                    curve.Trim(parent, uvs, indexList);
+                }
+                for (int i = vertexList.Count; i < uvs.Count; i++)
+                {
+                    int indexX = (int)Math.Floor(uvs[i].X), indexZ = (int)Math.Floor(uvs[i].Y);
+                    indexX = Math.Max(0, Math.Min(patchCountX - 1, indexX));
+                    indexZ = Math.Max(0, Math.Min(patchCountZ - 1, indexZ));
+                    float u = uvs[i].X - indexX;
+                    float v = uvs[i].Y - indexZ;
+                    vertexList.Add(new PatchVertex(u, v, indexX, indexZ));
                 }
             }
 

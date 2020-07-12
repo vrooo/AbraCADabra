@@ -57,6 +57,8 @@ namespace AbraCADabra
             set { }
         }
 
+        private List<IntersectionCurveManager> curves = new List<IntersectionCurveManager>();
+
         protected PatchManager(PointManager[,] points, PatchType patchType, int patchCountX, int patchCountZ, int continuity,
             int divX = divDefault, int divZ = divDefault, string name = null)
             : this(new Patch(patchCountX, patchCountZ, divX, divZ),
@@ -165,15 +167,6 @@ namespace AbraCADabra
         public int UScale => patchCountX;
         public int VScale => patchCountZ;
 
-        public bool IsUVValid(float u, float v)
-        {
-            if (v > 0 && v < patchCountZ)
-            {
-                return patchType == PatchType.Cylinder || (u > 0 && u < patchCountX);
-            }
-            return false;
-        }
-
         public Vector2 ClampUV(float u, float v)
         {
             return ClampUV(u, v, false);
@@ -203,6 +196,45 @@ namespace AbraCADabra
                 }
             }
             return u;
+        }
+
+        public bool IsUVValid(float u, float v)
+        {
+            if (v >= 0 && v <= patchCountZ)
+            {
+                return patchType == PatchType.Cylinder || (u >= 0 && u <= patchCountX);
+            }
+            return false;
+        }
+
+        public Vector2 GetClosestValidUV(float u, float v, float uPrev, float vPrev, out double t)
+        {
+            // line between (uPrev, vPrev) and (u, v) crosses the border
+            Vector2 point = new Vector2(u, v);
+            t = 1;
+            if (v < 0)
+            {
+                point = MathHelper.FindPointAtY(uPrev, vPrev, point.X, point.Y, 0, out t);
+            }
+            else if (v > patchCountZ)
+            {
+                point = MathHelper.FindPointAtY(uPrev, vPrev, point.X, point.Y, patchCountZ, out t);
+            }
+
+            if (patchType == PatchType.Simple)
+            {
+                if (u < 0)
+                {
+                    point = MathHelper.FindPointAtX(uPrev, vPrev, point.X, point.Y, 0, out double tt);
+                    t *= tt;
+                }
+                else if (u > patchCountX)
+                {
+                    point = MathHelper.FindPointAtX(uPrev, vPrev, point.X, point.Y, patchCountX, out double tt);
+                    t *= tt;
+                }
+            }
+            return point;
         }
 
         private (float u, float v, int sx, int sz) TranslateUV(float u, float v)
@@ -325,6 +357,12 @@ namespace AbraCADabra
             return CalcPoint(v, q);
         }
 
+        public void UpdateMesh()
+        {
+            shouldUpdate = true;
+            divChanged = true;
+        }
+
         public override void Update()
         {
             shouldUpdate = true;
@@ -337,7 +375,7 @@ namespace AbraCADabra
             if (divChanged)
             {
                 divChanged = false;
-                patch.Update(DivX, DivZ);
+                patch.Update(DivX, DivZ, this, curves);
             }
             polyGrid.Update(pts);
             UpdatePointTexture(pts);
@@ -469,6 +507,20 @@ namespace AbraCADabra
                 point.PointReplaced -= ReplacePoint;
             }
             base.Dispose();
+        }
+
+        public void AddIntersectionCurve(IntersectionCurveManager icm)
+        {
+            icm.ManagerDisposing += CurveDisposing;
+            curves.Add(icm);
+        }
+
+        private void CurveDisposing(TransformManager sender)
+        {
+            sender.ManagerDisposing -= CurveDisposing;
+            curves.Remove(sender as IntersectionCurveManager);
+            divChanged = true;
+            Update();
         }
     }
 }
