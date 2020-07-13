@@ -93,10 +93,10 @@ namespace AbraCADabra
                    Math.Min(a.Y, b.Y) <= point.Y && point.Y <= Math.Max(a.Y, b.Y);
         }
 
-        public static Vector2 GetIntersection(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        public static Vector2 GetIntersection(Vector2 a, Vector2 b, Vector2 c, Vector2 d, out float s)
         {
             Vector2 ba = b - a, ca = c - a, dc = d - c;
-            float s = (ba.X * ca.Y - ba.Y * ca.X) / (dc.X * ba.Y - dc.Y * ba.X);
+            s = (ba.X * ca.Y - ba.Y * ca.X) / (dc.X * ba.Y - dc.Y * ba.X);
             return c + s * dc;
         }
 

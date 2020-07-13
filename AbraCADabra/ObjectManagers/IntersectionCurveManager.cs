@@ -17,6 +17,21 @@ namespace AbraCADabra
 
     public class IntersectionCurveManager : FloatTransformManager
     {
+        private struct CurvePointData
+        {
+            public int SegmentIndex;
+            public int LineIndex;
+            public uint Index;
+            public float LineParameter;
+            public CurvePointData(int segmentIndex, int lineIndex, uint index, float lineParam)
+            {
+                SegmentIndex = segmentIndex;
+                LineIndex = lineIndex;
+                Index = index;
+                LineParameter = lineParam;
+            }
+        }
+
         public override string DefaultName => "Intersection Curve";
         private static int counter = 0;
         protected override int instanceCounter => counter++;
@@ -63,91 +78,107 @@ namespace AbraCADabra
 
         public void Trim(ISurface surface, List<Vector2> vertices, List<uint> indices)
         {
-            List<List<Vector2>> polygons = null, segments = null;
-            TrimMode trimMode = TrimMode.None;
-            bool isClosed = false;
             if (surface == P && TrimModeP != TrimMode.None && IsTrimmableP)
             {
-                polygons = PolygonsP;
-                segments = SegmentsP;
-                trimMode = TrimModeP;
-                isClosed = IsClosedP;
+                Trim(surface, vertices, indices, PolygonsP, SegmentsP, TrimModeP, IsClosedP);
             }
-            else if (surface == Q && TrimModeQ != TrimMode.None && IsTrimmableQ)
+            if (surface == Q && TrimModeQ != TrimMode.None && IsTrimmableQ)
             {
-                polygons = PolygonsQ;
-                segments = SegmentsQ;
-                trimMode = TrimModeQ;
-                isClosed = IsClosedQ;
+                Trim(surface, vertices, indices, PolygonsQ, SegmentsQ, TrimModeQ, IsClosedQ);
             }
-            if (segments != null)
+        }
+
+        private void Trim(ISurface surface, List<Vector2> vertices, List<uint> indices,
+                          List<List<Vector2>> polygons, List<List<Vector2>> segments, TrimMode trimMode, bool isClosed)
+        {
+            Vector2 scaleVector = new Vector2(surface.UScale, surface.VScale);
+            int n = vertices.Count;
+            bool[] isInside = new bool[n];
+            for (int i = 0; i < n; i++)
             {
-                Vector2 scaleVector = new Vector2(surface.UScale, surface.VScale);
-                int n = vertices.Count;
-                bool[] isInside = new bool[n];
-                for (int i = 0; i < n; i++)
+                isInside[i] = trimMode == TrimMode.SideA ? false : true;
+                foreach (var polygon in polygons)
                 {
-                    isInside[i] = trimMode == TrimMode.SideA ? false : true;
-                    foreach (var polygon in polygons)
+                    Vector2 point = vertices[i];
+                    point.X /= scaleVector.X;
+                    point.Y /= scaleVector.Y;
+                    if (MathHelper.IsPointInPolygon(point, polygon))
                     {
-                        Vector2 point = vertices[i];
-                        point.X /= scaleVector.X;
-                        point.Y /= scaleVector.Y;
-                        if (MathHelper.IsPointInPolygon(point, polygon))
-                        {
-                            isInside[i] = !isInside[i];
-                        }
+                        isInside[i] = !isInside[i];
                     }
                 }
-                for (int i = 0; i < indices.Count / 2; i++)
+            }
+            var borderPoints = new List<CurvePointData>();
+            for (int i = 0; i < indices.Count / 2; i++)
+            {
+                bool crosses = false;
+                int inside = 0, outside = 0;
+                bool isFirstIn = isInside[indices[2 * i]], isSecondIn = isInside[indices[2 * i + 1]];
+                if (isFirstIn && !isSecondIn)
                 {
-                    bool crosses = false;
-                    int inside = 0, outside = 0;
-                    bool isFirstIn = isInside[indices[2 * i]], isSecondIn = isInside[indices[2 * i + 1]];
-                    if (isFirstIn && !isSecondIn)
+                    crosses = true;
+                    inside = 2 * i;
+                    outside = 2 * i + 1;
+                }
+                else if (!isFirstIn && isSecondIn)
+                {
+                    crosses = true;
+                    inside = 2 * i + 1;
+                    outside = 2 * i;
+                }
+                else if (isFirstIn && isSecondIn)
+                {
+                    indices.RemoveAt(2 * i + 1);
+                    indices.RemoveAt(2 * i);
+                    i--;
+                }
+                if (crosses)
+                {
+                    Vector2 inner = vertices[(int)indices[inside]], outer = vertices[(int)indices[outside]];
+                    inner.X /= scaleVector.X;
+                    inner.Y /= scaleVector.Y;
+                    outer.X /= scaleVector.X;
+                    outer.Y /= scaleVector.Y;
+                    bool found = false;
+                    for (int j = 0; j < segments.Count; j++)
                     {
-                        crosses = true;
-                        inside = 2 * i;
-                        outside = 2 * i + 1;
-                    }
-                    else if (!isFirstIn && isSecondIn)
-                    {
-                        crosses = true;
-                        inside = 2 * i + 1;
-                        outside = 2 * i;
-                    }
-                    else if (isFirstIn && isSecondIn)
-                    {
-                        indices.RemoveAt(2 * i + 1);
-                        indices.RemoveAt(2 * i);
-                        i--;
-                    }
-                    if (crosses)
-                    {
-                        Vector2 inner = vertices[(int)indices[inside]], outer = vertices[(int)indices[outside]];
-                        inner.X /= scaleVector.X;
-                        inner.Y /= scaleVector.Y;
-                        outer.X /= scaleVector.X;
-                        outer.Y /= scaleVector.Y;
-                        bool found = false;
-                        foreach (var segment in segments)
+                        var segment = segments[j];
+                        for (int k = 0; k < segment.Count - (isClosed ? 0 : 1); k++)
                         {
-                            for (int j = 0; j < segment.Count - (isClosed ? 0 : 1); j++)
+                            if (MathHelper.HasIntersection(inner, outer, segment[k], segment[(k + 1) % segment.Count]))
                             {
-                                if (MathHelper.HasIntersection(inner, outer, segment[j], segment[(j + 1) % segment.Count]))
-                                {
-                                    Vector2 intersection = MathHelper.GetIntersection(inner, outer, segment[j], segment[(j + 1) % segment.Count]);
-                                    intersection *= scaleVector;
-                                    vertices.Add(intersection);
-                                    indices[inside] = (uint)(vertices.Count - 1);
-                                    found = true;
-                                    break;
-                                }
+                                Vector2 intersection = MathHelper.GetIntersection(inner, outer, segment[k], segment[(k + 1) % segment.Count], out float s);
+                                intersection *= scaleVector;
+                                vertices.Add(intersection);
+                                uint newIndex = (uint)(vertices.Count - 1);
+                                indices[inside] = newIndex;
+
+                                borderPoints.Add(new CurvePointData(j, k, newIndex, s));
+                                found = true;
+                                break;
                             }
-                            if (found) break;
                         }
+                        if (found) break;
                     }
                 }
+            }
+
+            // connect border
+            borderPoints.Sort((a, b) => {
+                if (a.SegmentIndex == b.SegmentIndex)
+                {
+                    if (a.LineIndex == b.LineIndex)
+                    {
+                        return a.LineParameter.CompareTo(b.LineParameter);
+                    }
+                    return a.LineIndex.CompareTo(b.LineIndex);
+                }
+                return a.SegmentIndex.CompareTo(b.SegmentIndex);
+            });
+            for (int i = 0; i < borderPoints.Count - (IsLoop ? 0 : 1); i++)
+            {
+                indices.Add(borderPoints[i].Index);
+                indices.Add(borderPoints[(i + 1) % borderPoints.Count].Index);
             }
         }
 
