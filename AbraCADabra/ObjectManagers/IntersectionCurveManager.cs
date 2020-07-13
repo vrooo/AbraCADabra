@@ -10,13 +10,13 @@ namespace AbraCADabra
     {
         None, SideA, SideB
     }
+    public enum EdgeType
+    {
+        Left, Top, Right, Bottom
+    }
 
     public class IntersectionCurveManager : FloatTransformManager
     {
-        private enum EdgeType
-        {
-            Left, Top, Right, Bottom
-        }
         public override string DefaultName => "Intersection Curve";
         private static int counter = 0;
         protected override int instanceCounter => counter++;
@@ -389,7 +389,7 @@ namespace AbraCADabra
                 return point;
             }
 
-            List<List<Vector2>> MakePolygons(List<List<Vector2>> segments)
+            List<List<Vector2>> MakePolygons(ISurface surface, List<List<Vector2>> segments)
             {
                 var polygons = new List<List<Vector2>>();
                 if (segments.Count == 1 && IsLoop && !IsOnEdge(segments[0][0])) // only case in which segment ends don't have to be on edges
@@ -405,24 +405,27 @@ namespace AbraCADabra
                         {
                             return new List<List<Vector2>>();
                         }
-                        var polygon = new List<Vector2>(segment);
-                        polygon.Add(MoveAway(last));
                         Vector2 point = last;
                         EdgeType firstEdge = GetEdgeType(first), curEdge = GetEdgeType(point);
-                        while (curEdge != firstEdge)
+                        if (surface.IsEdgeAllowed(firstEdge, curEdge))
                         {
-                            point = GetNextCorner(curEdge);
-                            curEdge = GetEdgeType(point);
-                            polygon.Add(MoveAway(point));
+                            var polygon = new List<Vector2>(segment);
+                            polygon.Add(MoveAway(last));
+                            while (curEdge != firstEdge)
+                            {
+                                point = GetNextCorner(curEdge);
+                                curEdge = GetEdgeType(point);
+                                polygon.Add(MoveAway(point));
+                            }
+                            polygon.Add(MoveAway(first));
+                            polygons.Add(polygon);
                         }
-                        polygon.Add(MoveAway(first));
-                        polygons.Add(polygon);
                     }
                 }
                 return polygons;
             }
-            PolygonsP = MakePolygons(SegmentsP);
-            PolygonsQ = MakePolygons(SegmentsQ);
+            PolygonsP = MakePolygons(P, SegmentsP);
+            PolygonsQ = MakePolygons(Q, SegmentsQ);
         }
 
         public (List<PointManager> points, Bezier3InterManager curve) ToBezierInter()

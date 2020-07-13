@@ -154,6 +154,10 @@ namespace AbraCADabra
                     {
                         throw new KeyNotFoundException("At least one point from patch is missing");
                     }
+                    else
+                    {
+                        pms[i, j].SurfaceCount++;
+                    }
                 }
             }
 
@@ -240,6 +244,9 @@ namespace AbraCADabra
         private (float u, float v, int sx, int sz) TranslateUV(float u, float v)
         {
             u = WrapU(u); // TODO: check with clamping?
+            //var tmp = ClampUV(u, v);
+            //u = tmp.X;
+            //v = tmp.Y;
             int indexX = (int)Math.Floor(u), indexZ = (int)Math.Floor(v);
             indexX = Math.Max(0, Math.Min(patchCountX - 1, indexX));
             indexZ = Math.Max(0, Math.Min(patchCountZ - 1, indexZ));
@@ -355,6 +362,33 @@ namespace AbraCADabra
                 q[i] = CalcPoint(u, p);
             }
             return CalcPoint(v, q);
+        }
+
+        public void AddIntersectionCurve(IntersectionCurveManager icm)
+        {
+            icm.ManagerDisposing += CurveDisposing;
+            curves.Add(icm);
+        }
+
+        private void CurveDisposing(TransformManager sender)
+        {
+            sender.ManagerDisposing -= CurveDisposing;
+            curves.Remove(sender as IntersectionCurveManager);
+            divChanged = true;
+            Update();
+        }
+
+        public bool IsEdgeAllowed(EdgeType start, EdgeType end)
+        {
+            if (patchType == PatchType.Simple)
+            {
+                return true;
+            }
+            if ((start == EdgeType.Top && end == EdgeType.Bottom) || (start == EdgeType.Bottom && end == EdgeType.Top))
+            {
+                return false;
+            }
+            return true;
         }
 
         public void UpdateMesh()
@@ -507,20 +541,6 @@ namespace AbraCADabra
                 point.PointReplaced -= ReplacePoint;
             }
             base.Dispose();
-        }
-
-        public void AddIntersectionCurve(IntersectionCurveManager icm)
-        {
-            icm.ManagerDisposing += CurveDisposing;
-            curves.Add(icm);
-        }
-
-        private void CurveDisposing(TransformManager sender)
-        {
-            sender.ManagerDisposing -= CurveDisposing;
-            curves.Remove(sender as IntersectionCurveManager);
-            divChanged = true;
-            Update();
         }
     }
 }

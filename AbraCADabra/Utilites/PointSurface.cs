@@ -31,5 +31,6 @@ namespace AbraCADabra
 
         public void AddIntersectionCurve(IntersectionCurveManager icm) { }
         public void UpdateMesh() { }
+        public bool IsEdgeAllowed(EdgeType start, EdgeType end) => true;
     }
 }

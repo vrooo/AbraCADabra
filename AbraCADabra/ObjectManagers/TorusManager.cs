@@ -194,6 +194,18 @@ namespace AbraCADabra
             Update();
         }
 
+        public bool IsEdgeAllowed(EdgeType start, EdgeType end)
+        {
+            if ((start == EdgeType.Top && end == EdgeType.Bottom) ||
+                (start == EdgeType.Bottom && end == EdgeType.Top) ||
+                (start == EdgeType.Left && end == EdgeType.Right) ||
+                (start == EdgeType.Right && end == EdgeType.Left))
+            {
+                return false;
+            }
+            return true;
+        }
+
         public override XmlNamedType GetSerializable()
         {
             return new XmlTorus
