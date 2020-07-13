@@ -166,7 +166,7 @@ namespace AbraCADabra
             }
             else
             {
-                foreach (var pm in Points)
+                foreach (var pm in Points.Distinct())
                 {
                     pm.PropertyChanged -= PointChanged;
                     pm.Translate(x, y, z);
@@ -209,7 +209,7 @@ namespace AbraCADabra
 
         public override void RotateAround(float xAngle, float yAngle, float zAngle, Vector3 center)
         {
-            foreach (var pm in Points)
+            foreach (var pm in Points.Distinct())
             {
                 pm.PropertyChanged -= PointChanged;
                 pm.RotateAround(xAngle, yAngle, zAngle, center);

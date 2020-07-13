@@ -36,11 +36,16 @@
             </Grid.ColumnDefinitions>
 
             <Canvas Grid.Row="0" Grid.Column="1" Margin="3, 14, 8, 0" x:Name="CanvasLeft"/>
-            <TextBlock Grid.Row="1" Grid.Column="0">0</TextBlock>
-            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Top">1</TextBlock>
-            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right">1</TextBlock>
-            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center">u</TextBlock>
-            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">v</TextBlock>
+            <TextBlock Grid.Row="1" Grid.Column="0"
+                       Text="0"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right"
+                       Text="{Binding Path=P.UScale}"/>
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Top"
+                       Text="{Binding Path=P.VScale}"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center"
+                       Text="u"/>
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                       Text="v"/>
         </Grid>
 
         <Grid Grid.Row="1" Grid.Column="1" Margin="5, 0, 5, 5">
@@ -54,11 +59,16 @@
             </Grid.ColumnDefinitions>
 
             <Canvas Grid.Row="0" Grid.Column="1" Margin="3, 14, 8, 0" x:Name="CanvasRight"/>
-            <TextBlock Grid.Row="1" Grid.Column="0">0</TextBlock>
-            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Top">1</TextBlock>
-            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right">1</TextBlock>
-            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center">u</TextBlock>
-            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center">v</TextBlock>
+            <TextBlock Grid.Row="1" Grid.Column="0"
+                       Text="0"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right"
+                       Text="{Binding Path=Q.UScale}"/>
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Top"
+                       Text="{Binding Path=Q.VScale}"/>
+            <TextBlock Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center"
+                       Text="u"/>
+            <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                       Text="v"/>
         </Grid>
 
         <DockPanel Grid.Row="2" Grid.ColumnSpan="2">

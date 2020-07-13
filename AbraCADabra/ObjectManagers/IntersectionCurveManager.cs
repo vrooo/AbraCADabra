@@ -82,6 +82,7 @@ namespace AbraCADabra
             }
             if (segments != null)
             {
+                Vector2 scaleVector = new Vector2(surface.UScale, surface.VScale);
                 int n = vertices.Count;
                 bool[] isInside = new bool[n];
                 for (int i = 0; i < n; i++)
@@ -89,7 +90,10 @@ namespace AbraCADabra
                     isInside[i] = trimMode == TrimMode.SideA ? false : true;
                     foreach (var polygon in polygons)
                     {
-                        if (MathHelper.IsPointInPolygon(vertices[i], polygon))
+                        Vector2 point = vertices[i];
+                        point.X /= scaleVector.X;
+                        point.Y /= scaleVector.Y;
+                        if (MathHelper.IsPointInPolygon(point, polygon))
                         {
                             isInside[i] = !isInside[i];
                         }
@@ -120,7 +124,6 @@ namespace AbraCADabra
                     }
                     if (crosses)
                     {
-                        Vector2 scaleVector = new Vector2(surface.UScale, surface.VScale);
                         Vector2 inner = vertices[(int)indices[inside]], outer = vertices[(int)indices[outside]];
                         inner.X /= scaleVector.X;
                         inner.Y /= scaleVector.Y;

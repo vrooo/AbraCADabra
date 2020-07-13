@@ -62,7 +62,7 @@ vec4 getPatchPoint(vec2 uv, int sx, int sz, bool deboor)
     {
         for (int j = 0; j < n; j++)
         {
-            p[j] = texelFetch(texturePoint, ivec2(sx + i, sz + j), 0);
+            p[j] = texelFetch(texturePoint, ivec2(sx + j, sz + i), 0);
         }
         q[i] = deboor ? getDeBoorPoint(uv.x, p) : getBezierPoint(uv.x, p);
     }

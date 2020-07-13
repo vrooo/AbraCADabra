@@ -66,12 +66,12 @@ namespace AbraCADabra
             var indexList = new List<uint>();
             var uvs = new List<Vector2>();
 
-            int width = divX + 1;
-            int height = divZ + 1;
+            int width = divZ + 1;
+            int height = divX + 1;
             Func<int, int, int, int, uint> ind = (i, j, px, pz)
                 => (uint)(((pz * patchCountX + px) * width + i) * height + j);
 
-            float stepX = 1.0f / divX, stepZ = 1.0f / divZ;
+            float stepU = 1.0f / divZ, stepV = 1.0f / divX;
             for (int px = 0; px < patchCountX; px++)
             {
                 for (int pz = 0; pz < patchCountZ; pz++)
@@ -80,8 +80,8 @@ namespace AbraCADabra
                     {
                         for (int j = 0; j < height; j++)
                         {
-                            uvs.Add(new Vector2(px + i * stepX, pz + j * stepZ));
-                            vertexList.Add(new PatchVertex(i * stepX, j * stepZ, px, pz));
+                            uvs.Add(new Vector2(px + i * stepU, pz + j * stepV));
+                            vertexList.Add(new PatchVertex(i * stepU, j * stepV, px, pz));
                             if (i < width - 1)
                             {
                                 indexList.AddMany(ind(i, j, px, pz), ind(i + 1, j, px, pz));
