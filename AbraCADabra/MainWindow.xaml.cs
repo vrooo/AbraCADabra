@@ -37,6 +37,9 @@ namespace AbraCADabra
         Quad anaglyphQuad;
 
         Camera camera;
+        Vector3 cameraDefPosition;
+        Vector3 cameraDefRotation;
+
         PlaneXZ plane;
         CrossCursor cursor;
         CenterMarker centerMarker;
@@ -86,7 +89,10 @@ namespace AbraCADabra
             anaglyphTexRight = GL.GenTexture();
             anaglyphQuad = new Quad();
 
-            camera = new Camera(0, 5.0f, -40.0f, 0.3f, 0, 0);
+            cameraDefPosition = new Vector3(0.0f, 5.0f, -40.0f);
+            cameraDefRotation = new Vector3(0.3f, 0.0f, 0.0f);
+            camera = new Camera(cameraDefPosition, cameraDefRotation);
+
             plane = new PlaneXZ(200.0f, 200.0f, 200, 200);
             cursor = new CrossCursor();
             centerMarker = new CenterMarker();
@@ -695,6 +701,25 @@ namespace AbraCADabra
                 objects.Move(index, index + 1);
             }
         }
+
+        private void ResetCamera()
+        {
+            camera.Position = cameraDefPosition;
+            camera.Rotation = cameraDefRotation;
+            RefreshView();
+        }
+
+        private void MenuNewClick(object sender, RoutedEventArgs e)
+        {
+            var res = System.Windows.MessageBox.Show("Are you sure you want to create a new scene?",
+                                                     "New Scene", MessageBoxButton.OKCancel);
+            if (res == MessageBoxResult.OK)
+            {
+                objects.Clear();
+            }
+        }
+
+        private void MenuResetClick(object sender, RoutedEventArgs e) => ResetCamera();
 
         private void MenuOpenClick(object sender, RoutedEventArgs e)
         {

@@ -5,8 +5,8 @@ namespace AbraCADabra
 {
     public class Camera
     {
-        public Vector3 Position { get; private set; }
-        public Vector3 Rotation { get; private set; }
+        public Vector3 Position { get; set; }
+        public Vector3 Rotation { get; set; }
         public Vector3 Offset { get; set; } = new Vector3(0, 0, -30.0f);
 
         public float ZNear { get; set; } = 0.1f;

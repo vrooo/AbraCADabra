@@ -25,8 +25,11 @@
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="File">
+                <MenuItem x:Name="MenuNew" Header="New Scene" Click="MenuNewClick"/>
                 <MenuItem x:Name="MenuOpen" Header="Open Scene..." Click="MenuOpenClick"/>
                 <MenuItem x:Name="MenuSave" Header="Save Scene..." Click="MenuSaveClick"/>
+                <Separator/>
+                <MenuItem x:Name="MenuReset" Header="Reset camera" Click="MenuResetClick"/>
             </MenuItem>
         </Menu>
         <Grid DockPanel.Dock="Top">
