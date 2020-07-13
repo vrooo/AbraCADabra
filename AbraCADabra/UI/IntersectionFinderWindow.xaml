@@ -47,6 +47,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                     <RowDefinition/>
+                    <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="100"/>
@@ -80,6 +81,13 @@
                 <xctk:DecimalUpDown Grid.Row="4" Grid.Column="1"
                                 Minimum="1e-8" Increment="0.0001" FormatString="F8"
                                 Value="{Binding StartPointEps, ElementName=_this}"/>
+
+                <TextBlock Grid.Row="5" Grid.Column="0" VerticalAlignment="Center"
+                           Style="{StaticResource TextBlockBasic}" Text="Same surface diff:"
+                           ToolTip="Minimum distance in parameter space between points on a single self-intersecting surface."/>
+                <xctk:DecimalUpDown Grid.Row="5" Grid.Column="1"
+                                Minimum="1e-8" Increment="0.0001" FormatString="F8"
+                                Value="{Binding StartSelfDiff, ElementName=_this}"/>
             </Grid>
         </GroupBox>
 

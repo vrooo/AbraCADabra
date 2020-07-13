@@ -854,13 +854,18 @@ namespace AbraCADabra
                 var selected = ListObjects.SelectedItems.OfType<ISurface>().ToList();
                 IntersectionFinderWindow ifw = new IntersectionFinderWindow(surfaces, selected);
                 bool? res = ifw.ShowDialog();
-                if (res == true && !IntersectionFinderWindow.IsSingleSurface)
+                if (res == true)
                 {
                     int divs = IntersectionFinderWindow.StartDims;
                     float fdivs = divs;
                     bool noCurve = false;
                     if (IntersectionFinderWindow.UseCursorPosition)
                     {
+                        if (IntersectionFinderWindow.IsSingleSurface)
+                        {
+                            System.Windows.MessageBox.Show("Using cursor position with intersections is not supported.", "Find intersections", MessageBoxButton.OK);
+                            return;
+                        }
                         var pointSurface = new PointSurface(cursor.Position);
                         bool foundStart = false;
                         for (int x = 0; x < divs; x++)
@@ -910,20 +915,24 @@ namespace AbraCADabra
                                 {
                                     for (int w = 0; w < divs; w++)
                                     {
-                                        Vector4 start = divs > 1 ? new Vector4(x / fdivs, y / fdivs, z / fdivs, w / fdivs)
-                                                                 : new Vector4(0.5f);
-                                        var (intRes, icm) = IntersectionFinder.FindIntersection(IntersectionFinderWindow.SelectedFirst,
-                                                                                                IntersectionFinderWindow.SelectedSecond,
-                                                                                                start);
-                                        if (intRes == IntersectionResult.OK)
+                                        if (!IntersectionFinderWindow.IsSingleSurface ||
+                                            Vector2.DistanceSquared(new Vector2(x / fdivs, y / fdivs), new Vector2(z / fdivs, w / fdivs)) > IntersectionFinderWindow.StartSelfDiffSquared)
                                         {
-                                            objects.Add(icm);
-                                            RefreshView();
-                                            return;
-                                        }
-                                        else if (intRes == IntersectionResult.NoCurve)
-                                        {
-                                            noCurve = true;
+                                            Vector4 start = divs > 1 ? new Vector4(x / fdivs, y / fdivs, z / fdivs, w / fdivs)
+                                                                     : new Vector4(0.5f);
+                                            var (intRes, icm) = IntersectionFinder.FindIntersection(IntersectionFinderWindow.SelectedFirst,
+                                                                                                    IntersectionFinderWindow.SelectedSecond,
+                                                                                                    start);
+                                            if (intRes == IntersectionResult.OK)
+                                            {
+                                                objects.Add(icm);
+                                                RefreshView();
+                                                return;
+                                            }
+                                            else if (intRes == IntersectionResult.NoCurve)
+                                            {
+                                                noCurve = true;
+                                            }
                                         }
                                     }
                                 }
@@ -939,10 +948,10 @@ namespace AbraCADabra
                         System.Windows.MessageBox.Show("No intersections found.", "Find intersections", MessageBoxButton.OK);
                     }
                 }
-                else if (res == true)
-                {
-                    System.Windows.MessageBox.Show("Self intersections are currently unsupported.", "Find intersections", MessageBoxButton.OK);
-                }
+                //else if (res == true)
+                //{
+                //    System.Windows.MessageBox.Show("Self intersections are currently unsupported.", "Find intersections", MessageBoxButton.OK);
+                //}
             }
         }
 

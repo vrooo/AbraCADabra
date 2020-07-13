@@ -65,7 +65,7 @@ namespace AbraCADabra
         public static (IntersectionResult intRes, IntersectionCurveManager icm) FindIntersection(ISurface P, ISurface Q, Vector4 x0, bool scale = true)
         {
             (bool res, Vector4 x) = FindIntersectionPoint(P, Q, x0, scale);
-            if (!res)
+            if (!res || (IFW.IsSingleSurface && Vector2.DistanceSquared(new Vector2(x.X, x.Y), new Vector2(x.Z, x.W)) < IFW.StartSelfDiffSquared))
             {
                 return (IntersectionResult.NoIntersection, null);
             }
