@@ -14,6 +14,7 @@ using System.IO;
 using Microsoft.Win32;
 using AbraCADabra.Serialization;
 using System.Xml.Serialization;
+using AbraCADabra.Milling;
 
 namespace AbraCADabra
 {
@@ -27,7 +28,8 @@ namespace AbraCADabra
             ToFirst, ToLast, ToCursor, ToCenter
         }
 
-        const uint wireframeMax = 100;
+        const uint WIREFRAME_MAX = 100;
+        const int SPHERICAL_INDEX = 0, FLAT_INDEX = 1;
 
         ShaderManager shader;
 
@@ -60,7 +62,9 @@ namespace AbraCADabra
         bool renderFromWorldCoordsChange = false;
 
         PropertyWindow propertyWindow;
-        private string currentDirectory = Directory.GetCurrentDirectory();
+        string currentDirectory = Directory.GetCurrentDirectory();
+
+        public MillingManager MillingManager { get; set; }
 
         public MainWindow()
         {
@@ -99,7 +103,9 @@ namespace AbraCADabra
 
             shader = new ShaderManager(camera, GLMain);
 
-            objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
+            MillingManager = new MillingManager();
+            ExpanderMilling.DataContext = MillingManager;
+            MillingManager.PropertyChanged += MillingPropertyChanged;
         }
 
         private void OnRender(object sender, System.Windows.Forms.PaintEventArgs e)
@@ -193,6 +199,8 @@ namespace AbraCADabra
                 if (!(ob is PointManager) || CheckBoxPoints.IsChecked == true)
                     ob.Render(shader);
             }
+
+            MillingManager.Render(shader);
 
             UpdateCenterMarker();
             centerMarker.Render(shader);
@@ -440,9 +448,16 @@ namespace AbraCADabra
 
         private void RoutedInvalidate(object sender, RoutedEventArgs e) => RefreshView();
 
+        private void UpDownInvalidate(object sender, RoutedPropertyChangedEventArgs<object> e) => RefreshView();
+
         private void ValueChangedInvalidate(object sender, RoutedPropertyChangedEventArgs<double> e) => RefreshView();
 
         private void ColorChangedInvalidate(object sender, RoutedPropertyChangedEventArgs<Color?> e) => RefreshView();
+
+        private void DecimalBaseHeightChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            DecimalSizeY.Value = Math.Max(DecimalSizeY.Value.Value, DecimalBaseHeight.Value.Value);
+        }
 
         private void ListBoxItemDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -542,7 +557,7 @@ namespace AbraCADabra
 
         private void ButtonCreateTorus(object sender, RoutedEventArgs e)
         {
-            objects.Add(new TorusManager(cursor.Position, wireframeMax, wireframeMax));
+            objects.Add(new TorusManager(cursor.Position, WIREFRAME_MAX, WIREFRAME_MAX));
             RefreshView();
         }
 
@@ -799,7 +814,31 @@ namespace AbraCADabra
                     ser.Serialize(sw, scene);
                     sw.Close();
                 }
-                catch (Exception ex) // TODO: not gud
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"Scene file could not be processed.\n{ex.Message}",
+                                                   "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void MenuLoadMillingClick(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.InitialDirectory = currentDirectory;
+            ofd.Filter = "Path Files (*.kXX, *.fXX)|*.k??;*.f??";
+            if (ofd.ShowDialog() == true)
+            {
+                currentDirectory = Path.GetDirectoryName(ofd.FileName);
+                try
+                {
+                    if (!MillingManager.LoadFile(ofd.FileName))
+                    {
+                        System.Windows.MessageBox.Show("Warning: loaded path is empty.",
+                                                       "Warning", MessageBoxButton.OK);
+                    }
+                }
+                catch (Exception ex)
                 {
                     System.Windows.MessageBox.Show($"Scene file could not be processed.\n{ex.Message}",
                                                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -998,6 +1037,32 @@ namespace AbraCADabra
         {
             sender.ManagerDisposing -= HandleManagerDisposing;
             objects.Remove(sender);
+        }
+
+        private void ComboToolSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (MillingManager != null)
+            {
+                MillingManager.IsFlat = ComboTool.SelectedIndex == FLAT_INDEX;
+                RefreshView();
+            }
+        }
+
+        private void ButtonBeginMilling(object sender, RoutedEventArgs e)
+        {
+            MillingManager.BeginMilling();
+            RefreshView();
+        }
+
+        private void ButtonMillingJumpToEnd(object sender, RoutedEventArgs e)
+        {
+            MillingManager.BeginMilling(true);
+            RefreshView();
+        }
+
+        private void MillingPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            ComboTool.SelectedIndex = MillingManager.IsFlat ? FLAT_INDEX : SPHERICAL_INDEX;
         }
 
         private void MergePoints(MergeMode mode)

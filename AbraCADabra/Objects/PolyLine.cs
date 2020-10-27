@@ -58,7 +58,7 @@ namespace AbraCADabra
 
         public override Matrix4 GetModelMatrix()
         {
-            return Matrix4.Identity;
+            return Matrix4.CreateScale(Scale);
         }
         public override void Translate(float x, float y, float z) { }
         public override void Rotate(float x, float y, float z) { }

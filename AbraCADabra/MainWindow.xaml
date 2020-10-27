@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:otk="clr-namespace:OpenTK;assembly=OpenTK.GLControl"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:AbraCADabra"
         mc:Ignorable="d"
         x:Name="_this" Title="AbraCADabra" Height="800" Width="1200" MinHeight="200" MinWidth="400"
@@ -28,6 +29,8 @@
                 <MenuItem x:Name="MenuNew" Header="New Scene" Click="MenuNewClick"/>
                 <MenuItem x:Name="MenuOpen" Header="Open Scene..." Click="MenuOpenClick"/>
                 <MenuItem x:Name="MenuSave" Header="Save Scene..." Click="MenuSaveClick"/>
+                <Separator/>
+                <MenuItem x:Name="MenuLoadMilling" Header="Load Milling Path..." Click="MenuLoadMillingClick"/>
                 <Separator/>
                 <MenuItem x:Name="MenuReset" Header="Reset camera" Click="MenuResetClick"/>
             </MenuItem>
@@ -81,6 +84,7 @@
                             </DockPanel>
                         </StackPanel>
                     </Expander>
+                    
                     <Expander Header="Add object" IsExpanded="False">
                         <WrapPanel>
                             <Button Click="ButtonCreatePoint">Point</Button>
@@ -92,6 +96,7 @@
                             <Button Click="ButtonCreateTorus">Torus</Button>
                         </WrapPanel>
                     </Expander>
+                    
                     <Expander Header="Cursor" IsExpanded="False">
                         <StackPanel>
                             <TextBlock Style="{StaticResource TextBlockBasic}">World:</TextBlock>
@@ -142,6 +147,7 @@
                             </Grid>
                         </StackPanel>
                     </Expander>
+                    
                     <Expander Header="Configuration" IsExpanded="False">
                         <StackPanel>
                             <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
@@ -151,6 +157,7 @@
                             <CheckBox x:Name="CheckBoxRotateOrigin" IsChecked="False">Rotate around cursor</CheckBox>
                         </StackPanel>
                     </Expander>
+                    
                     <Expander Header="Anaglyph" IsExpanded="False">
                         <StackPanel>
                             <CheckBox x:Name="CheckBoxAnaglyph" IsChecked="False"
@@ -205,6 +212,130 @@
                                                   SelectedColorChanged="ColorChangedInvalidate"/>
                                 </Grid>
                             </StackPanel>
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander x:Name="ExpanderMilling" Header="Milling">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox IsChecked="{Binding DisplayPath}"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Display path</CheckBox>
+                            <CheckBox IsChecked="{Binding ShowPathOnTop}"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show path on top</CheckBox>
+
+                            <StackPanel Orientation="Vertical" IsEnabled="{Binding IsIdle}">
+                                <TextBlock Style="{StaticResource TextBlockBasic}">Size:</TextBlock>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
+                                    <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
+                                                    Value="{Binding SizeX}" Minimum="0.001"
+                                                    ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
+                                    <xctk:DecimalUpDown x:Name="DecimalSizeY" Grid.Column="3" VerticalAlignment="Center"
+                                                    Value="{Binding SizeY}" Minimum="{Binding ElementName=DecimalBaseHeight, Path=Value}"
+                                                    ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>
+                                    <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
+                                    <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
+                                                    Value="{Binding SizeZ}" Minimum="0.001"
+                                                    ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>
+                                </Grid>
+
+                                <TextBlock Style="{StaticResource TextBlockBasic}">Position:</TextBlock>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
+                                    <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
+                                                    Value="{Binding PositionX}"
+                                                    ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Y:"/>
+                                    <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
+                                                    Value="{Binding PositionY}"
+                                                    ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>
+                                    <TextBlock Grid.Column="4" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
+                                    <xctk:DecimalUpDown Grid.Column="5" VerticalAlignment="Center"
+                                                    Value="{Binding PositionZ}"
+                                                    ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>
+                                </Grid>
+
+                                <TextBlock Style="{StaticResource TextBlockBasic}">Divisions:</TextBlock>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="X:"/>
+                                    <xctk:IntegerUpDown Grid.Column="1" VerticalAlignment="Center"
+                                                    Value="{Binding DivX}" Minimum="1"
+                                                    ValueChanged="UpDownInvalidate"></xctk:IntegerUpDown>
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Z:"/>
+                                    <xctk:IntegerUpDown Grid.Column="3" VerticalAlignment="Center"
+                                                    Value="{Binding DivZ}" Minimum="1"
+                                                    ValueChanged="UpDownInvalidate"></xctk:IntegerUpDown>
+                                </Grid>
+
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Left" Style="{StaticResource TextBlockBasic}"
+                                           VerticalAlignment="Center">Base height:</TextBlock>
+                                    <xctk:DecimalUpDown x:Name="DecimalBaseHeight" Grid.Column="3" VerticalAlignment="Center"
+                                                    Value="{Binding BaseHeight}" Minimum="0.001"
+                                                    ValueChanged="DecimalBaseHeightChanged"></xctk:DecimalUpDown>
+                                </DockPanel>
+
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Left" Style="{StaticResource TextBlockBasic}"
+                                           VerticalAlignment="Center">Tool:</TextBlock>
+                                    <ComboBox x:Name="ComboTool" DockPanel.Dock="Left" SelectedIndex="0"
+                                          SelectionChanged="ComboToolSelectionChanged">
+                                        <ComboBoxItem>Spherical</ComboBoxItem>
+                                        <ComboBoxItem>Flat</ComboBoxItem>
+                                    </ComboBox>
+                                </DockPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="Diameter:"/>
+                                    <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
+                                                    Value="{Binding ToolDiameter}" Minimum="0.001" Increment="0.1"
+                                                    ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>
+                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Height:"/>
+                                    <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
+                                                    Value="{Binding ToolHeight}" Minimum="0.001"
+                                                    ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>
+                                </Grid>
+                            </StackPanel>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <Button Grid.Column="0" Click="ButtonBeginMilling">Start</Button>
+                                <Button Grid.Column="1">Pause</Button>
+                                <Button Grid.Column="2">Reset</Button>
+                            </Grid>
+                            <Button Click="ButtonMillingJumpToEnd">Jump to end</Button>
                         </StackPanel>
                     </Expander>
                 </StackPanel>

@@ -18,6 +18,11 @@ namespace AbraCADabra
         private const string vertPathGregory = "../../Shaders/gregory.vert";
         private const string vertPathMultitex = "../../Shaders/multitex.vert";
         private const string fragPathMultitex = "../../Shaders/multitex.frag";
+        private const string vertPathPhong = "../../Shaders/phong.vert";
+        private const string fragPathPhong = "../../Shaders/phong.frag";
+        private const string vertPathPhongtex = "../../Shaders/phongtex.vert";
+        private const string fragPathPhongtex = "../../Shaders/phongtex.frag";
+        private const string vertPathMillHeight = "../../Shaders/millheight.vert";
 
         private Camera camera;
         private GLControl glControl;
@@ -27,6 +32,9 @@ namespace AbraCADabra
         private Shader shaderPatch;
         private Shader shaderGregory;
         private Shader shaderMultitex;
+        private Shader shaderPhong;
+        private Shader shaderPhongtex;
+        private Shader shaderMillHeight;
 
         private Shader shaderCurrent;
 
@@ -36,11 +44,14 @@ namespace AbraCADabra
 
         public ShaderManager(Camera camera, GLControl glControl)
         {
-            shaderBasic    = new Shader(vertPath, fragPath);
-            shaderBezier   = new Shader(vertPathBezier, fragPath, geomPathBezier);
-            shaderPatch    = new Shader(vertPathPatch, fragPath);
-            shaderGregory  = new Shader(vertPathGregory, fragPath);
-            shaderMultitex = new Shader(vertPathMultitex, fragPathMultitex);
+            shaderBasic      = new Shader(vertPath, fragPath);
+            shaderBezier     = new Shader(vertPathBezier, fragPath, geomPathBezier);
+            shaderPatch      = new Shader(vertPathPatch, fragPath);
+            shaderGregory    = new Shader(vertPathGregory, fragPath);
+            shaderMultitex   = new Shader(vertPathMultitex, fragPathMultitex);
+            shaderPhong      = new Shader(vertPathPhong, fragPathPhong);
+            shaderPhongtex   = new Shader(vertPathPhongtex, fragPathPhongtex);
+            shaderMillHeight = new Shader(vertPathMillHeight, fragPathPhongtex);
             this.camera = camera;
             this.glControl = glControl;
         }
@@ -68,6 +79,21 @@ namespace AbraCADabra
         public void UseMultitex()
         {
             Use(shaderMultitex);
+        }
+
+        public void UsePhong()
+        {
+            Use(shaderPhong);
+        }
+
+        public void UsePhongtex()
+        {
+            Use(shaderPhongtex);
+        }
+
+        public void UseMillHeight()
+        {
+            Use(shaderMillHeight);
         }
 
         private void Use(Shader shader)
@@ -114,7 +140,10 @@ namespace AbraCADabra
 
         public void SetupCamera()
         {
-            BindMatrix(camera.GetViewMatrix(), "viewMatrix");
+            var (view, invView) = camera.GetViewAndInvViewMatrix();
+            BindMatrix(view, "viewMatrix");
+            BindMatrix(invView, "invViewMatrix");
+            BindVector4(new Vector4(camera.Position, 1), "cameraPosition");
             Matrix4 projMatrix;
             if (anaglyphMode == AnaglyphMode.None)
             {

@@ -50,6 +50,12 @@ namespace AbraCADabra
             return view;
         }
 
+        public (Matrix4 view, Matrix4 invView) GetViewAndInvViewMatrix()
+        {
+            var view = GetViewMatrix();
+            return (view, view.Inverted());
+        }
+
         Random rand = new Random();
         public Matrix4 GetProjectionMatrix(float width, float height)
         {

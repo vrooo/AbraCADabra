@@ -4,6 +4,43 @@ using OpenTK;
 namespace AbraCADabra
 {
     [StructLayout(LayoutKind.Sequential)]
+    public struct NormalVertex
+    {
+        public Vector3 Point;
+        public Vector3 Normal;
+        public NormalVertex(Vector3 point, Vector3 normal)
+        {
+            Point = point;
+            Normal = normal;
+        }
+
+        public static readonly int Size = Marshal.SizeOf<NormalVertex>();
+        public static readonly int OffsetPoint = (int)Marshal.OffsetOf<NormalVertex>(nameof(Point));
+        public static readonly int OffsetNormal = (int)Marshal.OffsetOf<NormalVertex>(nameof(Normal));
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct NormalIndexedVertex
+    {
+        public Vector3 Point;
+        public Vector3 Normal;
+        public int IndexX, IndexZ;
+        public NormalIndexedVertex(Vector3 point, Vector3 normal, int indX, int indZ)
+        {
+            Point = point;
+            Normal = normal;
+            IndexX = indX;
+            IndexZ = indZ;
+        }
+
+        public static readonly int Size = Marshal.SizeOf<NormalIndexedVertex>();
+        public static readonly int OffsetPoint = (int)Marshal.OffsetOf<NormalIndexedVertex>(nameof(Point));
+        public static readonly int OffsetNormal = (int)Marshal.OffsetOf<NormalIndexedVertex>(nameof(Normal));
+        public static readonly int OffsetIndexX = (int)Marshal.OffsetOf<NormalIndexedVertex>(nameof(IndexX));
+        public static readonly int OffsetIndexZ = (int)Marshal.OffsetOf<NormalIndexedVertex>(nameof(IndexZ));
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct AdjacencyVertex
     {
         public Vector3 Point;

@@ -59,10 +59,25 @@
     <Reference Include="OpenTK.GLControl, Version=3.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <HintPath>..\packages\OpenTK.GLControl.3.1.0\lib\net20\OpenTK.GLControl.dll</HintPath>
     </Reference>
+    <Reference Include="SixLabors.ImageSharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
+      <HintPath>..\packages\SixLabors.ImageSharp.1.0.1\lib\netstandard2.0\SixLabors.ImageSharp.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.3\lib\netstandard2.0\System.Memory.dll</HintPath>
+    </Reference>
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -98,6 +113,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Milling\MillingManager.cs" />
+    <Compile Include="Milling\MillingPath.cs" />
+    <Compile Include="Milling\MillingStructs.cs" />
+    <Compile Include="Milling\Tool.cs" />
     <Compile Include="ObjectManagers\CerealFactory.cs" />
     <Compile Include="ObjectManagers\GregoryPatchManager.cs" />
     <Compile Include="ObjectManagers\IntersectionCurveManager.cs" />
@@ -106,6 +125,7 @@
     <Compile Include="ObjectManagers\PatchC2Manager.cs" />
     <Compile Include="ObjectManagers\PatchManager.cs" />
     <Compile Include="Objects\LineSet.cs" />
+    <Compile Include="Objects\NormalTransform.cs" />
     <Compile Include="Objects\Patch.cs" />
     <Compile Include="Objects\PolyGrid.cs" />
     <Compile Include="Objects\Quad.cs" />
@@ -126,7 +146,7 @@
     <Compile Include="Objects\Bezier3.cs" />
     <Compile Include="Objects\CenterMarker.cs" />
     <Compile Include="Objects\CrossCursor.cs" />
-    <Compile Include="Objects\Cube.cs" />
+    <Compile Include="Milling\Cuboid.cs" />
     <Compile Include="Objects\Cursor.cs" />
     <Compile Include="Objects\Arrow.cs" />
     <Compile Include="Objects\Line.cs" />
@@ -155,6 +175,7 @@
     <Compile Include="Utilites\IntersectionFinder.cs" />
     <Compile Include="Utilites\ListExtender.cs" />
     <Compile Include="Utilites\MathHelper.cs" />
+    <Compile Include="Milling\MillingReader.cs" />
     <Compile Include="Utilites\PatchGraph.cs" />
     <Compile Include="Utilites\PointSurface.cs" />
     <Page Include="UI\IntersectionFinderWindow.xaml">
@@ -218,6 +239,11 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Shaders\millheight.vert" />
+    <None Include="Shaders\phongtex.vert" />
+    <None Include="Shaders\phongtex.frag" />
+    <None Include="Shaders\phong.vert" />
+    <None Include="Shaders\phong.frag" />
     <None Include="Shaders\multitex.frag" />
     <None Include="Shaders\multitex.vert" />
     <None Include="Shaders\bezier.geom" />
