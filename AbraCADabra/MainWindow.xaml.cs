@@ -1051,6 +1051,7 @@ namespace AbraCADabra
         private void ButtonBeginMilling(object sender, RoutedEventArgs e)
         {
             MillingManager.BeginMilling();
+            for (int i = 0; i < 100; i++) MillingManager.Step(); // TODO: delete
             RefreshView();
         }
 

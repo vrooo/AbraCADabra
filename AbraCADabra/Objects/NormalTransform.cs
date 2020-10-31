@@ -15,19 +15,17 @@ namespace AbraCADabra
         }
     }
 
-    public abstract class NormalIndexedTransform : Transform<NormalIndexedVertex>
+    public abstract class IndexedTransform : Transform<IndexedVertex>
     {
-        public NormalIndexedTransform() { }
+        public IndexedTransform() { }
         protected override void SetVertexAttribPointer()
         {
             GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, NormalIndexedVertex.Size, NormalIndexedVertex.OffsetPoint);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, IndexedVertex.Size, IndexedVertex.OffsetPoint);
             GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, NormalIndexedVertex.Size, NormalIndexedVertex.OffsetNormal);
+            GL.VertexAttribIPointer(1, 1, VertexAttribIntegerType.Int, IndexedVertex.Size, (IntPtr)IndexedVertex.OffsetIndexX);
             GL.EnableVertexAttribArray(2);
-            GL.VertexAttribIPointer(2, 1, VertexAttribIntegerType.Int, NormalIndexedVertex.Size, (IntPtr)NormalIndexedVertex.OffsetIndexX);
-            GL.EnableVertexAttribArray(3);
-            GL.VertexAttribIPointer(3, 1, VertexAttribIntegerType.Int, NormalIndexedVertex.Size, (IntPtr)NormalIndexedVertex.OffsetIndexZ);
+            GL.VertexAttribIPointer(2, 1, VertexAttribIntegerType.Int, IndexedVertex.Size, (IntPtr)IndexedVertex.OffsetIndexZ);
         }
     }
 }

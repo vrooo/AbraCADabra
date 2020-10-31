@@ -239,9 +239,10 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Shaders\trianglenorm.geom" />
     <None Include="Shaders\millheight.vert" />
-    <None Include="Shaders\phongtex.vert" />
-    <None Include="Shaders\phongtex.frag" />
+    <None Include="Shaders\millbasic.vert" />
+    <None Include="Shaders\millbasic.frag" />
     <None Include="Shaders\phong.vert" />
     <None Include="Shaders\phong.frag" />
     <None Include="Shaders\multitex.frag" />

@@ -8,7 +8,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         xmlns:local="clr-namespace:AbraCADabra"
         mc:Ignorable="d"
-        x:Name="_this" Title="AbraCADabra" Height="800" Width="1200" MinHeight="200" MinWidth="400"
+        x:Name="_this" Title="AbraCADabra" Height="800" Width="1200" MinHeight="200" MinWidth="400" WindowState="Maximized"
         KeyDown="OnKeyDown">
 
     <Window.Resources>

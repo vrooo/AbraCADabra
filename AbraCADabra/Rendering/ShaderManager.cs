@@ -10,19 +10,21 @@ namespace AbraCADabra
 
     public class ShaderManager : IDisposable
     {
-        private const string vertPath = "../../Shaders/basic.vert";
-        private const string fragPath = "../../Shaders/basic.frag";
-        private const string vertPathBezier = "../../Shaders/bezier.vert";
-        private const string geomPathBezier = "../../Shaders/bezier.geom";
-        private const string vertPathPatch = "../../Shaders/patch.vert";
-        private const string vertPathGregory = "../../Shaders/gregory.vert";
-        private const string vertPathMultitex = "../../Shaders/multitex.vert";
-        private const string fragPathMultitex = "../../Shaders/multitex.frag";
-        private const string vertPathPhong = "../../Shaders/phong.vert";
-        private const string fragPathPhong = "../../Shaders/phong.frag";
-        private const string vertPathPhongtex = "../../Shaders/phongtex.vert";
-        private const string fragPathPhongtex = "../../Shaders/phongtex.frag";
-        private const string vertPathMillHeight = "../../Shaders/millheight.vert";
+        private const string pathPrefix             = "../../Shaders/";
+        private const string vertPathBasic          = pathPrefix + "basic.vert";
+        private const string fragPathBasic          = pathPrefix + "basic.frag";
+        private const string vertPathBezier         = pathPrefix + "bezier.vert";
+        private const string geomPathBezier         = pathPrefix + "bezier.geom";
+        private const string vertPathPatch          = pathPrefix + "patch.vert";
+        private const string vertPathGregory        = pathPrefix + "gregory.vert";
+        private const string vertPathMultitex       = pathPrefix + "multitex.vert";
+        private const string fragPathMultitex       = pathPrefix + "multitex.frag";
+        private const string vertPathPhong          = pathPrefix + "phong.vert";
+        private const string fragPathPhong          = pathPrefix + "phong.frag";
+        private const string vertPathMillBasic      = pathPrefix + "millbasic.vert";
+        private const string fragPathMillBasic      = pathPrefix + "millbasic.frag";
+        private const string vertPathMillHeight     = pathPrefix + "millheight.vert";
+        private const string geomPathTriangleNorm   = pathPrefix + "trianglenorm.geom";
 
         private Camera camera;
         private GLControl glControl;
@@ -33,7 +35,7 @@ namespace AbraCADabra
         private Shader shaderGregory;
         private Shader shaderMultitex;
         private Shader shaderPhong;
-        private Shader shaderPhongtex;
+        private Shader shaderMillBasic;
         private Shader shaderMillHeight;
 
         private Shader shaderCurrent;
@@ -44,14 +46,14 @@ namespace AbraCADabra
 
         public ShaderManager(Camera camera, GLControl glControl)
         {
-            shaderBasic      = new Shader(vertPath, fragPath);
-            shaderBezier     = new Shader(vertPathBezier, fragPath, geomPathBezier);
-            shaderPatch      = new Shader(vertPathPatch, fragPath);
-            shaderGregory    = new Shader(vertPathGregory, fragPath);
+            shaderBasic      = new Shader(vertPathBasic, fragPathBasic);
+            shaderBezier     = new Shader(vertPathBezier, fragPathBasic, geomPathBezier);
+            shaderPatch      = new Shader(vertPathPatch, fragPathBasic);
+            shaderGregory    = new Shader(vertPathGregory, fragPathBasic);
             shaderMultitex   = new Shader(vertPathMultitex, fragPathMultitex);
             shaderPhong      = new Shader(vertPathPhong, fragPathPhong);
-            shaderPhongtex   = new Shader(vertPathPhongtex, fragPathPhongtex);
-            shaderMillHeight = new Shader(vertPathMillHeight, fragPathPhongtex);
+            shaderMillBasic  = new Shader(vertPathMillBasic, fragPathMillBasic, geomPathTriangleNorm);
+            shaderMillHeight = new Shader(vertPathMillHeight, fragPathMillBasic, geomPathTriangleNorm);
             this.camera = camera;
             this.glControl = glControl;
         }
@@ -86,9 +88,9 @@ namespace AbraCADabra
             Use(shaderPhong);
         }
 
-        public void UsePhongtex()
+        public void UseMillBasic()
         {
-            Use(shaderPhongtex);
+            Use(shaderMillBasic);
         }
 
         public void UseMillHeight()
