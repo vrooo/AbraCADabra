@@ -205,7 +205,15 @@ namespace AbraCADabra.Milling
 
         public void BeginMilling(bool jumpToEnd = false)
         {
-            if (!IsIdle || path == null || path.Points.Count == 0) return;
+            if (path == null || path.Points.Count == 0) return;
+            if (!IsIdle)
+            {
+                if (jumpToEnd)
+                {
+                    while (Step(true));
+                }
+                return;
+            }
 
             IsIdle = false;
             isNewLine = true;

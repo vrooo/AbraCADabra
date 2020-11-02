@@ -1091,6 +1091,7 @@ namespace AbraCADabra
 
         private void ButtonMillingJumpToEnd(object sender, RoutedEventArgs e)
         {
+            StopMillingTimer();
             try
             {
                 MillingManager.BeginMilling(true);

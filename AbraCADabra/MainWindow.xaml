@@ -313,17 +313,17 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="1*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="1*"/>
+                                        <!--<ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="1*"/>-->
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="1,5,5,0" Text="Diameter:"/>
                                     <xctk:DecimalUpDown Grid.Column="1" VerticalAlignment="Center"
                                                     Value="{Binding ToolDiameter}" Minimum="0.001" Increment="0.1"
                                                     ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>
-                                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Height:"/>
+                                    <!--<TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="4,5,5,0" Text="Height:"/>
                                     <xctk:DecimalUpDown Grid.Column="3" VerticalAlignment="Center"
                                                     Value="{Binding ToolHeight}" Minimum="0.001"
-                                                    ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>
+                                                    ValueChanged="UpDownInvalidate"></xctk:DecimalUpDown>-->
                                 </Grid>
                             </StackPanel>
 
