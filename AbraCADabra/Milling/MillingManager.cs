@@ -16,6 +16,7 @@ namespace AbraCADabra.Milling
         {
             Full, X, Z
         }
+        private const float Y_EPS = 0.001f;
         private const float TOOL_DIST = 1;
         private const string TEX_PATH = "../../Images/bamboo.png";
 
@@ -90,7 +91,7 @@ namespace AbraCADabra.Milling
                 Reset(true);
             }
         }
-        public float BaseHeight { get; set; } = 2;
+        public float BaseHeight { get; set; } = 1.5f;
         #endregion
         private float[,] materialHeight;
         private List<Vector3> gridPoints;
@@ -109,12 +110,10 @@ namespace AbraCADabra.Milling
             set
             {
                 tool.Diameter = value;
-                toolRadius = tool.Diameter / 2;
                 tool.Update();
                 OnPropertyChanged();
             }
         }
-        private float toolRadius;
         public float ToolHeight
         {
             get { return tool.Height; }
@@ -155,7 +154,6 @@ namespace AbraCADabra.Milling
         {
             material = new Cuboid();
             tool = new Tool(false, 1, 10);
-            toolRadius = tool.Diameter / 2;
 
             Image<Rgba32> img = Image.Load<Rgba32>(TEX_PATH);
             img.TryGetSinglePixelSpan(out System.Span<Rgba32> span);
@@ -242,12 +240,20 @@ namespace AbraCADabra.Milling
         }
 
         private int stepCurX, stepCurZ, stepdx1, stepdx2, stepdz1, stepdz2, stepLongest, stepShortest, stepDistCounter, stepLen, stepCurLine, stepCurPixel;
-        private float stepStartY, stepDeltaY;
+        private float stepStartY, stepDeltaY, stepDiffY;
         private FillingMode stepInnerMode;
         private bool isNewLine = false;
         public bool Step(bool jumping = false)
         {
             if (IsIdle) return false;
+
+            if (gridPoints.Count == 1)
+            {
+                stepDiffY = 0;
+                MillRadius((int)Math.Round(gridPoints[0].X), gridPoints[0].Y, (int)Math.Round(gridPoints[0].Z));
+                UpdateHeightMap();
+                return false;
+            }
 
             if (isNewLine)
             {
@@ -255,12 +261,6 @@ namespace AbraCADabra.Milling
                 stepCurPixel = 0;
                 int startX = (int)Math.Round(gridPoints[stepCurLine].X);
                 int startZ = (int)Math.Round(gridPoints[stepCurLine].Z);
-                if (gridPoints.Count == 1)
-                {
-                    MillRadius(startX, gridPoints[0].Y, startZ);
-                    UpdateHeightMap();
-                    return false;
-                }
 
                 // Bresenham
                 stepStartY = gridPoints[stepCurLine].Y;
@@ -288,17 +288,22 @@ namespace AbraCADabra.Milling
                     stepdx2 = 0;
                 }
 
-                stepDeltaY = (endY - stepStartY) / (stepLongest > 0 ? stepLongest : 1);
+                stepDiffY = endY - stepStartY;
+                stepDeltaY = stepDiffY / (stepLongest > 0 ? stepLongest : 1);
                 stepCurX = startX;
                 stepCurZ = startZ;
                 stepDistCounter = stepLongest >> 1;
                 stepLen = jumping ? stepLongest : StepLength - 1;
             }
 
-            int stepStart = stepCurPixel;
-            for (; stepCurPixel <= stepStart + stepLen; stepCurPixel++)
+            int stepStart = stepCurPixel, stepEnd = Math.Min(stepLongest, stepStart + stepLen);
+            for (; stepCurPixel <= stepEnd; stepCurPixel++)
             {
                 float curY = stepStartY + stepCurPixel * stepDeltaY;
+                if (stepLongest == 0) // vertical line
+                {
+                    curY = stepStartY + stepDiffY;
+                }
                 if (stepCurPixel == stepStart || stepCurPixel == stepLen)
                 {
                     MillRadius(stepCurX, curY, stepCurZ);
@@ -338,6 +343,13 @@ namespace AbraCADabra.Milling
             return !finished;
         }
 
+        private void ThrowMillingError(string message)
+        {
+            IsIdle = true;
+            UpdateHeightMap();
+            throw new MillingException(message);
+        }
+
         private float GetMilledHeight(int x, float tipHeight, int z, Vector3 world, Vector3 centerWorld)
         {
             float height;
@@ -370,7 +382,18 @@ namespace AbraCADabra.Milling
                     Vector3 world = GridToWorld(xx, tipHeight, zz);
                     if ((centerWorld - world).LengthSquared <= radius * radius)
                     {
-                        materialHeight[xx, zz] = GetMilledHeight(xx, tipHeight, zz, world, centerWorld);
+                        float height = GetMilledHeight(xx, tipHeight, zz, world, centerWorld);
+                        if (height <= BaseHeight)
+                        {
+                            ThrowMillingError("Cannot mill below base level.");
+                        }
+                        if (IsFlat && height < materialHeight[xx, zz])
+                        {
+                            if (stepDiffY < -Y_EPS)
+                            ThrowMillingError("Cannot mill using the flat side of a flat tool.");
+                        }
+
+                        materialHeight[xx, zz] = height;
                         texFirstX = Math.Min(texFirstX, xx);
                         texFirstZ = Math.Min(texFirstZ, zz);
                         texLastX = Math.Max(texLastX, xx);

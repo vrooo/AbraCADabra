@@ -1,4 +1,6 @@
-﻿namespace AbraCADabra.Milling
+﻿using System;
+
+namespace AbraCADabra.Milling
 {
     public struct ToolData
     {
@@ -9,5 +11,10 @@
             IsFlat = flat;
             Diameter = diameter;
         }
+    }
+
+    public class MillingException : Exception
+    {
+        public MillingException(string message) : base(message) { }
     }
 }

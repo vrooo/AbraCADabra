@@ -15,6 +15,7 @@ using Microsoft.Win32;
 using AbraCADabra.Serialization;
 using System.Xml.Serialization;
 using AbraCADabra.Milling;
+using System.Windows.Threading;
 
 namespace AbraCADabra
 {
@@ -65,6 +66,8 @@ namespace AbraCADabra
         string currentDirectory = Directory.GetCurrentDirectory();
 
         public MillingManager MillingManager { get; set; }
+        public double MillingStepDelay { get; set; } = 0.1;
+        private DispatcherTimer millingTimer = new DispatcherTimer();
 
         public MainWindow()
         {
@@ -106,6 +109,7 @@ namespace AbraCADabra
             MillingManager = new MillingManager();
             ExpanderMilling.DataContext = MillingManager;
             MillingManager.PropertyChanged += MillingPropertyChanged;
+            millingTimer.Tick += OnMillingTimer;
         }
 
         private void OnRender(object sender, System.Windows.Forms.PaintEventArgs e)
@@ -456,7 +460,11 @@ namespace AbraCADabra
 
         private void DecimalBaseHeightChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            DecimalSizeY.Value = Math.Max(DecimalSizeY.Value.Value, DecimalBaseHeight.Value.Value);
+            decimal sizeY = DecimalSizeY.Value.Value, baseHeight = DecimalBaseHeight.Value.Value;
+            if (baseHeight > sizeY)
+            {
+                DecimalSizeY.Value = baseHeight;
+            }
         }
 
         private void ListBoxItemDoubleClick(object sender, MouseButtonEventArgs e)
@@ -1048,22 +1056,76 @@ namespace AbraCADabra
             }
         }
 
+        private void StartMillingTimer()
+        {
+            millingTimer.Start();
+            StackPanelMillingStep.IsEnabled = false;
+        }
+
+        private void StopMillingTimer()
+        {
+            millingTimer.Stop();
+            StackPanelMillingStep.IsEnabled = true;
+        }
+
         private void ButtonBeginMilling(object sender, RoutedEventArgs e)
         {
             MillingManager.BeginMilling();
-            for (int i = 0; i < 100; i++) MillingManager.Step(); // TODO: delete
+            millingTimer.Interval = new TimeSpan((long)(1e7 * MillingStepDelay));
+            StartMillingTimer();
+            RefreshView();
+        }
+
+        private void ButtonPauseMilling(object sender, RoutedEventArgs e)
+        {
+            StopMillingTimer();
+            RefreshView();
+        }
+
+        private void ButtonResetMilling(object sender, RoutedEventArgs e)
+        {
+            StopMillingTimer();
+            MillingManager.Reset();
             RefreshView();
         }
 
         private void ButtonMillingJumpToEnd(object sender, RoutedEventArgs e)
         {
-            MillingManager.BeginMilling(true);
+            try
+            {
+                MillingManager.BeginMilling(true);
+            }
+            catch (MillingException ex)
+            {
+                RefreshView();
+                System.Windows.MessageBox.Show(ex.Message, "Milling error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             RefreshView();
         }
 
         private void MillingPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             ComboTool.SelectedIndex = MillingManager.IsFlat ? FLAT_INDEX : SPHERICAL_INDEX;
+        }
+
+        private void OnMillingTimer(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!MillingManager.Step())
+                {
+                    StopMillingTimer();
+                }
+            }
+            catch (MillingException ex)
+            {
+                RefreshView();
+                System.Windows.MessageBox.Show(ex.Message, "Milling error", MessageBoxButton.OK, MessageBoxImage.Error);
+                StopMillingTimer();
+                return;
+            }
+            RefreshView();
         }
 
         private void MergePoints(MergeMode mode)

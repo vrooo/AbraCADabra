@@ -8,7 +8,8 @@ namespace AbraCADabra.Milling
 {
     public static class MillingReader
     {
-        private static Regex coordRegex = new Regex("([XYZ])(-?[0-9]+\\.[0-9]{3})");
+        private static Regex verificationRegex = new Regex("^([XYZ]-?[0-9]+\\.[0-9]{3})+$");
+        private static Regex extractionRegex = new Regex("([XYZ])(-?[0-9]+\\.[0-9]{3})");
 
         public static (MillingPath path, ToolData toolData) ReadFile(string path)
         {
@@ -55,15 +56,22 @@ namespace AbraCADabra.Milling
                 var split = line.Split(new string[]{ "G01" }, StringSplitOptions.None);
                 if (split.Length == 2)
                 {
-                    var matches = coordRegex.Matches(split[1]);
-                    if (matches.Count > 0)
+                    if (verificationRegex.IsMatch(split[1]))
                     {
-                        var move = i > 0 ? moves[i - 1] : Vector3.Zero;
-                        foreach (Match m in matches)
+                        var matches = extractionRegex.Matches(split[1]);
+                        if (matches.Count > 0)
                         {
-                            TransformAndSetCoord(m.Groups[1].Value, float.Parse(m.Groups[2].Value), ref move);
+                            var move = i > 0 ? moves[i - 1] : Vector3.Zero;
+                            foreach (Match m in matches)
+                            {
+                                TransformAndSetCoord(m.Groups[1].Value, float.Parse(m.Groups[2].Value), ref move);
+                            }
+                            moves.Add(move);
                         }
-                        moves.Add(move);
+                        else
+                        {
+                            throw new ArgumentException($"Incorrect instruction at line {i + 1}.");
+                        }
                     }
                     else
                     {
