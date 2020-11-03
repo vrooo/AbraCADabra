@@ -1092,22 +1092,38 @@ namespace AbraCADabra
         private void ButtonMillingJumpToEnd(object sender, RoutedEventArgs e)
         {
             StopMillingTimer();
-            try
-            {
-                MillingManager.BeginMilling(true);
-            }
-            catch (MillingException ex)
-            {
-                RefreshView();
-                System.Windows.MessageBox.Show(ex.Message, "Milling error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
+            //try
+            //{
+            //    MillingManager.BeginMilling(true);
+            //    MillingManager.MillAsync();
+            //}
+            //catch (MillingException ex)
+            //{
+            //    RefreshView();
+            //    System.Windows.MessageBox.Show(ex.Message, "Milling error", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    return;
+            //}
+            GridMillingButtons.IsEnabled = false;
+            MillingManager.MillAsync(EndMillingJumpToEnd);
             RefreshView();
+        }
+
+        private void EndMillingJumpToEnd(Exception ex)
+        {
+            GridMillingButtons.IsEnabled = true;
+            RefreshView();
+            if (ex != null)
+            {
+                System.Windows.MessageBox.Show(ex.Message, "Milling error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void MillingPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            ComboTool.SelectedIndex = MillingManager.IsFlat ? FLAT_INDEX : SPHERICAL_INDEX;
+            if (e.PropertyName == "IsFlat")
+            {
+                ComboTool.SelectedIndex = MillingManager.IsFlat ? FLAT_INDEX : SPHERICAL_INDEX;
+            }
         }
 
         private void OnMillingTimer(object sender, EventArgs e)

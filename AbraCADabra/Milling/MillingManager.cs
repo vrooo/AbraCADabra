@@ -7,6 +7,8 @@ using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace AbraCADabra.Milling
 {
@@ -97,6 +99,8 @@ namespace AbraCADabra.Milling
         private List<Vector3> gridPoints;
         private int materialTexture, materialHeightMap;
         private int texFirstX, texFirstZ, texLastX, texLastZ;
+        private bool updateHeightMap, recreateHeightMap;
+        private bool isHeightMapInvalid;
 
         private MillingPath path;
 
@@ -203,6 +207,22 @@ namespace AbraCADabra.Milling
             }
         }
 
+        public async void MillAsync(Action<Exception> endAction)
+        {
+            var millTask = new Task(() => BeginMilling(true));
+            MillingException caughtEx = null;
+            millTask.Start();
+            try
+            {
+                await millTask;
+            }
+            catch (MillingException ex)
+            {
+                caughtEx = ex;
+            }
+            Application.Current.Dispatcher.Invoke(endAction, caughtEx);
+        }
+
         public void BeginMilling(bool jumpToEnd = false)
         {
             if (path == null || path.Points.Count == 0) return;
@@ -224,6 +244,7 @@ namespace AbraCADabra.Milling
             texLastX = texLastZ = -int.MaxValue;
             if (materialHeight == null)
             {
+                isHeightMapInvalid = true;
                 materialHeight = new float[DivX + 1, DivZ + 1];
                 for (int i = 0; i <= DivX; i++)
                 {
@@ -232,8 +253,10 @@ namespace AbraCADabra.Milling
                         materialHeight[i, j] = SizeY;
                     }
                 }
+                isHeightMapInvalid = false;
             }
-            UpdateHeightMap(true);
+            updateHeightMap = true;
+            recreateHeightMap = true;
 
             gridPoints = new List<Vector3>();
             foreach (var point in path.Points)
@@ -259,7 +282,7 @@ namespace AbraCADabra.Milling
             {
                 stepDiffY = 0;
                 MillRadius((int)Math.Round(gridPoints[0].X), gridPoints[0].Y, (int)Math.Round(gridPoints[0].Z));
-                UpdateHeightMap();
+                updateHeightMap = true;
                 return false;
             }
 
@@ -320,7 +343,10 @@ namespace AbraCADabra.Milling
                 {
                     MillRadius(stepCurX, curY, stepCurZ, stepInnerMode);
                 }
-                tool.Position = GridToWorld(stepCurX, curY, stepCurZ);
+                if (!jumping)
+                {
+                    tool.Position = GridToWorld(stepCurX, curY, stepCurZ);
+                }
 
                 stepDistCounter += stepShortest;
                 if (stepDistCounter >= stepLongest)
@@ -345,16 +371,21 @@ namespace AbraCADabra.Milling
             bool finished = stepCurLine == gridPoints.Count - 1;
             if (!jumping || finished)
             {
-                UpdateHeightMap();
+                updateHeightMap = true;
             }
             IsIdle = finished;
+            if (finished)
+            {
+                tool.Position = path.Points[path.Points.Count - 1];
+            }
             return !finished;
         }
 
-        private void ThrowMillingError(string message)
+        private void ThrowMillingError(string message, Vector3 toolPos)
         {
             IsIdle = true;
-            UpdateHeightMap();
+            updateHeightMap = true;
+            tool.Position = toolPos;
             throw new MillingException(message);
         }
 
@@ -393,12 +424,12 @@ namespace AbraCADabra.Milling
                         float height = GetMilledHeight(xx, tipHeight, zz, world, centerWorld);
                         if (height <= BaseHeight)
                         {
-                            ThrowMillingError("Cannot mill below base level.");
+                            ThrowMillingError("Cannot mill below base level.", centerWorld);
                         }
                         if (IsFlat && height < materialHeight[xx, zz])
                         {
                             if (stepDiffY < -Y_EPS)
-                            ThrowMillingError("Cannot mill using the flat side of a flat tool.");
+                            ThrowMillingError("Cannot mill using the flat side of a flat tool.", centerWorld);
                         }
 
                         materialHeight[xx, zz] = height;
@@ -443,16 +474,16 @@ namespace AbraCADabra.Milling
             return res;
         }
 
-        private void UpdateHeightMap(bool recreate = false)
+        private void ActualUpdateHeightMap()
         {
             int texDimX = materialHeight.GetLength(0), texDimZ = materialHeight.GetLength(1);
             int startX = 0, startZ = 0, endX = texDimX, endZ = texDimZ;
-            if (!recreate && texFirstX < texLastX)
+            if (!recreateHeightMap && texFirstX < texLastX)
             {
                 startX = texFirstX;
                 endX = texLastX + 1;
             }
-            if (!recreate && texFirstZ < texLastZ)
+            if (!recreateHeightMap && texFirstZ < texLastZ)
             {
                 startZ = texFirstZ;
                 endZ = texLastZ + 1;
@@ -470,7 +501,7 @@ namespace AbraCADabra.Milling
 
             GL.ActiveTexture(TextureUnit.Texture12);
             GL.BindTexture(TextureTarget.Texture2D, materialHeightMap);
-            if (recreate)
+            if (recreateHeightMap)
             {
                 GL.TexImage2D(TextureTarget.Texture2D,
                               0,
@@ -507,12 +538,17 @@ namespace AbraCADabra.Milling
             if (path != null)
             {
                 GL.Enable(EnableCap.CullFace);
-                if (materialHeight == null)
+                if (materialHeight == null || isHeightMapInvalid)
                 {
                     shader.UseMillBasic();
                 }
                 else
                 {
+                    if (updateHeightMap)
+                    {
+                        ActualUpdateHeightMap();
+                        updateHeightMap = recreateHeightMap = false;
+                    }
                     shader.UseMillHeight();
                     GL.ActiveTexture(TextureUnit.Texture12);
                     GL.BindTexture(TextureTarget.Texture2D, materialHeightMap);

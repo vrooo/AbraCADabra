@@ -350,7 +350,7 @@
                                 </Grid>
                             </StackPanel>
                             
-                            <Grid>
+                            <Grid x:Name="GridMillingButtons">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition/>
                                     <ColumnDefinition/>
