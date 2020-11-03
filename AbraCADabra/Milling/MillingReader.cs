@@ -92,7 +92,7 @@ namespace AbraCADabra.Milling
                     move.X = val * MillingPath.SCALE;
                     break;
                 case "Y":
-                    move.Z = val * MillingPath.SCALE;
+                    move.Z = -val * MillingPath.SCALE;
                     break;
                 case "Z":
                     move.Y = val * MillingPath.SCALE;

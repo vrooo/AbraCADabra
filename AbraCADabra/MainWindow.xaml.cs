@@ -65,7 +65,7 @@ namespace AbraCADabra
         PropertyWindow propertyWindow;
         string currentDirectory = Directory.GetCurrentDirectory();
 
-        public MillingManager MillingManager { get; set; }
+        private MillingManager millingManager;
         public double MillingStepDelay { get; set; } = 0.1;
         private DispatcherTimer millingTimer = new DispatcherTimer();
 
@@ -106,9 +106,10 @@ namespace AbraCADabra
 
             shader = new ShaderManager(camera, GLMain);
 
-            MillingManager = new MillingManager();
-            ExpanderMilling.DataContext = MillingManager;
-            MillingManager.PropertyChanged += MillingPropertyChanged;
+            millingManager = new MillingManager();
+            MenuLoadMilling.DataContext = millingManager;
+            ExpanderMilling.DataContext = millingManager;
+            millingManager.PropertyChanged += MillingPropertyChanged;
             millingTimer.Tick += OnMillingTimer;
         }
 
@@ -204,7 +205,7 @@ namespace AbraCADabra
                     ob.Render(shader);
             }
 
-            MillingManager.Render(shader);
+            millingManager.Render(shader);
 
             UpdateCenterMarker();
             centerMarker.Render(shader);
@@ -840,7 +841,7 @@ namespace AbraCADabra
                 currentDirectory = Path.GetDirectoryName(ofd.FileName);
                 try
                 {
-                    if (!MillingManager.LoadFile(ofd.FileName))
+                    if (!millingManager.LoadFile(ofd.FileName))
                     {
                         System.Windows.MessageBox.Show("Warning: loaded path is empty.",
                                                        "Warning", MessageBoxButton.OK);
@@ -1049,9 +1050,9 @@ namespace AbraCADabra
 
         private void ComboToolSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (MillingManager != null)
+            if (millingManager != null)
             {
-                MillingManager.IsFlat = ComboTool.SelectedIndex == FLAT_INDEX;
+                millingManager.IsFlat = ComboTool.SelectedIndex == FLAT_INDEX;
                 RefreshView();
             }
         }
@@ -1070,7 +1071,7 @@ namespace AbraCADabra
 
         private void ButtonBeginMilling(object sender, RoutedEventArgs e)
         {
-            MillingManager.BeginMilling();
+            millingManager.BeginMilling();
             millingTimer.Interval = new TimeSpan((long)(1e7 * MillingStepDelay));
             StartMillingTimer();
             RefreshView();
@@ -1085,7 +1086,7 @@ namespace AbraCADabra
         private void ButtonResetMilling(object sender, RoutedEventArgs e)
         {
             StopMillingTimer();
-            MillingManager.Reset();
+            millingManager.Reset();
             RefreshView();
         }
 
@@ -1094,8 +1095,7 @@ namespace AbraCADabra
             StopMillingTimer();
             //try
             //{
-            //    MillingManager.BeginMilling(true);
-            //    MillingManager.MillAsync();
+            //    millingManager.BeginMilling(true);
             //}
             //catch (MillingException ex)
             //{
@@ -1103,14 +1103,20 @@ namespace AbraCADabra
             //    System.Windows.MessageBox.Show(ex.Message, "Milling error", MessageBoxButton.OK, MessageBoxImage.Error);
             //    return;
             //}
-            GridMillingButtons.IsEnabled = false;
-            MillingManager.MillAsync(EndMillingJumpToEnd);
+            StackPanelMillingButtons.IsEnabled = false;
+            millingManager.MillAsync(EndMillingJumpToEnd, UpdateMillingProgressBar);
             RefreshView();
+        }
+
+        private void UpdateMillingProgressBar(int step, int total)
+        {
+            ProgressBarMain.Value = (100.0 * step) / total;
         }
 
         private void EndMillingJumpToEnd(Exception ex)
         {
-            GridMillingButtons.IsEnabled = true;
+            StackPanelMillingButtons.IsEnabled = true;
+            ProgressBarMain.Value = 0;
             RefreshView();
             if (ex != null)
             {
@@ -1122,7 +1128,7 @@ namespace AbraCADabra
         {
             if (e.PropertyName == "IsFlat")
             {
-                ComboTool.SelectedIndex = MillingManager.IsFlat ? FLAT_INDEX : SPHERICAL_INDEX;
+                ComboTool.SelectedIndex = millingManager.IsFlat ? FLAT_INDEX : SPHERICAL_INDEX;
             }
         }
 
@@ -1130,7 +1136,7 @@ namespace AbraCADabra
         {
             try
             {
-                if (!MillingManager.Step())
+                if (!millingManager.Step())
                 {
                     StopMillingTimer();
                 }

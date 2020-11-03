@@ -207,9 +207,9 @@ namespace AbraCADabra.Milling
             }
         }
 
-        public async void MillAsync(Action<Exception> endAction)
+        public async void MillAsync(Action<Exception> endAction, Action<int, int> stepAction)
         {
-            var millTask = new Task(() => BeginMilling(true));
+            var millTask = new Task(() => BeginMilling(true, stepAction));
             MillingException caughtEx = null;
             millTask.Start();
             try
@@ -220,17 +220,26 @@ namespace AbraCADabra.Milling
             {
                 caughtEx = ex;
             }
-            Application.Current.Dispatcher.Invoke(endAction, caughtEx);
+            if (Application.Current != null)
+            {
+                Application.Current.Dispatcher.Invoke(endAction, caughtEx);
+            }
         }
 
-        public void BeginMilling(bool jumpToEnd = false)
+        public void BeginMilling(bool jumpToEnd = false, Action<int, int> stepAction = null)
         {
             if (path == null || path.Points.Count == 0) return;
             if (!IsIdle)
             {
                 if (jumpToEnd)
                 {
-                    while (Step(true));
+                    while (Step(true))
+                    {
+                        if (stepAction != null && Application.Current != null)
+                        {
+                            Application.Current.Dispatcher.Invoke(stepAction, stepCurLine, path.Points.Count - 1);
+                        }
+                    }
                 }
                 return;
             }
@@ -266,7 +275,13 @@ namespace AbraCADabra.Milling
 
             if (jumpToEnd)
             {
-                while (Step(true));
+                while (Step(true))
+                {
+                    if (stepAction != null && Application.Current != null)
+                    {
+                        Application.Current.Dispatcher.Invoke(stepAction, stepCurLine, path.Points.Count - 1);
+                    }
+                }
             }
         }
 
@@ -426,9 +441,8 @@ namespace AbraCADabra.Milling
                         {
                             ThrowMillingError("Cannot mill below base level.", centerWorld);
                         }
-                        if (IsFlat && height < materialHeight[xx, zz])
+                        if (IsFlat && height < materialHeight[xx, zz] && stepDiffY < -Y_EPS)
                         {
-                            if (stepDiffY < -Y_EPS)
                             ThrowMillingError("Cannot mill using the flat side of a flat tool.", centerWorld);
                         }
 
@@ -583,7 +597,27 @@ namespace AbraCADabra.Milling
 
         private void OnPropertyChanged([CallerMemberName] string name = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            //PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            var args = new PropertyChangedEventArgs(name);
+            //foreach (Delegate d in PropertyChanged.GetInvocationList())
+            //{
+            //    ISynchronizeInvoke syncer = d.Target as ISynchronizeInvoke;
+            //    if (syncer == null)
+            //    {
+            //        d.DynamicInvoke(this, args);
+            //    }
+            //    else
+            //    {
+            //        syncer.BeginInvoke(d, new object[] { this, args });
+            //    }
+            //}
+            if (Application.Current != null)
+            {
+                foreach (Delegate d in PropertyChanged.GetInvocationList())
+                {
+                    Application.Current.Dispatcher.Invoke(d, this, args);
+                }
+            }
         }
     }
 }
