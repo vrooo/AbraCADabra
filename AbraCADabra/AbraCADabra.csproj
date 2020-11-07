@@ -129,6 +129,9 @@
     <Compile Include="Objects\Patch.cs" />
     <Compile Include="Objects\PolyGrid.cs" />
     <Compile Include="Objects\Quad.cs" />
+    <Compile Include="UI\ScaleWindow.xaml.cs">
+      <DependentUpon>ScaleWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Serialization\Bezier.cs" />
     <Compile Include="Serialization\Patch.cs" />
     <Compile Include="Serialization\Point.cs" />
@@ -178,6 +181,10 @@
     <Compile Include="Milling\MillingReader.cs" />
     <Compile Include="Utilites\PatchGraph.cs" />
     <Compile Include="Utilites\PointSurface.cs" />
+    <Page Include="UI\ScaleWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UI\IntersectionFinderWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

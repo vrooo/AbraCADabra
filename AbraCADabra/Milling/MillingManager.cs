@@ -18,7 +18,7 @@ namespace AbraCADabra.Milling
         {
             Full, X, Z
         }
-        private const float Y_EPS = 0.001f;
+        private const float Y_EPS = 0.0001f;
         private const float TOOL_DIST = 1;
         private const string TEX_PATH = "../../Images/bamboo.png";
 

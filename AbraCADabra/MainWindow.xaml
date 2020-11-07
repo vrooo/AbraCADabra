@@ -35,6 +35,9 @@
                 <Separator/>
                 <MenuItem x:Name="MenuReset" Header="Reset camera" Click="MenuResetClick"/>
             </MenuItem>
+            <MenuItem Header="Scene">
+                <MenuItem Header="Scale Points..." Click="MenuScaleClick"/>
+            </MenuItem>
         </Menu>
         <Grid DockPanel.Dock="Top">
             <Grid.ColumnDefinitions>

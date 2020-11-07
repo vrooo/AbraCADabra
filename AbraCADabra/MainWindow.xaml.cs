@@ -855,6 +855,24 @@ namespace AbraCADabra
             }
         }
 
+        private void MenuScaleClick(object sender, RoutedEventArgs e)
+        {
+            ScaleWindow sw = new ScaleWindow();
+            if (sw.ShowDialog() == true)
+            {
+                foreach (var ob in objects)
+                {
+                    if (ob is PointManager pm)
+                    {
+                        pm.PositionX = (float)(pm.PositionX * sw.ScaleFactor);
+                        pm.PositionY = (float)(pm.PositionY * sw.ScaleFactor);
+                        pm.PositionZ = (float)(pm.PositionZ * sw.ScaleFactor);
+                    }
+                }
+                RefreshView();
+            }
+        }
+
         private void FillTriangles(object sender, RoutedEventArgs e)
         {
             PatchGraph graph = new PatchGraph();
