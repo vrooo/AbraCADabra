@@ -34,6 +34,7 @@ namespace AbraCADabra
 
         protected PatchType patchType;
         private Patch patch;
+        private QuadPatch quadPatch;
         private PolyGrid polyGrid;
 
         private bool shouldUpdate = false;
@@ -62,7 +63,8 @@ namespace AbraCADabra
         protected PatchManager(PointManager[,] points, PatchType patchType, int patchCountX, int patchCountZ, int continuity,
             int divX = divDefault, int divZ = divDefault, string name = null)
             : this(new Patch(patchCountX, patchCountZ, divX, divZ),
-                  new PolyGrid(GetPointPositions(points, patchType, continuity).points, new Vector4(0.7f, 0.7f, 0.0f, 1.0f)), name)
+                   new QuadPatch(patchCountX, patchCountZ, divX, divZ),
+                   new PolyGrid(GetPointPositions(points, patchType, continuity).points, new Vector4(0.7f, 0.7f, 0.0f, 1.0f)), name)
         {
             this.points = points;
             this.patchType = patchType;
@@ -83,9 +85,11 @@ namespace AbraCADabra
             UpdatePointTexture(pts);
         }
 
-        private PatchManager(Patch patch, PolyGrid polyGrid, string name = null) : base(patch, name)
+        private PatchManager(Patch patch, QuadPatch quadPatch, PolyGrid polyGrid, string name = null) : base(patch, name)
         {
             this.patch = patch;
+            this.quadPatch = quadPatch;
+            quadPatch.Color = patch.Color;
             this.polyGrid = polyGrid;
         }
 
@@ -415,7 +419,17 @@ namespace AbraCADabra
             UpdatePointTexture(pts);
         }
 
+        public void RenderFilled(ShaderManager shader)
+        {
+            ActualRender(shader, true);
+        }
+
         public override void Render(ShaderManager shader)
+        {
+            ActualRender(shader, false);
+        }
+
+        private void ActualRender(ShaderManager shader, bool fillPatch)
         {
             if (shouldUpdate)
             {
@@ -431,7 +445,15 @@ namespace AbraCADabra
             GL.BindTexture(TextureTarget.Texture2D, pointTexture);
             shader.SetupInt(10, "texturePoint");
             shader.SetupInt(continuity, "continuity");
-            base.Render(shader);
+            if (fillPatch)
+            {
+                quadPatch.Update(DivX, DivZ); // we're using quadPatch rarely so this is better
+                quadPatch.Render(shader);
+            }
+            else
+            {
+                patch.Render(shader);
+            }
             shader.UseBasic();
         }
 

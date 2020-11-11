@@ -56,7 +56,6 @@ namespace AbraCADabra
             return (view, view.Inverted());
         }
 
-        Random rand = new Random();
         public Matrix4 GetProjectionMatrix(float width, float height)
         {
             // TODO: cache

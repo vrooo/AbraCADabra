@@ -129,6 +129,7 @@
     <Compile Include="Objects\Patch.cs" />
     <Compile Include="Objects\PolyGrid.cs" />
     <Compile Include="Objects\Quad.cs" />
+    <Compile Include="Objects\QuadPatch.cs" />
     <Compile Include="UI\ScaleWindow.xaml.cs">
       <DependentUpon>ScaleWindow.xaml</DependentUpon>
     </Compile>

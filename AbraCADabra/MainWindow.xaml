@@ -30,13 +30,14 @@
                 <MenuItem x:Name="MenuOpen" Header="Open Scene..." Click="MenuOpenClick"/>
                 <MenuItem x:Name="MenuSave" Header="Save Scene..." Click="MenuSaveClick"/>
                 <Separator/>
-                <MenuItem x:Name="MenuLoadMilling" Header="Load Milling Path..." Click="MenuLoadMillingClick"
-                          IsEnabled="{Binding IsIdle}"/>
-                <Separator/>
                 <MenuItem x:Name="MenuReset" Header="Reset camera" Click="MenuResetClick"/>
             </MenuItem>
-            <MenuItem Header="Scene">
-                <MenuItem Header="Scale Points..." Click="MenuScaleClick"/>
+            <MenuItem x:Name="MenuMilling" Header="Milling">
+                <MenuItem x:Name="MenuMillingLoad" Header="Load Milling Path..." Click="MenuMillingLoadClick"
+                          IsEnabled="{Binding IsIdle}"/>
+                <Separator/>
+                <MenuItem x:Name="MenuMillingScale" Header="Scale..." Click="MenuMillingScaleClick"/>
+                <MenuItem x:Name="MenuMillingAlign" Header="Align to Material" Click="MenuMillingAlignClick"/>
             </MenuItem>
         </Menu>
         <Grid DockPanel.Dock="Top">

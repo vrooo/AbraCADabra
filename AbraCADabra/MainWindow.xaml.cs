@@ -65,9 +65,12 @@ namespace AbraCADabra
         PropertyWindow propertyWindow;
         string currentDirectory = Directory.GetCurrentDirectory();
 
-        private MillingManager millingManager;
         public double MillingStepDelay { get; set; } = 0.1;
-        private DispatcherTimer millingTimer = new DispatcherTimer();
+        MillingManager millingManager;
+        DispatcherTimer millingTimer = new DispatcherTimer();
+
+        int pathHeightBuffer;
+        int pathHeightTex;
 
         public MainWindow()
         {
@@ -107,10 +110,13 @@ namespace AbraCADabra
             shader = new ShaderManager(camera, GLMain);
 
             millingManager = new MillingManager();
-            MenuLoadMilling.DataContext = millingManager;
+            MenuMilling.DataContext = millingManager;
             ExpanderMilling.DataContext = millingManager;
             millingManager.PropertyChanged += MillingPropertyChanged;
             millingTimer.Tick += OnMillingTimer;
+
+            pathHeightBuffer = GL.GenFramebuffer();
+            pathHeightTex = GL.GenTexture();
         }
 
         private void OnRender(object sender, System.Windows.Forms.PaintEventArgs e)
@@ -145,6 +151,7 @@ namespace AbraCADabra
                 shader.SetupAnaglyphColors(new Vector4(lCol.R / 255.0f, lCol.G / 255.0f, lCol.B / 255.0f, 1.0f),
                                            new Vector4(rCol.R / 255.0f, rCol.G / 255.0f, rCol.B / 255.0f, 1.0f));
                 anaglyphQuad.Render(shader);
+                shader.UseBasic();
             }
             else
             {
@@ -219,6 +226,11 @@ namespace AbraCADabra
             {
                 UpdateCursorWorldPos();
             }
+        }
+
+        private void CreateObjectHeightMap()
+        {
+
         }
 
         private void UpdateCursorScreenPos()
@@ -831,7 +843,7 @@ namespace AbraCADabra
             }
         }
 
-        private void MenuLoadMillingClick(object sender, RoutedEventArgs e)
+        private void MenuMillingLoadClick(object sender, RoutedEventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.InitialDirectory = currentDirectory;
@@ -855,7 +867,7 @@ namespace AbraCADabra
             }
         }
 
-        private void MenuScaleClick(object sender, RoutedEventArgs e)
+        private void MenuMillingScaleClick(object sender, RoutedEventArgs e)
         {
             ScaleWindow sw = new ScaleWindow();
             if (sw.ShowDialog() == true)
@@ -867,6 +879,23 @@ namespace AbraCADabra
                         pm.PositionX = (float)(pm.PositionX * sw.ScaleFactor);
                         pm.PositionY = (float)(pm.PositionY * sw.ScaleFactor);
                         pm.PositionZ = (float)(pm.PositionZ * sw.ScaleFactor);
+                    }
+                }
+                RefreshView();
+            }
+        }
+
+        private void MenuMillingAlignClick(object sender, RoutedEventArgs e)
+        {
+            if (millingManager != null)
+            {
+                foreach (var ob in objects)
+                {
+                    if (ob is PointManager pm)
+                    {
+                        pm.Translate(millingManager.PositionX,
+                                     millingManager.PositionY + millingManager.SizeY,
+                                     millingManager.PositionZ);
                     }
                 }
                 RefreshView();

@@ -5,7 +5,28 @@ using System;
 
 namespace AbraCADabra
 {
-    public class Patch : Transform<PatchVertex>
+    public abstract class PatchTransform : Transform<PatchVertex>
+    {
+        protected override void SetVertexAttribPointer()
+        {
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, PatchVertex.Size, PatchVertex.OffsetUV);
+            GL.EnableVertexAttribArray(1);
+            GL.VertexAttribIPointer(1, 1, VertexAttribIntegerType.Int, PatchVertex.Size, (IntPtr)PatchVertex.OffsetIndexX);
+            GL.EnableVertexAttribArray(2);
+            GL.VertexAttribIPointer(2, 1, VertexAttribIntegerType.Int, PatchVertex.Size, (IntPtr)PatchVertex.OffsetIndexZ);
+        }
+
+        public override Matrix4 GetModelMatrix()
+        {
+            return Matrix4.Identity;
+        }
+        public override void Translate(float x, float y, float z) { }
+        public override void Rotate(float x, float y, float z) { }
+        public override void ScaleUniform(float delta) { }
+    }
+
+    public class Patch : PatchTransform
     {
         private static Random colorRandom = new Random();
 
@@ -23,7 +44,7 @@ namespace AbraCADabra
         public Patch(int patchesCountX, int patchesCountZ, int divX, int divZ, Vector4 color)
         {
             primitiveType = PrimitiveType.Lines;
-            //Color = new Vector4(0.5f, 0.95f, 0.4f, 1.0f);
+
             if (color.W <= 0.0f)
             {
                 double minColor = 0.1, colorMult = 1 - minColor;
@@ -42,16 +63,6 @@ namespace AbraCADabra
 
             CalculateVertices(divX, divZ);
             Initialize();
-        }
-
-        protected override void SetVertexAttribPointer()
-        {
-            GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, PatchVertex.Size, PatchVertex.OffsetUV);
-            GL.EnableVertexAttribArray(1);
-            GL.VertexAttribIPointer(1, 1, VertexAttribIntegerType.Int, PatchVertex.Size, (IntPtr)PatchVertex.OffsetIndexX);
-            GL.EnableVertexAttribArray(2);
-            GL.VertexAttribIPointer(2, 1, VertexAttribIntegerType.Int, PatchVertex.Size, (IntPtr)PatchVertex.OffsetIndexZ);
         }
 
         public void Update(int divX, int divZ, ISurface parent, List<IntersectionCurveManager> curves)
@@ -115,13 +126,5 @@ namespace AbraCADabra
             vertexArray = vertexList.ToArray();
             indexArray = indexList.ToArray();
         }
-
-        public override Matrix4 GetModelMatrix()
-        {
-            return Matrix4.Identity;
-        }
-        public override void Translate(float x, float y, float z) { }
-        public override void Rotate(float x, float y, float z) { }
-        public override void ScaleUniform(float delta) { }
     }
 }

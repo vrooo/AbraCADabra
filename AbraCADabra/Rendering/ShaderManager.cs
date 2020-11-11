@@ -186,7 +186,11 @@ namespace AbraCADabra
             shaderBasic.Dispose();
             shaderBezier.Dispose();
             shaderPatch.Dispose();
+            shaderGregory.Dispose();
             shaderMultitex.Dispose();
+            shaderPhong.Dispose();
+            shaderMillBasic.Dispose();
+            shaderMillHeight.Dispose();
         }
         #endregion
     }
