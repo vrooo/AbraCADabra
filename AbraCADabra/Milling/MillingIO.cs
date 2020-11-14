@@ -33,7 +33,7 @@ namespace AbraCADabra.Milling
             }
 
             char[] extChars = { ext[2], ext[3] };
-            bool res = float.TryParse(new string(extChars), out toolData.Diameter);
+            bool res = int.TryParse(new string(extChars), out toolData.Diameter);
             if (!res || toolData.Diameter <= 0)
             {
                 throw new ArgumentException("Incorrect file extension.");
@@ -82,6 +82,21 @@ namespace AbraCADabra.Milling
 
             sr.Close();
             return (new MillingPath(moves), toolData);
+        }
+
+        public static void SaveFile(List<Vector3> points, ToolData toolData, string location, string name, int startMove)
+        {
+            string filename = name + "." + (toolData.IsFlat ? "f" : "k") + toolData.Diameter.ToString("D2");
+            StreamWriter sw = new StreamWriter(Path.Combine(location, filename));
+
+            foreach (var origPoint in points)
+            {
+                var point = TransformCoordsWrite(origPoint);
+                sw.WriteLine("N{0}G01X{1:F3}Y{2:F3}Z{3:F3}", startMove, point.X, point.Y, point.Z);
+                startMove++;
+            }
+
+            sw.Close();
         }
 
         private static void TransformAndSetCoordRead(string name, float val, ref Vector3 move)

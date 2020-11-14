@@ -5,8 +5,8 @@ namespace AbraCADabra.Milling
     public struct ToolData
     {
         public bool IsFlat;
-        public float Diameter;
-        public ToolData(bool flat, float diameter)
+        public int Diameter;
+        public ToolData(bool flat, int diameter)
         {
             IsFlat = flat;
             Diameter = diameter;

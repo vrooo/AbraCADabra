@@ -944,7 +944,7 @@ namespace AbraCADabra
         {
             // TODO: window with params
             var pixels = SetupObjectHeightMap();
-            millingManager.WriteFirstPath(pixels, "");
+            millingManager.WriteFirstPath(pixels, "../../../../paths/mine/", 1);
             RefreshView(); // TODO: remove when it's not needed
         }
 

@@ -535,15 +535,14 @@ namespace AbraCADabra.Milling
             return path.Points.Count > 0;
         }
 
-        public void WriteFirstPath(float[,] modelHeightMap, string location)
+        public void WriteFirstPath(float[,] modelHeightMap, string location, int startMove)
         {
-            // filename: 1.k16
-            // path will be made 0.5 above base level
+            int diamMil = 16;
+            var toolData = new ToolData(false, diamMil);
             int mapDimX = modelHeightMap.GetLength(0), mapDimZ = modelHeightMap.GetLength(1);
             float diamEps = 2 * MillingPath.SCALE, stripWidth = 7 * MillingPath.SCALE; // TODO: should be params
             float radEps = diamEps / 2;
-            float diam = 16 * MillingPath.SCALE;
-            float diamExt = diam + diamEps, radExt = diamExt / 2, radExtSq = radExt * radExt;
+            float diamExt = (diamMil * MillingPath.SCALE) + diamEps, radExt = diamExt / 2, radExtSq = radExt * radExt;
 
             int gridRadX = (int)Math.Ceiling(radExt / SizeX * mapDimX);
             int gridRadZ = (int)Math.Ceiling(radExt / SizeZ * mapDimZ);
@@ -665,6 +664,7 @@ namespace AbraCADabra.Milling
             pts.Add(new Vector3(directionX * edgeMultX * stripWidth, SizeY + TOOL_DIST, -directionZ * edgeZ));
             pts.Add(new Vector3(0, SizeY + TOOL_DIST, 0));
 
+            MillingIO.SaveFile(pts, toolData, location, "1", startMove);
             path = new MillingPath(pts);
         }
 
