@@ -830,38 +830,43 @@ namespace AbraCADabra
             if (ofd.ShowDialog() == true)
             {
                 currentDirectory = Path.GetDirectoryName(ofd.FileName);
-                List<TransformManager> objectBuffer = new List<TransformManager>();
-                try
-                {
-                    var ser = new XmlSerializer(typeof(XmlScene));
-                    var sr = new StreamReader(ofd.FileName);
-                    var scene = ser.Deserialize(sr) as XmlScene;
+                LoadSceneFromFile(ofd.FileName);
+            }
+        }
 
-                    var pointDict = new Dictionary<string, PointManager>();
-                    foreach (var ob in scene.Items)
-                    {
-                        if (ob is XmlPoint)
-                        {
-                            pointDict.Add(ob.Name, ob.GetTransformManager(null) as PointManager);
-                        }
-                    }
-                    foreach (var ob in scene.Items)
-                    {
-                        objectBuffer.Add(ob.GetTransformManager(pointDict));
-                    }
+        private void LoadSceneFromFile(string path)
+        {
+            List<TransformManager> objectBuffer = new List<TransformManager>();
+            try
+            {
+                var ser = new XmlSerializer(typeof(XmlScene));
+                var sr = new StreamReader(path);
+                var scene = ser.Deserialize(sr) as XmlScene;
 
-                    objects.Clear();
-                    foreach (var ob in objectBuffer)
-                    {
-                        objects.Add(ob);
-                    }
-                    RefreshView();
-                }
-                catch (Exception ex) // TODO: not gud
+                var pointDict = new Dictionary<string, PointManager>();
+                foreach (var ob in scene.Items)
                 {
-                    System.Windows.MessageBox.Show($"Scene file could not be processed.\n{ex.Message}",
-                                                   "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    if (ob is XmlPoint)
+                    {
+                        pointDict.Add(ob.Name, ob.GetTransformManager(null) as PointManager);
+                    }
                 }
+                foreach (var ob in scene.Items)
+                {
+                    objectBuffer.Add(ob.GetTransformManager(pointDict));
+                }
+
+                objects.Clear();
+                foreach (var ob in objectBuffer)
+                {
+                    objects.Add(ob);
+                }
+                RefreshView();
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Scene file could not be processed.\n{ex.Message}",
+                                               "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -870,6 +875,10 @@ namespace AbraCADabra
             if (e.Key == Key.M)
             {
                 ContextMain.IsOpen = !ContextMain.IsOpen;
+            }
+            else if (e.Key == Key.P)
+            {
+                LoadSceneFromFile("../../../../paths/mine/mm_model_aligned.xml");
             }
         }
 

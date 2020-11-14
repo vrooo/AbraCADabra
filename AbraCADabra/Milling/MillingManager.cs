@@ -16,7 +16,8 @@ namespace AbraCADabra.Milling
             Full, X, Z
         }
         private const float Y_EPS = 0.0001f;
-        private const float TOOL_DIST = 1;
+        private const float TOOL_DIST = 5;
+        private const float PATH_BASE_DIST = 0.5f;
         private const string TEX_PATH = "../../Images/bamboo.png";
 
         private Cuboid material;
@@ -527,7 +528,7 @@ namespace AbraCADabra.Milling
         public bool LoadFile(string filename)
         {
             ToolData toolData;
-            (path, toolData) = MillingReader.ReadFile(filename);
+            (path, toolData) = MillingIO.ReadFile(filename);
             ToolDiameter = toolData.Diameter * MillingPath.SCALE;
             IsFlat = toolData.IsFlat;
             AdjustTool();
@@ -539,13 +540,14 @@ namespace AbraCADabra.Milling
             // filename: 1.k16
             // path will be made 0.5 above base level
             int mapDimX = modelHeightMap.GetLength(0), mapDimZ = modelHeightMap.GetLength(1);
-            float diamEps = 2 * MillingPath.SCALE, stripWidth = 2 * MillingPath.SCALE; // TODO: should be params
-            float diam = 4 * MillingPath.SCALE, rad = diam / 2, radSq = rad * rad;
-            //float diamExt = diam + diamEps, radExt = diamExt / 2;
+            float diamEps = 2 * MillingPath.SCALE, stripWidth = 7 * MillingPath.SCALE; // TODO: should be params
+            float radEps = diamEps / 2;
+            float diam = 16 * MillingPath.SCALE;
+            float diamExt = diam + diamEps, radExt = diamExt / 2, radExtSq = radExt * radExt;
 
-            int gridRadX = (int)Math.Ceiling(rad / SizeX * mapDimX);
-            int gridRadZ = (int)Math.Ceiling(rad / SizeZ * mapDimZ);
-            float offsetStepX = rad / gridRadX, offsetStepZ = rad / gridRadZ;
+            int gridRadX = (int)Math.Ceiling(radExt / SizeX * mapDimX);
+            int gridRadZ = (int)Math.Ceiling(radExt / SizeZ * mapDimZ);
+            float offsetStepX = radExt / gridRadX, offsetStepZ = radExt / gridRadZ;
             var toolOffsets = new float[2 * gridRadX + 1, 2 * gridRadZ + 1];
             for (int i = 0; i < toolOffsets.GetLength(0); i++)
             {
@@ -554,10 +556,10 @@ namespace AbraCADabra.Milling
                 {
                     pt.Y = (j - gridRadZ) * offsetStepZ;
                     float lenSq = pt.LengthSquared;
-                    if (lenSq < radSq)
+                    if (lenSq < radExtSq)
                     {
-                        float h = (float)Math.Sqrt(Math.Max(0, radSq - pt.LengthSquared));
-                        toolOffsets[i, j] = rad - h;
+                        float h = (float)Math.Sqrt(Math.Max(0, radExtSq - pt.LengthSquared));
+                        toolOffsets[i, j] = radExt - h;
                     }
                     else
                     {
@@ -577,19 +579,15 @@ namespace AbraCADabra.Milling
                     {
                         for (int jj = Math.Max(0, gridRadZ - j); jj < toolOffsets.GetLength(1) && j + jj < mapDimZ; jj++)
                         {
-                            height = Math.Max(height, modelHeightMap[i + ii - gridRadX, j + jj - gridRadZ] - toolOffsets[ii, jj]);
+                            if (toolOffsets[ii, jj] >= 0)
+                            {
+                                height = Math.Max(height, modelHeightMap[i + ii - gridRadX, j + jj - gridRadZ] - toolOffsets[ii, jj] + radEps);
+                            }
                         }
                     }
                     minLegalHeight[i, j] = height;
                 }
             }
-
-            var pts = new List<Vector3>();
-            int stripCount = (int)Math.Floor(SizeX / stripWidth);
-            float edgeMultX = stripCount / 2.0f + 1;
-            float edgeZ = SizeZ / 2 + stripWidth;
-            float finalY = BaseHeight + 0.5f + diamEps / 2, y = (SizeY + finalY) / 2;
-            int multZ = 1;
 
             int WorldToHeightX(float x)
             {
@@ -602,74 +600,70 @@ namespace AbraCADabra.Milling
                 return (int)Math.Round(((z - z1) / SizeZ) * (mapDimZ - 1));
             }
 
-            float HeightToWorldX(int x)
-            {
-                float x1 = -SizeX / 2;
-                return (x * SizeX) / (mapDimX - 1) + x1;
-            }
+            //float HeightToWorldX(int x)
+            //{
+            //    float x1 = -SizeX / 2;
+            //    return (x * SizeX) / (mapDimX - 1) + x1;
+            //}
             float HeightToWorldZ(int z)
             {
                 float z1 = -SizeZ / 2;
                 return (z * SizeZ) / (mapDimZ - 1) + z1;
             }
 
-            // TODO: combine and remove pointless moves
-            // layer 1
-            for (float ix = -edgeMultX; ix <= edgeMultX; ix++)
+            int stripCount = (int)Math.Floor(SizeX / stripWidth);
+            float edgeMultX = stripCount / 2.0f + 1;
+            float edgeZ = SizeZ / 2 + stripWidth;
+            float finalY = BaseHeight + PATH_BASE_DIST + diamEps / 2, y = (SizeY + finalY) / 2;
+            int directionX = 1, directionZ = 1;
+
+            var pts = new List<Vector3>
             {
-                float x = ix * stripWidth, z = multZ * edgeZ;
-                int gridX = WorldToHeightX(x);
-                int gridStartZ = WorldToHeightZ(z);
-                int gridEndZ = WorldToHeightZ(-z);
-
-                pts.Add(new Vector3(x, y, z)); // TODO: proper height
-
-                if (gridX >= 0 && gridX < minLegalHeight.GetLength(0))
+                new Vector3(0, SizeY + TOOL_DIST, 0),
+                new Vector3(-directionX * edgeMultX * stripWidth, SizeY + TOOL_DIST, -directionZ * edgeZ)
+            };
+            for (int i = 0; i < 2; i++)
+            {
+                for (float ix = -directionX * edgeMultX; ix * directionX <= edgeMultX; ix += directionX)
                 {
-                    for (int zz = gridStartZ; zz != gridEndZ; zz -= multZ)
+                    float x = ix * stripWidth, z = directionZ * edgeZ;
+                    int gridX = WorldToHeightX(x);
+                    int gridStartZ = WorldToHeightZ(-z);
+                    int gridEndZ = WorldToHeightZ(z);
+                    bool prevSkipped = false;
+                    pts.Add(new Vector3(x, y, -z)); // TODO: proper height
+
+                    if (gridX >= 0 && gridX < minLegalHeight.GetLength(0))
                     {
-                        if (zz >= 0 && zz < minLegalHeight.GetLength(1))
+                        for (int zz = gridStartZ; zz != gridEndZ; zz += directionZ)
                         {
-                            if (minLegalHeight[gridX, zz] > y)
+                            if (zz >= 0 && zz < minLegalHeight.GetLength(1))
                             {
-                                pts.Add(new Vector3(x, minLegalHeight[gridX, zz], HeightToWorldZ(zz)));
+                                if (minLegalHeight[gridX, zz] > y)
+                                {
+                                    if (prevSkipped)
+                                    {
+                                        pts.Add(new Vector3(x, y, HeightToWorldZ(zz - directionZ)));
+                                    }
+                                    pts.Add(new Vector3(x, minLegalHeight[gridX, zz], HeightToWorldZ(zz)));
+                                    prevSkipped = false;
+                                }
+                                else
+                                {
+                                    prevSkipped = true;
+                                }
                             }
                         }
                     }
+
+                    pts.Add(new Vector3(x, y, z)); // TODO: proper height
+                    directionZ = -directionZ;
                 }
-
-                pts.Add(new Vector3(x, y, -z)); // TODO: proper height
-                multZ = -multZ;
+                y = finalY;
+                directionX = -1;
             }
-
-            y = finalY;
-            // layer 2
-            for (float ix = edgeMultX; ix >= -edgeMultX; ix--)
-            {
-                float x = ix * stripWidth, z = multZ * edgeZ;
-                int gridX = WorldToHeightX(x);
-                int gridStartZ = WorldToHeightZ(z);
-                int gridEndZ = WorldToHeightZ(-z);
-
-                pts.Add(new Vector3(x, y, z)); // TODO: proper height
-
-                if (gridX >= 0 && gridX < minLegalHeight.GetLength(0))
-                {
-                    for (int zz = gridStartZ; zz != gridEndZ; zz -= multZ)
-                    {
-                        if (zz >= 0 && zz < minLegalHeight.GetLength(1))
-                        {
-                            if (minLegalHeight[gridX, zz] > y)
-                            {
-                                pts.Add(new Vector3(x, minLegalHeight[gridX, zz], HeightToWorldZ(zz)));
-                            }
-                        }
-                    }
-                }
-
-                pts.Add(new Vector3(x, y, -z)); // TODO: proper height
-                multZ = -multZ;
-            }
+            pts.Add(new Vector3(directionX * edgeMultX * stripWidth, SizeY + TOOL_DIST, -directionZ * edgeZ));
+            pts.Add(new Vector3(0, SizeY + TOOL_DIST, 0));
 
             path = new MillingPath(pts);
         }

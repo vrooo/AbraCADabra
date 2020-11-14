@@ -160,7 +160,7 @@
                         <StackPanel>
                             <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
                                   Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
-                            <CheckBox x:Name="CheckBoxPoints" IsChecked="True"
+                            <CheckBox x:Name="CheckBoxPoints" IsChecked="False"
                                   Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show points</CheckBox>
                             <CheckBox x:Name="CheckBoxRotateOrigin" IsChecked="False">Rotate around cursor</CheckBox>
                         </StackPanel>

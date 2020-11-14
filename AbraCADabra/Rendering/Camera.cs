@@ -9,8 +9,8 @@ namespace AbraCADabra
         public Vector3 Rotation { get; set; }
         public Vector3 Offset { get; set; } = new Vector3(0, 0, -30.0f);
 
-        public float ZNear { get; set; } = 0.1f;
-        public float ZFar { get; set; } = 5000.0f;
+        public float ZNear { get; set; } = 1;
+        public float ZFar { get; set; } = 1000;
         public float FOV { get; set; } = (float)(Math.PI / 4.0);
 
         public Camera(Vector3 position, Vector3 rotation)

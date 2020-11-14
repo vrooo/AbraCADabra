@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace AbraCADabra.Milling
 {
-    public static class MillingReader
+    public static class MillingIO
     {
         private static Regex verificationRegex = new Regex("^([XYZ]-?[0-9]+\\.[0-9]{3})+$");
         private static Regex extractionRegex = new Regex("([XYZ])(-?[0-9]+\\.[0-9]{3})");
@@ -64,7 +64,7 @@ namespace AbraCADabra.Milling
                             var move = i > 0 ? moves[i - 1] : Vector3.Zero;
                             foreach (Match m in matches)
                             {
-                                TransformAndSetCoord(m.Groups[1].Value, float.Parse(m.Groups[2].Value), ref move);
+                                TransformAndSetCoordRead(m.Groups[1].Value, float.Parse(m.Groups[2].Value), ref move);
                             }
                             moves.Add(move);
                         }
@@ -84,7 +84,7 @@ namespace AbraCADabra.Milling
             return (new MillingPath(moves), toolData);
         }
 
-        private static void TransformAndSetCoord(string name, float val, ref Vector3 move)
+        private static void TransformAndSetCoordRead(string name, float val, ref Vector3 move)
         {
             switch (name)
             {
@@ -98,6 +98,13 @@ namespace AbraCADabra.Milling
                     move.Y = val * MillingPath.SCALE;
                     break;
             }
+        }
+
+        private static Vector3 TransformCoordsWrite(Vector3 move)
+        {
+            var res = new Vector3(move.X, -move.Z, move.Y);
+            res /= MillingPath.SCALE;
+            return res;
         }
     }
 }

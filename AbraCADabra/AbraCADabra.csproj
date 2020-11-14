@@ -180,7 +180,7 @@
     <Compile Include="Utilites\IntersectionFinder.cs" />
     <Compile Include="Utilites\ListExtender.cs" />
     <Compile Include="Utilites\MathHelper.cs" />
-    <Compile Include="Milling\MillingReader.cs" />
+    <Compile Include="Milling\MillingIO.cs" />
     <Compile Include="Utilites\PatchGraph.cs" />
     <Compile Include="Utilites\PointSurface.cs" />
     <Page Include="UI\ScaleWindow.xaml">
