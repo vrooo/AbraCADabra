@@ -6,5 +6,5 @@ in vec3 world;
 
 void main()
 {
-    oColor = color;
+    oColor = vec4(world.y);
 }

@@ -113,6 +113,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Utilites\ImageIO.cs" />
     <Compile Include="Milling\MillingManager.cs" />
     <Compile Include="Milling\MillingPath.cs" />
     <Compile Include="Milling\MillingStructs.cs" />
@@ -247,6 +248,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="Shaders\height.frag" />
     <None Include="Shaders\trianglenorm.geom" />
     <None Include="Shaders\millheight.vert" />
     <None Include="Shaders\millbasic.vert" />

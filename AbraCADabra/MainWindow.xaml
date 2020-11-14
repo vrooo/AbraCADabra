@@ -32,9 +32,9 @@
                 <Separator/>
                 <MenuItem x:Name="MenuReset" Header="Reset camera" Click="MenuResetClick"/>
             </MenuItem>
-            <MenuItem x:Name="MenuMilling" Header="Milling">
-                <MenuItem x:Name="MenuMillingLoad" Header="Load Milling Path..." Click="MenuMillingLoadClick"
-                          IsEnabled="{Binding IsIdle}"/>
+            <MenuItem x:Name="MenuMilling" Header="Milling" IsEnabled="{Binding IsIdle}">
+                <MenuItem x:Name="MenuMillingLoad" Header="Load Milling Path..." Click="MenuMillingLoadClick"/>
+                <MenuItem x:Name="MenuMillingGenerate" Header="Generate Milling Path..." Click="MenuMillingGenerateClick"/>
                 <Separator/>
                 <MenuItem x:Name="MenuMillingScale" Header="Scale..." Click="MenuMillingScaleClick"/>
                 <MenuItem x:Name="MenuMillingAlign" Header="Align to Material" Click="MenuMillingAlignClick"/>
@@ -227,6 +227,8 @@
                         <StackPanel Orientation="Vertical">
                             <CheckBox IsChecked="{Binding DisplayPath}"
                                   Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Display path</CheckBox>
+                            <CheckBox IsChecked="{Binding DisplayMaterial}"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Display material</CheckBox>
                             <CheckBox IsChecked="{Binding ShowPathOnTop}"
                                   Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show path on top</CheckBox>
 

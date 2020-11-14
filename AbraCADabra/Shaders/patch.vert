@@ -12,6 +12,8 @@ layout (location = 0) in vec2 uv;
 layout (location = 1) in int indexX;
 layout (location = 2) in int indexZ;
 
+out vec3 world;
+
 vec4 getBezierPoint(float t, vec4 pts[n])
 {
     vec4 arr[n][n];
@@ -75,5 +77,7 @@ void main()
     int mult = 3 - continuity;
     bool deboor = continuity == 2;
     vec4 pos = getPatchPoint(uv, mult * indexX, mult * indexZ, deboor);
-    gl_Position = projMatrix * viewMatrix * modelMatrix * pos;
+    vec4 worldPos = modelMatrix * pos;
+    world = worldPos.xyz;
+    gl_Position = projMatrix * viewMatrix * worldPos;
 }

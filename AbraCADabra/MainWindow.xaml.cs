@@ -16,6 +16,7 @@ using AbraCADabra.Serialization;
 using System.Xml.Serialization;
 using AbraCADabra.Milling;
 using System.Windows.Threading;
+using OpenTK.Graphics;
 
 namespace AbraCADabra
 {
@@ -35,13 +36,15 @@ namespace AbraCADabra
         ShaderManager shader;
 
         int anaglyphFrameBufferLeft, anaglyphFrameBufferRight;
-        int anaglyphDepthBufferLeft, anaglyphDepthBufferRight;
+        int anaglyphRenderBufferLeft, anaglyphRenderBufferRight;
         int anaglyphTexLeft, anaglyphTexRight;
         Quad anaglyphQuad;
 
         Camera camera;
         Vector3 cameraDefPosition;
         Vector3 cameraDefRotation;
+
+        Color4 defBackgroundColor;
 
         PlaneXZ plane;
         CrossCursor cursor;
@@ -63,13 +66,14 @@ namespace AbraCADabra
         bool renderFromWorldCoordsChange = false;
 
         PropertyWindow propertyWindow;
-        string currentDirectory = Directory.GetCurrentDirectory();
+        string currentDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "../../../../"));
 
-        public double MillingStepDelay { get; set; } = 0.1;
+        public double MillingStepDelay { get; set; } = 0.02;
         MillingManager millingManager;
         DispatcherTimer millingTimer = new DispatcherTimer();
 
-        int pathHeightBuffer;
+        int pathHeightFrameBuffer;
+        int pathHeightRenderBuffer;
         int pathHeightTex;
 
         public MainWindow()
@@ -87,14 +91,15 @@ namespace AbraCADabra
 
         private void OnLoad(object sender, EventArgs e)
         {
-            GL.ClearColor(0.05f, 0.05f, 0.15f, 1.0f);
+            defBackgroundColor = new Color4(0.05f, 0.05f, 0.15f, 1.0f);
+            GL.ClearColor(defBackgroundColor);
             GL.Enable(EnableCap.DepthTest);
             GL.Enable(EnableCap.PointSmooth);
 
             anaglyphFrameBufferLeft = GL.GenFramebuffer();
             anaglyphFrameBufferRight = GL.GenFramebuffer();
-            anaglyphDepthBufferLeft = GL.GenRenderbuffer();
-            anaglyphDepthBufferRight = GL.GenRenderbuffer();
+            anaglyphRenderBufferLeft = GL.GenRenderbuffer();
+            anaglyphRenderBufferRight = GL.GenRenderbuffer();
             anaglyphTexLeft = GL.GenTexture();
             anaglyphTexRight = GL.GenTexture();
             anaglyphQuad = new Quad();
@@ -115,12 +120,14 @@ namespace AbraCADabra
             millingManager.PropertyChanged += MillingPropertyChanged;
             millingTimer.Tick += OnMillingTimer;
 
-            pathHeightBuffer = GL.GenFramebuffer();
+            pathHeightFrameBuffer = GL.GenFramebuffer();
+            pathHeightRenderBuffer = GL.GenRenderbuffer();
             pathHeightTex = GL.GenTexture();
         }
 
         private void OnRender(object sender, System.Windows.Forms.PaintEventArgs e)
         {
+            //shader.EnableHeightMode(15, 5, 15); // debug
             GL.Viewport(0, 0, GLMain.Width, GLMain.Height);
             GL.Clear(ClearBufferMask.ColorBufferBit |
                      ClearBufferMask.DepthBufferBit);
@@ -130,13 +137,15 @@ namespace AbraCADabra
                 float eye = (float)SliderEyeDistance.Value, plane = (float)SliderProjDistance.Value;
 
                 GL.ActiveTexture(TextureUnit.Texture0);
-                SetTexture(anaglyphTexLeft, anaglyphFrameBufferLeft, anaglyphDepthBufferLeft);
+                SetRenderTexture(anaglyphTexLeft, anaglyphFrameBufferLeft, anaglyphRenderBufferLeft,
+                    GLMain.Width, GLMain.Height, PixelInternalFormat.Rgb, OpenTK.Graphics.OpenGL.PixelFormat.Rgb, PixelType.UnsignedByte);
                 shader.SetAnaglyphMode(AnaglyphMode.Left, eye, plane, false);
                 shader.UseBasic();
                 RenderScene();
 
                 GL.ActiveTexture(TextureUnit.Texture1);
-                SetTexture(anaglyphTexRight, anaglyphFrameBufferRight, anaglyphDepthBufferRight);
+                SetRenderTexture(anaglyphTexRight, anaglyphFrameBufferRight, anaglyphRenderBufferRight,
+                    GLMain.Width, GLMain.Height, PixelInternalFormat.Rgb, OpenTK.Graphics.OpenGL.PixelFormat.Rgb, PixelType.UnsignedByte);
                 shader.SetAnaglyphMode(AnaglyphMode.Right, eye, plane);
                 RenderScene();
 
@@ -165,27 +174,34 @@ namespace AbraCADabra
             GLMain.SwapBuffers();
         }
 
-        private void SetTexture(int tex, int fbo, int dbo)
+        private void SetupTexture(int tex, int width, int height,
+            PixelInternalFormat internalFormat, OpenTK.Graphics.OpenGL.PixelFormat pixelFormat, PixelType pixelType)
         {
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
-
             GL.BindTexture(TextureTarget.Texture2D, tex);
             GL.TexImage2D(TextureTarget.Texture2D,
                           0,
-                          PixelInternalFormat.Rgb,
-                          GLMain.Width, GLMain.Height, 0,
-                          OpenTK.Graphics.OpenGL.PixelFormat.Rgb,
-                          PixelType.UnsignedByte,
+                          internalFormat,
+                          width, height, 0,
+                          pixelFormat, pixelType,
                           IntPtr.Zero);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToBorder);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToBorder);
+        }
+
+        private void SetRenderTexture(int tex, int fbo, int dbo, int width, int height,
+            PixelInternalFormat internalFormat, OpenTK.Graphics.OpenGL.PixelFormat pixelFormat, PixelType pixelType)
+        {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
+
+            GL.BindTexture(TextureTarget.Texture2D, tex);
+            SetupTexture(tex, width, height, internalFormat, pixelFormat, pixelType);
 
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, dbo);
             GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer,
                                    RenderbufferStorage.DepthComponent,
-                                   GLMain.Width, GLMain.Height);
+                                   width, height);
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
             GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer,
                                        FramebufferAttachment.DepthAttachment,
@@ -228,9 +244,57 @@ namespace AbraCADabra
             }
         }
 
-        private void CreateObjectHeightMap()
+        private float[,] SetupObjectHeightMap()
         {
+            int texWidth = (int)millingManager.DivX, texHeight = (int)millingManager.DivZ; // TODO: values from some other place?
+            GL.ActiveTexture(TextureUnit.Texture2);
+            //GL.BindFramebuffer(FramebufferTarget.Framebuffer, pathHeightFrameBuffer);
 
+            //GL.BindTexture(TextureTarget.Texture2D, pathHeightTex);
+            //SetupTexture(pathHeightTex, texWidth, texHeight,
+            //             PixelInternalFormat.R32f, OpenTK.Graphics.OpenGL.PixelFormat.Red, PixelType.Float);
+
+            //GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, pathHeightTex, 0);
+            //GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
+            SetRenderTexture(pathHeightTex, pathHeightFrameBuffer, pathHeightRenderBuffer, texWidth, texHeight,
+                             PixelInternalFormat.R32f, OpenTK.Graphics.OpenGL.PixelFormat.Red, PixelType.Float);
+
+            GL.Viewport(0, 0, texWidth, texHeight);
+            GL.ClearColor(0, 0, 0, 1);
+            GL.Clear(ClearBufferMask.ColorBufferBit |
+                     ClearBufferMask.DepthBufferBit);
+            shader.EnableHeightMode(millingManager.SizeX, millingManager.SizeY, millingManager.SizeZ);
+
+            foreach (var ob in objects)
+            {
+                if (ob is PatchManager pm)
+                {
+                    pm.RenderFilled(shader);
+                }
+            }
+
+            GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
+            var tmpPixels = new float[texWidth * texHeight];
+            GL.ReadPixels(0, 0, texWidth, texHeight, OpenTK.Graphics.OpenGL.PixelFormat.Red, PixelType.Float, tmpPixels);
+            int ind = 0;
+            var pixels = new float[texWidth, texHeight];
+            // order of loops is important!
+            //for (int i = 0; i < texHeight; i++)
+            for (int i = texHeight - 1; i >= 0; i--)
+            {
+                for (int j = 0; j < texWidth; j++)
+                {
+                    pixels[j, i] = tmpPixels[ind++];
+                }
+            }
+            ImageIO.SaveGrayscalePng(pixels, "tmpimg.png");
+
+            shader.DisableHeightMode();
+            GL.ClearColor(defBackgroundColor);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            shader.UseBasic();
+
+            return pixels;
         }
 
         private void UpdateCursorScreenPos()
@@ -867,6 +931,14 @@ namespace AbraCADabra
             }
         }
 
+        private void MenuMillingGenerateClick(object sender, RoutedEventArgs e)
+        {
+            // TODO: window with params
+            var pixels = SetupObjectHeightMap();
+            millingManager.WriteFirstPath(pixels, "");
+            RefreshView(); // TODO: remove when it's not needed
+        }
+
         private void MenuMillingScaleClick(object sender, RoutedEventArgs e)
         {
             ScaleWindow sw = new ScaleWindow();
@@ -887,6 +959,7 @@ namespace AbraCADabra
 
         private void MenuMillingAlignClick(object sender, RoutedEventArgs e)
         {
+            // assuming that model is centered and with y = 0 as base plane
             if (millingManager != null)
             {
                 foreach (var ob in objects)
@@ -894,7 +967,7 @@ namespace AbraCADabra
                     if (ob is PointManager pm)
                     {
                         pm.Translate(millingManager.PositionX,
-                                     millingManager.PositionY + millingManager.SizeY,
+                                     millingManager.PositionY + millingManager.BaseHeight,
                                      millingManager.PositionZ);
                     }
                 }

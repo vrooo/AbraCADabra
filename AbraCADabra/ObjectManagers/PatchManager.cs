@@ -436,7 +436,7 @@ namespace AbraCADabra
                 shouldUpdate = false;
                 ActualUpdate();
             }
-            if (DrawPolynet)
+            if (DrawPolynet && !fillPatch)
             {
                 polyGrid.Render(shader);
             }

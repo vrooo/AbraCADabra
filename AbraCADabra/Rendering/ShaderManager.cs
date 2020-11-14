@@ -25,8 +25,10 @@ namespace AbraCADabra
         private const string fragPathMillBasic      = pathPrefix + "millbasic.frag";
         private const string vertPathMillHeight     = pathPrefix + "millheight.vert";
         private const string geomPathTriangleNorm   = pathPrefix + "trianglenorm.geom";
+        private const string fragPathHeight         = pathPrefix + "height.frag";
 
         private Camera camera;
+        private Camera orthoCamera;
         private GLControl glControl;
 
         private Shader shaderBasic;
@@ -38,11 +40,17 @@ namespace AbraCADabra
         private Shader shaderMillBasic;
         private Shader shaderMillHeight;
 
+        private Shader shaderBasicHeight;
+        private Shader shaderPatchHeight;
+
         private Shader shaderCurrent;
 
         private AnaglyphMode anaglyphMode = AnaglyphMode.None;
         private float eyeDistance = 0.0f;
         private float planeDistance = 0.0f;
+
+        private bool isHeightMode = false;
+        private float orthoWidth, orthoHeight = 0;
 
         public ShaderManager(Camera camera, GLControl glControl)
         {
@@ -54,13 +62,29 @@ namespace AbraCADabra
             shaderPhong      = new Shader(vertPathPhong, fragPathPhong);
             shaderMillBasic  = new Shader(vertPathMillBasic, fragPathMillBasic, geomPathTriangleNorm);
             shaderMillHeight = new Shader(vertPathMillHeight, fragPathMillBasic, geomPathTriangleNorm);
+
+            shaderBasicHeight = new Shader(vertPathBasic, fragPathHeight);
+            shaderPatchHeight = new Shader(vertPathPatch, fragPathHeight);
+
             this.camera = camera;
+            this.orthoCamera = new Camera(0, 0, 0, (float)(Math.PI / 2), 0, 0)
+            {
+                ZNear = 1,
+                Offset = Vector3.Zero
+            };
             this.glControl = glControl;
         }
 
         public void UseBasic()
         {
-            Use(shaderBasic);
+            if (isHeightMode)
+            {
+                UseOrtho(shaderBasicHeight);
+            }
+            else
+            {
+                Use(shaderBasic);
+            }
         }
 
         public void UseBezier()
@@ -70,7 +94,14 @@ namespace AbraCADabra
 
         public void UsePatch()
         {
-            Use(shaderPatch);
+            if (isHeightMode)
+            {
+                UseOrtho(shaderPatchHeight);
+            }
+            else
+            {
+                Use(shaderPatch);
+            }
         }
 
         public void UseGregory()
@@ -103,6 +134,13 @@ namespace AbraCADabra
             shader.Use();
             shaderCurrent = shader;
             SetupCamera();
+        }
+
+        private void UseOrtho(Shader shader)
+        {
+            shader.Use();
+            shaderCurrent = shader;
+            SetupOrthoCamera();
         }
 
         public void SetAnaglyphMode(AnaglyphMode mode, float eyeDist, float planeDist, bool resetCam = true)
@@ -140,7 +178,7 @@ namespace AbraCADabra
             BindMatrix(model, "modelMatrix");
         }
 
-        public void SetupCamera()
+        private void SetupCamera()
         {
             var (view, invView) = camera.GetViewAndInvViewMatrix();
             BindMatrix(view, "viewMatrix");
@@ -150,6 +188,7 @@ namespace AbraCADabra
             if (anaglyphMode == AnaglyphMode.None)
             {
                 projMatrix = camera.GetProjectionMatrix(glControl.Width, glControl.Height);
+                //projMatrix = camera.GetOrthographicMatrix(glControl.Width / 10, glControl.Height / 10);
             }
             else
             {
@@ -157,6 +196,26 @@ namespace AbraCADabra
                 projMatrix = anaglyphMode == AnaglyphMode.Left ? left : right;
             }
             BindMatrix(projMatrix, "projMatrix");
+        }
+
+        private void SetupOrthoCamera()
+        {
+            BindMatrix(orthoCamera.GetViewMatrix(), "viewMatrix");
+            BindMatrix(orthoCamera.GetOrthographicMatrix(orthoWidth, orthoHeight), "projMatrix");
+        }
+
+        public void EnableHeightMode(float matSizeX, float matSizeY, float matSizeZ)
+        {
+            isHeightMode = true;
+            orthoCamera.ZFar = matSizeY + 3;
+            orthoCamera.Position = new Vector3(0, -matSizeY - 2, 0); // offset just in case
+            orthoWidth = matSizeX;
+            orthoHeight = matSizeZ;
+        }
+
+        public void DisableHeightMode()
+        {
+            isHeightMode = false;
         }
 
         public float GetCameraDistance(Vector3 point)

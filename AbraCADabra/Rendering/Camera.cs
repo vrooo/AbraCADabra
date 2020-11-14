@@ -62,6 +62,11 @@ namespace AbraCADabra
             return Matrix4.CreatePerspectiveFieldOfView(FOV, width/height, ZNear, ZFar);
         }
 
+        public Matrix4 GetOrthographicMatrix(float width, float height)
+        {
+            return Matrix4.CreateOrthographic(width, height, ZNear, ZFar);
+        }
+
         public (Matrix4 left, Matrix4 right) GetStereoscopicMatrices(float width, float height, float eyeDist, float planeDist)
         {
             double tan = Math.Tan(FOV / 2.0f), asp = width/height;

@@ -3,9 +3,6 @@ using OpenTK.Graphics.OpenGL;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
@@ -105,6 +102,7 @@ namespace AbraCADabra.Milling
         private MillingPath path;
 
         public bool DisplayPath { get; set; } = true;
+        public bool DisplayMaterial { get; set; } = true;
         public bool ShowPathOnTop { get; set; } = false;
 
         private Tool tool;
@@ -159,24 +157,13 @@ namespace AbraCADabra.Milling
             material = new Cuboid();
             tool = new Tool(false, 1, 10);
 
-            Image<Rgba32> img = Image.Load<Rgba32>(TEX_PATH);
-            img.TryGetSinglePixelSpan(out System.Span<Rgba32> span);
-            var tempPixels = span.ToArray();
-
-            var pixels = new List<byte>();
-            foreach (Rgba32 p in tempPixels)
-            {
-                pixels.Add(p.R);
-                pixels.Add(p.G);
-                pixels.Add(p.B);
-                pixels.Add(p.A);
-            }
+            var (pixels, imgWidth, imgHeight) = ImageIO.LoadImageBytes(TEX_PATH);
             materialTexture = GL.GenTexture();
             GL.ActiveTexture(TextureUnit.Texture11);
             GL.BindTexture(TextureTarget.Texture2D, materialTexture);
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba,
-                          img.Width, img.Height, 0,
-                          PixelFormat.Rgba, PixelType.UnsignedByte, pixels.ToArray());
+                          imgWidth, imgHeight, 0,
+                          PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
 
@@ -547,32 +534,175 @@ namespace AbraCADabra.Milling
             return path.Points.Count > 0;
         }
 
+        public void WriteFirstPath(float[,] modelHeightMap, string location)
+        {
+            // filename: 1.k16
+            // path will be made 0.5 above base level
+            int mapDimX = modelHeightMap.GetLength(0), mapDimZ = modelHeightMap.GetLength(1);
+            float diamEps = 2 * MillingPath.SCALE, stripWidth = 2 * MillingPath.SCALE; // TODO: should be params
+            float diam = 4 * MillingPath.SCALE, rad = diam / 2, radSq = rad * rad;
+            //float diamExt = diam + diamEps, radExt = diamExt / 2;
+
+            int gridRadX = (int)Math.Ceiling(rad / SizeX * mapDimX);
+            int gridRadZ = (int)Math.Ceiling(rad / SizeZ * mapDimZ);
+            float offsetStepX = rad / gridRadX, offsetStepZ = rad / gridRadZ;
+            var toolOffsets = new float[2 * gridRadX + 1, 2 * gridRadZ + 1];
+            for (int i = 0; i < toolOffsets.GetLength(0); i++)
+            {
+                Vector2 pt = new Vector2((i - gridRadX) * offsetStepX, 0);
+                for (int j = 0; j < toolOffsets.GetLength(1); j++)
+                {
+                    pt.Y = (j - gridRadZ) * offsetStepZ;
+                    float lenSq = pt.LengthSquared;
+                    if (lenSq < radSq)
+                    {
+                        float h = (float)Math.Sqrt(Math.Max(0, radSq - pt.LengthSquared));
+                        toolOffsets[i, j] = rad - h;
+                    }
+                    else
+                    {
+                        toolOffsets[i, j] = -1;
+                    }
+                }
+            }
+
+            // TODO: add border?
+            var minLegalHeight = new float[mapDimX, mapDimZ];
+            for (int i = 0; i < mapDimX; i++)
+            {
+                for (int j = 0; j < mapDimZ; j++)
+                {
+                    float height = 0;
+                    for (int ii = Math.Max(0, gridRadX - i); ii < toolOffsets.GetLength(0) && i + ii < mapDimX; ii++)
+                    {
+                        for (int jj = Math.Max(0, gridRadZ - j); jj < toolOffsets.GetLength(1) && j + jj < mapDimZ; jj++)
+                        {
+                            height = Math.Max(height, modelHeightMap[i + ii - gridRadX, j + jj - gridRadZ] - toolOffsets[ii, jj]);
+                        }
+                    }
+                    minLegalHeight[i, j] = height;
+                }
+            }
+
+            var pts = new List<Vector3>();
+            int stripCount = (int)Math.Floor(SizeX / stripWidth);
+            float edgeMultX = stripCount / 2.0f + 1;
+            float edgeZ = SizeZ / 2 + stripWidth;
+            float finalY = BaseHeight + 0.5f + diamEps / 2, y = (SizeY + finalY) / 2;
+            int multZ = 1;
+
+            int WorldToHeightX(float x)
+            {
+                float x1 = -SizeX / 2;
+                return (int)Math.Round(((x - x1) / SizeX) * (mapDimX - 1));
+            }
+            int WorldToHeightZ(float z)
+            {
+                float z1 = -SizeZ / 2;
+                return (int)Math.Round(((z - z1) / SizeZ) * (mapDimZ - 1));
+            }
+
+            float HeightToWorldX(int x)
+            {
+                float x1 = -SizeX / 2;
+                return (x * SizeX) / (mapDimX - 1) + x1;
+            }
+            float HeightToWorldZ(int z)
+            {
+                float z1 = -SizeZ / 2;
+                return (z * SizeZ) / (mapDimZ - 1) + z1;
+            }
+
+            // TODO: combine and remove pointless moves
+            // layer 1
+            for (float ix = -edgeMultX; ix <= edgeMultX; ix++)
+            {
+                float x = ix * stripWidth, z = multZ * edgeZ;
+                int gridX = WorldToHeightX(x);
+                int gridStartZ = WorldToHeightZ(z);
+                int gridEndZ = WorldToHeightZ(-z);
+
+                pts.Add(new Vector3(x, y, z)); // TODO: proper height
+
+                if (gridX >= 0 && gridX < minLegalHeight.GetLength(0))
+                {
+                    for (int zz = gridStartZ; zz != gridEndZ; zz -= multZ)
+                    {
+                        if (zz >= 0 && zz < minLegalHeight.GetLength(1))
+                        {
+                            if (minLegalHeight[gridX, zz] > y)
+                            {
+                                pts.Add(new Vector3(x, minLegalHeight[gridX, zz], HeightToWorldZ(zz)));
+                            }
+                        }
+                    }
+                }
+
+                pts.Add(new Vector3(x, y, -z)); // TODO: proper height
+                multZ = -multZ;
+            }
+
+            y = finalY;
+            // layer 2
+            for (float ix = edgeMultX; ix >= -edgeMultX; ix--)
+            {
+                float x = ix * stripWidth, z = multZ * edgeZ;
+                int gridX = WorldToHeightX(x);
+                int gridStartZ = WorldToHeightZ(z);
+                int gridEndZ = WorldToHeightZ(-z);
+
+                pts.Add(new Vector3(x, y, z)); // TODO: proper height
+
+                if (gridX >= 0 && gridX < minLegalHeight.GetLength(0))
+                {
+                    for (int zz = gridStartZ; zz != gridEndZ; zz -= multZ)
+                    {
+                        if (zz >= 0 && zz < minLegalHeight.GetLength(1))
+                        {
+                            if (minLegalHeight[gridX, zz] > y)
+                            {
+                                pts.Add(new Vector3(x, minLegalHeight[gridX, zz], HeightToWorldZ(zz)));
+                            }
+                        }
+                    }
+                }
+
+                pts.Add(new Vector3(x, y, -z)); // TODO: proper height
+                multZ = -multZ;
+            }
+
+            path = new MillingPath(pts);
+        }
+
         public void Render(ShaderManager shader)
         {
             if (path != null)
             {
                 GL.Enable(EnableCap.CullFace);
-                if (materialHeight == null || isHeightMapInvalid)
+                if (DisplayMaterial)
                 {
-                    shader.UseMillBasic();
-                }
-                else
-                {
-                    if (updateHeightMap)
+                    if (materialHeight == null || isHeightMapInvalid)
                     {
-                        ActualUpdateHeightMap();
-                        updateHeightMap = recreateHeightMap = false;
+                        shader.UseMillBasic();
                     }
-                    shader.UseMillHeight();
-                    GL.ActiveTexture(TextureUnit.Texture12);
-                    GL.BindTexture(TextureTarget.Texture2D, materialHeightMap);
-                    shader.SetupInt(12, "materialHeightMap");
+                    else
+                    {
+                        if (updateHeightMap)
+                        {
+                            ActualUpdateHeightMap();
+                            updateHeightMap = recreateHeightMap = false;
+                        }
+                        shader.UseMillHeight();
+                        GL.ActiveTexture(TextureUnit.Texture12);
+                        GL.BindTexture(TextureTarget.Texture2D, materialHeightMap);
+                        shader.SetupInt(12, "materialHeightMap");
+                    }
+                    GL.ActiveTexture(TextureUnit.Texture11);
+                    GL.BindTexture(TextureTarget.Texture2D, materialTexture);
+                    shader.SetupInt(11, "materialTex");
+                    material.Render(shader);
+                    shader.UseBasic();
                 }
-                GL.ActiveTexture(TextureUnit.Texture11);
-                GL.BindTexture(TextureTarget.Texture2D, materialTexture);
-                shader.SetupInt(11, "materialTex");
-                material.Render(shader);
-                shader.UseBasic();
 
                 if (DisplayPath)
                 {
