@@ -68,7 +68,7 @@ namespace AbraCADabra
         PropertyWindow propertyWindow;
         string currentDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "../../../../"));
 
-        public double MillingStepDelay { get; set; } = 0.02;
+        public double MillingStepDelay { get; set; } = 0.001;
         MillingManager millingManager;
         DispatcherTimer millingTimer = new DispatcherTimer();
 
@@ -244,7 +244,7 @@ namespace AbraCADabra
             }
         }
 
-        private float[,] SetupObjectHeightMap()
+        private float[,] SetupObjectHeightMap(IEnumerable<PatchManager> patches)
         {
             int texWidth = (int)millingManager.DivX, texHeight = (int)millingManager.DivZ; // TODO: values from some other place?
             GL.ActiveTexture(TextureUnit.Texture2);
@@ -265,12 +265,9 @@ namespace AbraCADabra
                      ClearBufferMask.DepthBufferBit);
             shader.EnableHeightMode(millingManager.SizeX, millingManager.SizeY, millingManager.SizeZ);
 
-            foreach (var ob in objects)
+            foreach (var pm in patches)
             {
-                if (ob is PatchManager pm)
-                {
-                    pm.RenderFilled(shader);
-                }
+                pm.RenderFilled(shader);
             }
 
             GL.ReadBuffer(ReadBufferMode.ColorAttachment0);
@@ -287,7 +284,6 @@ namespace AbraCADabra
                     pixels[j, i] = tmpPixels[ind++];
                 }
             }
-            ImageIO.SaveGrayscalePng(pixels, "tmpimg.png");
 
             shader.DisableHeightMode();
             GL.ClearColor(defBackgroundColor);
@@ -940,11 +936,30 @@ namespace AbraCADabra
             }
         }
 
-        private void MenuMillingGenerateClick(object sender, RoutedEventArgs e)
+        private List<PatchManager> GetPatches()
+        {
+            var patches = new List<PatchManager>();
+            foreach (var ob in objects)
+            {
+                if (ob is PatchManager pm)
+                {
+                    patches.Add(pm);
+                }
+            }
+            return patches;
+        }
+
+        // TODO: window with generation params, maybe one for all?
+        private void MenuMillingGenerateRoughClick(object sender, RoutedEventArgs e)
         {
             // TODO: window with params
-            var pixels = SetupObjectHeightMap();
-            millingManager.WriteFirstPath(pixels, "../../../../paths/mine/", 1);
+            var pixels = SetupObjectHeightMap(GetPatches());
+            millingManager.WriteRoughPath(pixels, 0.01f, "../../../../paths/mine/", 1);
+        }
+
+        private void MenuMillingGenerateBaseClick(object sender, RoutedEventArgs e)
+        {
+            millingManager.WriteBasePaths(GetPatches(), 0.0001f, "../../../../paths/mine/", 1);
             RefreshView(); // TODO: remove when it's not needed
         }
 
@@ -1059,7 +1074,7 @@ namespace AbraCADabra
                 bool? res = ifw.ShowDialog();
                 if (res == true)
                 {
-                    int divs = IntersectionFinderWindow.StartDims;
+                    int divs = IntersectionFinderWindow.FinderParams.StartDims;
                     float fdivs = divs;
                     bool noCurve = false;
                     if (IntersectionFinderWindow.UseCursorPosition)
@@ -1073,9 +1088,10 @@ namespace AbraCADabra
                             {
                                 Vector4 preStart1 = divs > 1 ? new Vector4(x / fdivs, y / fdivs, 0.0f, 0.0f)
                                                              : new Vector4(0.5f, 0.5f, 0.0f, 0.0f);
-                                var (boolIntRes1, start1) = IntersectionFinder.FindIntersectionPoint(IntersectionFinderWindow.SelectedFirst,
-                                                                                                    pointSurface,
-                                                                                                    preStart1);
+                                var (boolIntRes1, start1) = IntersectionFinder.FindIntersectionPoint(IntersectionFinderWindow.FinderParams,
+                                                                                                     IntersectionFinderWindow.SelectedFirst,
+                                                                                                     pointSurface,
+                                                                                                     preStart1);
                                 if (!boolIntRes1) continue;
 
                                 for (int z = 0; z < divs; z++)
@@ -1083,26 +1099,28 @@ namespace AbraCADabra
                                     for (int w = 0; w < divs; w++)
                                     {
                                         if (IntersectionFinderWindow.IsSingleSurface &&
-                                            Vector2.DistanceSquared(new Vector2(x / fdivs, y / fdivs), new Vector2(z / fdivs, w / fdivs)) < IntersectionFinderWindow.StartSelfDiffSquared)
+                                            Vector2.DistanceSquared(new Vector2(x / fdivs, y / fdivs), new Vector2(z / fdivs, w / fdivs)) < IntersectionFinderWindow.FinderParams.StartSelfDiffSquared)
                                             continue;
 
                                         Vector4 preStart2 = divs > 1 ? new Vector4(z / fdivs, w / fdivs, 0.0f, 0.0f)
                                                                  : new Vector4(0.5f, 0.5f, 0.0f, 0.0f);
                                         if (pointsSecond[z, w].valid == null)
                                         {
-                                            pointsSecond[z, w] = IntersectionFinder.FindIntersectionPoint(IntersectionFinderWindow.SelectedSecond,
+                                            pointsSecond[z, w] = IntersectionFinder.FindIntersectionPoint(IntersectionFinderWindow.FinderParams,
+                                                                                                          IntersectionFinderWindow.SelectedSecond,
                                                                                                           pointSurface,
                                                                                                           preStart2);
                                         }
                                         var (boolIntRes2, start2) = pointsSecond[z, w];
                                         if (boolIntRes2 == false) continue;
                                         if (!IntersectionFinderWindow.IsSingleSurface &&
-                                            Vector2.DistanceSquared(new Vector2(x / fdivs, y / fdivs), new Vector2(z / fdivs, w / fdivs)) < IntersectionFinderWindow.StartSelfDiffSquared)
+                                            Vector2.DistanceSquared(new Vector2(x / fdivs, y / fdivs), new Vector2(z / fdivs, w / fdivs)) < IntersectionFinderWindow.FinderParams.StartSelfDiffSquared)
                                             continue;
 
                                         foundStart = true;
                                         Vector4 start = new Vector4(start1.X, start1.Y, start2.X, start2.Y);
-                                        var (intRes, icm) = IntersectionFinder.FindIntersection(IntersectionFinderWindow.SelectedFirst,
+                                        var (intRes, icm) = IntersectionFinder.FindIntersection(IntersectionFinderWindow.FinderParams,
+                                                                                                IntersectionFinderWindow.SelectedFirst,
                                                                                                 IntersectionFinderWindow.SelectedSecond,
                                                                                                 start, false);
                                         if (intRes == IntersectionResult.OK)
@@ -1136,12 +1154,13 @@ namespace AbraCADabra
                                     for (int w = 0; w < divs; w++)
                                     {
                                         if (IntersectionFinderWindow.IsSingleSurface &&
-                                            Vector2.DistanceSquared(new Vector2(x / fdivs, y / fdivs), new Vector2(z / fdivs, w / fdivs)) < IntersectionFinderWindow.StartSelfDiffSquared)
+                                            Vector2.DistanceSquared(new Vector2(x / fdivs, y / fdivs), new Vector2(z / fdivs, w / fdivs)) < IntersectionFinderWindow.FinderParams.StartSelfDiffSquared)
                                             continue;
 
                                         Vector4 start = divs > 1 ? new Vector4(x / fdivs, y / fdivs, z / fdivs, w / fdivs)
                                                                      : new Vector4(0.5f);
-                                        var (intRes, icm) = IntersectionFinder.FindIntersection(IntersectionFinderWindow.SelectedFirst,
+                                        var (intRes, icm) = IntersectionFinder.FindIntersection(IntersectionFinderWindow.FinderParams,
+                                                                                                IntersectionFinderWindow.SelectedFirst,
                                                                                                 IntersectionFinderWindow.SelectedSecond,
                                                                                                 start);
                                         if (intRes == IntersectionResult.OK)

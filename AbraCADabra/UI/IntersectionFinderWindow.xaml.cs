@@ -14,18 +14,20 @@ namespace AbraCADabra
         public static bool IsSingleSurface => SelectedFirst == SelectedSecond;
         public static bool UseCursorPosition { get; set; }
 
-        public static int StartDims { get; set; } = 4;
-        public static int StartMaxIterations { get; set; } = 30;
-        public static float StartEps { get; set; } = 1e-6f;
-        public static float StartPointEps { get; set; } = 1e-2f;
-        public static float StartSelfDiff { get; set; } = 0.1f;
-        public static float StartSelfDiffSquared => StartSelfDiff * StartSelfDiff;
+        public static IntersectionFinderParams FinderParams { get; private set; } = new IntersectionFinderParams();
 
-        public static int CurveMaxPoints { get; set; } = 1000;
-        public static int CurveMaxIterations { get; set; } = 30;
-        public static float CurveStep { get; set; } = 0.1f;
-        public static float CurveEps { get; set; } = 1e-6f;
-        public static float CurveEndDist { get; set; } = 0.1f;
+        //public static int StartDims { get; set; } = 4;
+        //public static int StartMaxIterations { get; set; } = 30;
+        //public static float StartEps { get; set; } = 1e-6f;
+        //public static float StartPointEps { get; set; } = 1e-2f;
+        //public static float StartSelfDiff { get; set; } = 0.1f;
+        //public static float StartSelfDiffSquared => StartSelfDiff * StartSelfDiff;
+
+        //public static int CurveMaxPoints { get; set; } = 1000;
+        //public static int CurveMaxIterations { get; set; } = 30;
+        //public static float CurveStep { get; set; } = 0.05f;
+        //public static float CurveEps { get; set; } = 1e-6f;
+        //public static float CurveEndDist { get; set; } = 0.05f;
 
         public IntersectionFinderWindow(List<ISurface> managers, List<ISurface> selected = null)
         {

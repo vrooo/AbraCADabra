@@ -2,10 +2,24 @@
 using System;
 using System.Collections.Generic;
 
-using IFW = AbraCADabra.IntersectionFinderWindow;
-
 namespace AbraCADabra
 {
+    public class IntersectionFinderParams
+    {
+        public int StartDims { get; set; } = 4;
+        public int StartMaxIterations { get; set; } = 30;
+        public float StartEps { get; set; } = 1e-6f;
+        public float StartPointEps { get; set; } = 1e-2f;
+        public float StartSelfDiff { get; set; } = 0.1f;
+        public float StartSelfDiffSquared => StartSelfDiff * StartSelfDiff;
+
+        public int CurveMaxPoints { get; set; } = 1000;
+        public int CurveMaxIterations { get; set; } = 30;
+        public float CurveStep { get; set; } = 0.05f;
+        public float CurveEps { get; set; } = 1e-6f;
+        public float CurveEndDist { get; set; } = 0.05f;
+    }
+
     public static class IntersectionFinder
     {
         private static bool IsAnyNaN(Vector4 v)
@@ -16,7 +30,8 @@ namespace AbraCADabra
             return false;
         }
 
-        public static (bool res, Vector4 x) FindIntersectionPoint(ISurface P, ISurface Q, Vector4 x0, bool scale = true)
+        public static (bool res, Vector4 x) FindIntersectionPoint(
+            IntersectionFinderParams finderParams, ISurface P, ISurface Q, Vector4 x0, bool scale = true)
         {
             Vector2 x1, x2;
             if (scale)
@@ -33,11 +48,11 @@ namespace AbraCADabra
             Vector4 x = x0, xprev, grad = GetDistGradient(P, Q, x0), r = -grad, p = r, rnew;
             float a, b;
 
-            float eps = IFW.StartEps * IFW.StartEps;
+            float eps = finderParams.StartEps * finderParams.StartEps;
             int startCounter = 0;
             do
             {
-                if (startCounter >= IFW.StartMaxIterations || IsAnyNaN(x))
+                if (startCounter >= finderParams.StartMaxIterations || IsAnyNaN(x))
                 {
                     return (false, x);
                 }
@@ -62,29 +77,126 @@ namespace AbraCADabra
             return (true, x);
         }
 
-        public static (IntersectionResult intRes, IntersectionCurveManager icm) FindIntersection(ISurface P, ISurface Q, Vector4 x0, bool scale = true)
+        public static (IntersectionResult intRes, IntersectionCurveManager icm) FindIntersection(
+            IntersectionFinderParams finderParams, ISurface P, ISurface Q, Vector4 x0, bool scale = true)
         {
-            (bool res, Vector4 x) = FindIntersectionPoint(P, Q, x0, scale);
-            if (!res || (IFW.IsSingleSurface && Vector2.DistanceSquared(new Vector2(x.X, x.Y), new Vector2(x.Z, x.W)) < IFW.StartSelfDiffSquared))
+            var (intRes, points, xs, loop) = FindIntersectionData(finderParams, P, Q, x0, scale);
+            if (intRes == IntersectionResult.OK)
             {
-                return (IntersectionResult.NoIntersection, null);
+                return (intRes, new IntersectionCurveManager(P, Q, points, xs, loop));
+            }
+            return (intRes, null);
+        }
+
+        public static (IntersectionResult iRes, List<Vector3> points, bool loop) FindIntersectionDataWithStartPoint(
+            IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs, Vector3 startPoint)
+        {
+            float fdivs = divs;
+            bool noCurve = false;
+            var pointSurface = new PointSurface(startPoint);
+            var pointsSecond = new (bool? valid, Vector4 start)[divs, divs];
+            for (int x = 0; x < divs; x++)
+            {
+                for (int y = 0; y < divs; y++)
+                {
+                    Vector4 preStart1 = divs > 1 ? new Vector4(x / fdivs, y / fdivs, 0.0f, 0.0f)
+                                                 : new Vector4(0.5f, 0.5f, 0.0f, 0.0f);
+                    var (boolIntRes1, start1) = FindIntersectionPoint(finderParams, P, pointSurface, preStart1);
+                    if (!boolIntRes1) continue;
+
+                    for (int z = 0; z < divs; z++)
+                    {
+                        for (int w = 0; w < divs; w++)
+                        {
+                            Vector4 preStart2 = divs > 1 ? new Vector4(z / fdivs, w / fdivs, 0.0f, 0.0f)
+                                                     : new Vector4(0.5f, 0.5f, 0.0f, 0.0f);
+                            if (pointsSecond[z, w].valid == null)
+                            {
+                                pointsSecond[z, w] = FindIntersectionPoint(finderParams, Q, pointSurface, preStart2);
+                            }
+                            var (boolIntRes2, start2) = pointsSecond[z, w];
+                            if (boolIntRes2 == false) continue;
+
+                            Vector4 start = new Vector4(start1.X, start1.Y, start2.X, start2.Y);
+                            var (intRes, points, _, loop) = FindIntersectionData(finderParams, P, Q, start, false);
+                            if (intRes == IntersectionResult.OK)
+                            {
+                                return (intRes, points, loop);
+                            }
+                            else if (intRes == IntersectionResult.NoCurve)
+                            {
+                                noCurve = true;
+                            }
+                        }
+                    }
+                }
+            }
+            if (noCurve)
+            {
+                return (IntersectionResult.NoCurve, null, false);
+            }
+            return (IntersectionResult.NoIntersection, null, false);
+        }
+
+        public static (IntersectionResult iRes, List<Vector3> points, bool loop) FindIntersectionDataWithoutStartPoint(
+            IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs)
+        {
+            float fdivs = divs;
+            bool noCurve = false;
+            for (int x = 0; x < divs; x++)
+            {
+                for (int y = 0; y < divs; y++)
+                {
+                    for (int z = 0; z < divs; z++)
+                    {
+                        for (int w = 0; w < divs; w++)
+                        {
+                            Vector4 start = divs > 1 ? new Vector4(x / fdivs, y / fdivs, z / fdivs, w / fdivs)
+                                                         : new Vector4(0.5f);
+                            var (intRes, points, _, loop) = FindIntersectionData(finderParams, P, Q, start);
+                            if (intRes == IntersectionResult.OK)
+                            {
+                                return (intRes, points, loop);
+                            }
+                            else if (intRes == IntersectionResult.NoCurve)
+                            {
+                                noCurve = true;
+                            }
+                        }
+                    }
+                }
+            }
+            if (noCurve)
+            {
+                return (IntersectionResult.NoCurve, null, false);
+            }
+            return (IntersectionResult.NoIntersection, null, false);
+        }
+
+        public static (IntersectionResult intRes, List<Vector3> points, List<Vector4> xs, bool loop) FindIntersectionData(
+            IntersectionFinderParams finderParams, ISurface P, ISurface Q, Vector4 x0, bool scale = true)
+        {
+            (bool res, Vector4 x) = FindIntersectionPoint(finderParams, P, Q, x0, scale);
+            if (!res || (P == Q && Vector2.DistanceSquared(new Vector2(x.X, x.Y), new Vector2(x.Z, x.W)) < finderParams.StartSelfDiffSquared))
+            {
+                return (IntersectionResult.NoIntersection, null, null, false);
             }
 
             var startP = P.GetUVPoint(x.X, x.Y);
             var startQ = Q.GetUVPoint(x.Z, x.W);
-            if ((startP - startQ).LengthSquared > IFW.StartPointEps * IFW.StartPointEps)
+            if ((startP - startQ).LengthSquared > finderParams.StartPointEps * finderParams.StartPointEps)
             {
-                return (IntersectionResult.NoIntersection, null);
+                return (IntersectionResult.NoIntersection, null, null, false);
             }
 
             var first = (startP + startQ) / 2.0f;
             List<Vector3> points = new List<Vector3> { first }, pointsEnd = null;
             List<Vector4> xs = new List<Vector4> { x }, xsEnd = null;
-            float endDist = IFW.CurveEndDist * IFW.CurveEndDist;
-            float eps = IFW.CurveEps * IFW.CurveEps;
+            float endDist = finderParams.CurveEndDist * finderParams.CurveEndDist;
+            float eps = finderParams.CurveEps * finderParams.CurveEps;
             Vector4 xprev, xprevValid;
             bool loop = false, afterReverse = false;
-            for (int pointCounter = 0; pointCounter < IFW.CurveMaxPoints; pointCounter++)
+            for (int pointCounter = 0; pointCounter < finderParams.CurveMaxPoints; pointCounter++)
             {
                 var nP = Vector3.Cross(P.GetDu(x.X, x.Y), P.GetDv(x.X, x.Y));
                 var nQ = Vector3.Cross(Q.GetDu(x.Z, x.W), Q.GetDv(x.Z, x.W));
@@ -99,22 +211,22 @@ namespace AbraCADabra
                 int iterCounter = 0;
                 do
                 {
-                    if (iterCounter >= IFW.CurveMaxIterations || IsAnyNaN(x))
+                    if (iterCounter >= finderParams.CurveMaxIterations || IsAnyNaN(x))
                     {
-                        return (IntersectionResult.NoCurve, null);
+                        return (IntersectionResult.NoCurve, null, null, false);
                     }
                     iterCounter++;
                     xprev = x;
 
                     var J = GetJacobian(P, Q, tan, x);
-                    var F = new Vector4(pP - pQ, Vector3.Dot(pP - startP, tan) - IFW.CurveStep);
+                    var F = new Vector4(pP - pQ, Vector3.Dot(pP - startP, tan) - finderParams.CurveStep);
                     try
                     {
                         x += MathHelper.Solve4(J, -F);
                     }
                     catch (ArgumentException)
                     {
-                        return (IntersectionResult.NoCurve, null);
+                        return (IntersectionResult.NoCurve, null, null, false);
                     }
                     //x = MathHelper.MakeVector4(P.ClampUV(x.X, x.Y), Q.ClampUV(x.Z, x.W));
                     pP = P.GetUVPoint(x.X, x.Y);
@@ -123,7 +235,7 @@ namespace AbraCADabra
                 
                 if (IsAnyNaN(x))
                 {
-                    return (IntersectionResult.NoCurve, null);
+                    return (IntersectionResult.NoCurve, null, null, false);
                 }
                 bool valid = true;
                 Vector2 closestP, closestQ;
@@ -195,7 +307,7 @@ namespace AbraCADabra
                 }
             }
 
-            return (IntersectionResult.OK, new IntersectionCurveManager(P, Q, points, xs, loop));
+            return (IntersectionResult.OK, points, xs, loop);
         }
 
         private static float GetDistD(ISurface P, ISurface Q, float u, float v, float s, float t, bool useU)

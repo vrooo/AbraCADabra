@@ -34,10 +34,11 @@
             </MenuItem>
             <MenuItem x:Name="MenuMilling" Header="Milling" IsEnabled="{Binding IsIdle}">
                 <MenuItem x:Name="MenuMillingLoad" Header="Load Milling Path..." Click="MenuMillingLoadClick"/>
-                <MenuItem x:Name="MenuMillingGenerate" Header="Generate Milling Path..." Click="MenuMillingGenerateClick"/>
+                <MenuItem Header="Generate Roughing Path..." Click="MenuMillingGenerateRoughClick"/>
+                <MenuItem Header="Generate Base and Contour Path..." Click="MenuMillingGenerateBaseClick"/>
                 <Separator/>
-                <MenuItem x:Name="MenuMillingScale" Header="Scale..." Click="MenuMillingScaleClick"/>
-                <MenuItem x:Name="MenuMillingAlign" Header="Align to Material" Click="MenuMillingAlignClick"/>
+                <MenuItem Header="Scale..." Click="MenuMillingScaleClick"/>
+                <MenuItem Header="Align to Material" Click="MenuMillingAlignClick"/>
             </MenuItem>
         </Menu>
         <Grid DockPanel.Dock="Top">

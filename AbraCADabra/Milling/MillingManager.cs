@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Linq;
 
 namespace AbraCADabra.Milling
 {
@@ -535,7 +536,13 @@ namespace AbraCADabra.Milling
             return path.Points.Count > 0;
         }
 
-        public void WriteFirstPath(float[,] modelHeightMap, string location, int startMove)
+        //public void WritePaths(List<PatchManager> patches, float[,] modelHeightMap, string location, MillingPathParams pathParams)
+        //{
+        //    WriteRoughPath(modelHeightMap, location, pathParams.StartIndex, pathParams.ReductionEpsRough);
+        //    WriteBasePaths(patches, pathParams.ReductionEpsBase);
+        //}
+
+        public void WriteRoughPath(float[,] modelHeightMap, float reductionEps, string location, int startIndex)
         {
             int diamMil = 16;
             var toolData = new ToolData(false, diamMil);
@@ -661,11 +668,297 @@ namespace AbraCADabra.Milling
                 y = finalY;
                 directionX = -1;
             }
+
+            pts = DouglasPeucker(pts, reductionEps); // TODO: per every line?
             pts.Add(new Vector3(directionX * edgeMultX * stripWidth, SizeY + TOOL_DIST, -directionZ * edgeZ));
             pts.Add(new Vector3(0, SizeY + TOOL_DIST, 0));
+            MillingIO.SaveFile(pts, toolData, location, "1", startIndex);
+        }
 
-            MillingIO.SaveFile(pts, toolData, location, "1", startMove);
-            path = new MillingPath(pts);
+        private static class FishPart
+        {
+            public const int Head           = 0;
+            public const int Collar         = 1;
+            public const int Body           = 2;
+            public const int MedLowerFin    = 3;
+            public const int MedUpperFin    = 4;
+            public const int LongFin        = 5;
+            public const int SmallInnerFin  = 6;
+            public const int SmallOuterFin  = 7;
+            public const int Count          = 8;
+        }
+
+        public void WriteBasePaths(List<PatchManager> patches, float reductionEps, string location, int startIndex)
+        {
+            if (patches.Count != FishPart.Count) // prevent an exception when the dumdum that is me tries to find paths before loading the model
+            {
+                return;
+            }
+
+            float y = BaseHeight + PATH_BASE_DIST;
+            var (basePatch, _) = CerealFactory.CreatePatchC0(new Vector3(0, y, 0), PatchType.Simple, SizeX, SizeZ, 1, 1);
+            var finderParams = new IntersectionFinderParams();
+            int divs = 4;
+            var segments = new List<ContourSegment>();
+
+            bool success = true;
+            // starting with inner body because it's needed for both sides
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.Body], divs); // inner
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.Body], divs, new Vector3(6.42f, y, -4.7f)); // outer
+
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.Head], divs, new Vector3(-2.5f, y, 0)); // inner
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.Head], divs); // outer
+
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.Collar], divs, new Vector3(-0.5f, y, -3)); // inner
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.Collar], divs); // outer
+
+            finderParams.CurveEps = 1e-5f;
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.MedLowerFin], divs, new Vector3(3, y, 2));
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.MedUpperFin], divs, new Vector3(3, y, -3));
+
+            finderParams.CurveEps = 1e-6f;
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.LongFin], divs, new Vector3(6.42f, y, -4.7f));
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.SmallInnerFin], divs, new Vector3(-1.5f, y, 0));
+            success = success && AddIntersection(segments, reductionEps, finderParams, basePatch, patches[FishPart.SmallOuterFin], divs);
+
+            if (!success) // something has gone terribly wrong
+            {
+                return;
+            }
+
+            for (int i = 0; i < segments.Count; i++)
+            {
+                for (int j = i + 1; j < segments.Count; j++)
+                {
+                    var intersections = IntersectSegments(segments[i], segments[j]);
+                    foreach (var inter in intersections)
+                    {
+                        segments[i].Intersections.Add(inter);
+                        segments[j].Intersections.Add(inter);
+                    }
+                }
+            }
+
+            const int MIN_EDGE_COUNT = 4; // maybe configurable?
+            int maxInd = -1;
+            var graph = new Dictionary<int, ContourVertex>();
+            foreach (var segment in segments)
+            {
+                segment.Intersections.Sort(
+                    (i1, i2) =>
+                    {
+                        int ind1 = segment.Id == i1.SegmentFrom ? i1.IndexFrom : i1.IndexTo;
+                        int ind2 = segment.Id == i2.SegmentFrom ? i2.IndexFrom : i2.IndexTo;
+                        return ind2.CompareTo(ind1); // descending
+                    });
+                var edges = new List<ContourEdge>();
+                var interIndices = new List<int>();
+                bool first = true;
+                foreach (var inter in segment.Intersections)
+                {
+                    int ind = (segment.Id == inter.SegmentFrom ? inter.IndexFrom : inter.IndexTo) + 1;
+                    interIndices.Add(inter.Id);
+                    maxInd = Math.Max(maxInd, inter.Id);
+                    if (!first)
+                    {
+                        var newPoints = new List<Vector3> { inter.Point };
+                        newPoints.AddRange(segment.Points.Skip(ind));
+                        edges.Add(new ContourEdge(newPoints));
+                    }
+                    first = false;
+                    
+                    segment.Points.RemoveRange(ind, segment.Points.Count - ind);
+                    segment.Points.Add(inter.Point);
+                }
+                
+                for (int i = 0; i < edges.Count; i++)
+                {
+                    int i1 = interIndices[i + 1], i2 = interIndices[i];
+
+                    var edge1 = edges[i];
+                    if (edge1.Points.Count < MIN_EDGE_COUNT) continue;
+                    edge1.From = i1;
+                    edge1.To = i2;
+                    if (!graph.ContainsKey(i1))
+                    {
+                        graph.Add(i1, new ContourVertex(i1, edge1.Points[0]));
+                    }
+                    graph[i1].OutEdges.Add(edge1);
+
+                    var revPoints = new List<Vector3>(edge1.Points);
+                    revPoints.Reverse();
+                    var edge2 = new ContourEdge(revPoints);
+                    edge2.From = i2;
+                    edge2.To = i1;
+                    if (!graph.ContainsKey(i2))
+                    {
+                        graph.Add(i2, new ContourVertex(i2, edge2.Points[0]));
+                    }
+                    graph[i2].OutEdges.Add(edge2);
+                }
+            }
+
+            Vector3 prevPoint = new Vector3(-SizeX / 2, y, -SizeZ / 2); // top-left corner
+            int curVertex = 0, prevVertex = -1;
+            float bestDistSq = float.MaxValue;
+            for (int i = 0; i < graph.Count; i++)
+            {
+                if (!graph.ContainsKey(i)) continue;
+                float distSq = (prevPoint - graph[i].Point).LengthSquared;
+                if (distSq < bestDistSq)
+                {
+                    bestDistSq = distSq;
+                    curVertex = i;
+                }
+            }
+
+            bool[] isVertUsed = new bool[maxInd + 1];
+            isVertUsed[curVertex] = true;
+            var contour = new List<ContourEdge>();
+            Vector3 curPoint = graph[curVertex].Point;
+
+            while (true)
+            {
+                int bestInd = -1;
+                float bestVal = 0;
+                Vector2 curDir = new Vector2(curPoint.X - prevPoint.X, curPoint.Z - prevPoint.Z);
+                curDir.Normalize();
+                for (int i = 0; i < graph[curVertex].OutEdges.Count; i++)
+                {
+                    var edge = graph[curVertex].OutEdges[i];
+                    if (edge.To != prevVertex)
+                    {
+                        var potentialNext = edge.Points[1];
+                        Vector2 potentialDir = new Vector2(potentialNext.X - prevPoint.X, potentialNext.Z - prevPoint.Z);
+                        potentialDir.Normalize();
+                        float val = curDir.X * potentialDir.Y - curDir.Y * potentialDir.X;
+                        if (val > bestVal || bestInd == -1) // TODO: toss into a function and pass compareFunc(val, bestVal)
+                        {
+                            bestInd = i;
+                            bestVal = val;
+                        }
+                    }
+                }
+                if (bestInd == -1)
+                {
+                    break;
+                }
+                var bestEdge = graph[curVertex].OutEdges[bestInd];
+                int bestVertex = bestEdge.To;
+                contour.Add(bestEdge);
+                if (isVertUsed[bestVertex])
+                {
+                    break;
+                }
+                isVertUsed[bestVertex] = true;
+                prevPoint = bestEdge.Points[bestEdge.Points.Count - 2];
+                curPoint = bestEdge.Points[bestEdge.Points.Count - 1];
+                prevVertex = curVertex;
+                curVertex = bestVertex;
+            }
+
+            var tmp = new List<Vector3>();
+            foreach (var segment in contour)
+            {
+                tmp.AddRange(segment.Points);
+            }
+            path = new MillingPath(tmp);
+        }
+
+        private bool AddIntersection(List<ContourSegment> segments,
+            float eps, IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs)
+        {
+            var (iRes, interPoints, _) = IntersectionFinder.FindIntersectionDataWithoutStartPoint(finderParams, P, Q, divs);
+            if (iRes == IntersectionResult.OK)
+            {
+                segments.Add(new ContourSegment(DouglasPeucker(interPoints, eps)));
+                return true;
+            }
+            return false;
+        }
+
+        private bool AddIntersection(List<ContourSegment> segments,
+            float eps, IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs, Vector3 start)
+        {
+            var (iRes, interPoints, _) = IntersectionFinder.FindIntersectionDataWithStartPoint(finderParams, P, Q, divs, start);
+            if (iRes == IntersectionResult.OK)
+            {
+                segments.Add(new ContourSegment(DouglasPeucker(interPoints, eps)));
+                return true;
+            }
+            return false;
+        }
+
+        private List<ContourIntersection> IntersectSegments(ContourSegment seg1, ContourSegment seg2)
+        {
+            const float pointDistEps = 1e-2f;
+            float pdeSq = pointDistEps * pointDistEps;
+            // we can assume that all Y are equal to BaseHeight + PATH_BASE_DIST
+            float y = BaseHeight + PATH_BASE_DIST;
+            var intersections = new List<ContourIntersection>();
+            for (int i = 0; i < seg1.Points.Count - 1; i++)
+            {
+                Vector2 a1 = new Vector2(seg1.Points[i].X, seg1.Points[i].Z);
+                Vector2 b1 = new Vector2(seg1.Points[i + 1].X, seg1.Points[i + 1].Z);
+                for (int j = 0; j < seg2.Points.Count - 1; j++)
+                {
+                    Vector2 a2 = new Vector2(seg2.Points[j].X, seg2.Points[j].Z);
+                    Vector2 b2 = new Vector2(seg2.Points[j + 1].X, seg2.Points[j + 1].Z);
+                    if ((a1 - a2).LengthSquared < pdeSq ||
+                        (a1 - b2).LengthSquared < pdeSq ||
+                        (b1 - a2).LengthSquared < pdeSq ||
+                        (b1 - b2).LengthSquared < pdeSq ||
+                        MathHelper.HasIntersection(a1, b1, a2, b2))
+                    {
+                        var inter2d = MathHelper.GetIntersection(a1, b1, a2, b2, out _);
+                        var inter = new Vector3(inter2d.X, y, inter2d.Y);
+                        intersections.Add(new ContourIntersection(seg1.Id, seg2.Id, i, j, inter));
+                    }
+                }
+            }
+            return intersections;
+        }
+
+        private List<Vector3> DouglasPeucker(List<Vector3> pts, float eps)
+        {
+            float PointDist(Vector3 p, Vector3 a, Vector3 b)
+            {
+                Vector3 dir = b - a;
+                float dirLength = dir.Length;
+                return dirLength > 0 ? Vector3.Cross(dir, a - p).Length / dirLength : 0;
+            }
+
+            int n = pts.Count;
+            if (n < 3)
+            {
+                return pts;
+            }
+
+            float dMax = 0;
+            int iMax = 0;
+            for (int i = 1; i < n - 1; i++)
+            {
+                float d = PointDist(pts[i], pts[0], pts[n - 1]);
+                if (d > dMax)
+                {
+                    dMax = d;
+                    iMax = i;
+                }
+            }
+
+            var res = new List<Vector3>();
+            if (dMax > eps)
+            {
+                var first = DouglasPeucker(pts.Take(iMax + 1).ToList(), eps);
+                var second = DouglasPeucker(pts.Skip(iMax).ToList(), eps);
+                res.AddRange(first.Take(first.Count - 1));
+                res.AddRange(second);
+            }
+            else
+            {
+                res.AddMany(pts[0], pts[n - 1]);
+            }
+            return res;
         }
 
         public void Render(ShaderManager shader)
@@ -741,6 +1034,64 @@ namespace AbraCADabra.Milling
                 {
                     Application.Current.Dispatcher.Invoke(d, this, args);
                 }
+            }
+        }
+
+        private class ContourSegment
+        {
+            private static int counter = 0;
+            public int Id { get; }
+            public List<ContourIntersection> Intersections { get; } = new List<ContourIntersection>();
+            public List<Vector3> Points { get; set; }
+
+            public ContourSegment(List<Vector3> points)
+            {
+                Id = counter++;
+                Points = points;
+            }
+        }
+
+        private class ContourIntersection
+        {
+            private static int counter = 0;
+            public int Id { get; }
+            public int SegmentFrom { get; set; }
+            public int SegmentTo { get; set; }
+            public int IndexFrom { get; set; }
+            public int IndexTo { get; set; }
+            public Vector3 Point { get; set; }
+
+            public ContourIntersection(int from, int to, int indFrom, int indTo, Vector3 point)
+            {
+                Id = counter++;
+                SegmentFrom = from;
+                SegmentTo = to;
+                IndexFrom = indFrom;
+                IndexTo = indTo;
+                Point = point;
+            }
+        }
+
+        private class ContourVertex
+        {
+            public int Id { get; }
+            public Vector3 Point { get; }
+            public List<ContourEdge> OutEdges { get; } = new List<ContourEdge>();
+
+            public ContourVertex(int id, Vector3 point)
+            {
+                Id = id;
+                Point = point;
+            }
+        }
+        private class ContourEdge
+        {
+            public int From { get; set; }
+            public int To { get; set; }
+            public List<Vector3> Points { get; } = new List<Vector3>();
+            public ContourEdge(List<Vector3> points)
+            {
+                Points = points;
             }
         }
     }

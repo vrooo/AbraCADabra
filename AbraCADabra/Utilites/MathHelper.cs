@@ -93,11 +93,11 @@ namespace AbraCADabra
                    Math.Min(a.Y, b.Y) <= point.Y && point.Y <= Math.Max(a.Y, b.Y);
         }
 
-        public static Vector2 GetIntersection(Vector2 a, Vector2 b, Vector2 c, Vector2 d, out float s)
+        public static Vector2 GetIntersection(Vector2 v1start, Vector2 v1end, Vector2 v2start, Vector2 v2end, out float s)
         {
-            Vector2 ba = b - a, ca = c - a, dc = d - c;
+            Vector2 ba = v1end - v1start, ca = v2start - v1start, dc = v2end - v2start;
             s = (ba.X * ca.Y - ba.Y * ca.X) / (dc.X * ba.Y - dc.Y * ba.X);
-            return c + s * dc;
+            return v2start + s * dc;
         }
 
         public static bool IsPointInPolygon(Vector2 point, List<Vector2> polygon)

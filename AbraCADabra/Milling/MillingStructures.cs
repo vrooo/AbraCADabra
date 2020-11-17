@@ -1,4 +1,6 @@
-﻿using System;
+﻿using OpenTK;
+using System;
+using System.Collections.Generic;
 
 namespace AbraCADabra.Milling
 {
@@ -11,6 +13,13 @@ namespace AbraCADabra.Milling
             IsFlat = flat;
             Diameter = diameter;
         }
+    }
+
+    public struct MillingPathParams
+    {
+        public int StartIndex;
+        public float ReductionEpsRough;
+        public float ReductionEpsBase;
     }
 
     public class MillingException : Exception

@@ -116,7 +116,7 @@
     <Compile Include="Utilites\ImageIO.cs" />
     <Compile Include="Milling\MillingManager.cs" />
     <Compile Include="Milling\MillingPath.cs" />
-    <Compile Include="Milling\MillingStructs.cs" />
+    <Compile Include="Milling\MillingStructures.cs" />
     <Compile Include="Milling\Tool.cs" />
     <Compile Include="ObjectManagers\CerealFactory.cs" />
     <Compile Include="ObjectManagers\GregoryPatchManager.cs" />
