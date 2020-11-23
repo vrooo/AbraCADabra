@@ -258,6 +258,14 @@ namespace AbraCADabra
             return (u - indexX, v - indexZ, mult * indexX, mult * indexZ);
         }
 
+        public Vector3 GetNormal(float u, float v)
+        {
+            Vector3 du = GetDu(u, v), dv = GetDv(u, v);
+            Vector3 normal = Vector3.Cross(du, dv);
+            normal.Normalize();
+            return normal;
+        }
+
         public Vector3 GetUVPoint(float u, float v)
         {
             var (pts, _) = GetPointPositions(points, patchType, continuity);
