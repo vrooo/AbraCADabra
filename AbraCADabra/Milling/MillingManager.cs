@@ -743,58 +743,77 @@ namespace AbraCADabra.Milling
                 }
             }
 
-            var contourPoints = GetPathFromGraph(graph, graphCount, curVertex, prevPoint);
+            var contour = GetPathFromGraph(graph, graphCount, curVertex, prevPoint);
 
             // building base path
-            const int baseDiam = 12, contourDiam = 10;
-            const float baseEps = baseDiam / 20.0f, contourEps = contourDiam / 20.0f;
+            const int baseDiamMil = 12, contourDiamMil = 10;
+            const float baseDiam = baseDiamMil * MillingPath.SCALE, contourDiam = contourDiamMil * MillingPath.SCALE;
+            const float baseEps = baseDiam / 20.0f;
 
-            var offsetBasePoints = OffsetContour(contourPoints, baseDiam * MillingPath.SCALE / 2.0f, true);
-            ToolDiameter = baseDiam * MillingPath.SCALE;
-            IsFlat = true;
-            path = new MillingPath(offsetBasePoints); return; // TODO
-
+            var offsetBasePoints = OffsetContour(contour, baseDiam / 2.0f, true);
+            MillingIO.SaveFile(offsetBasePoints, new ToolData(true, baseDiamMil), location, "3", startIndex); // TODO: separate offset
+            //ToolDiameter = baseDiam * MillingPath.SCALE;
+            //IsFlat = true;
+            //path = new MillingPath(offsetBasePoints); return; // TODO
+            
+            float middleOffset = 1e-4f;
+            float stripWidth = baseDiam - baseEps;
+            int stripCount = (int)Math.Floor(SizeX / stripWidth);
+            float edgeMultX = stripCount / 2.0f + 1;
+            float edgeZ = SizeZ / 2 + stripWidth;
             var zigZagPoints = new List<Vector3>();
-            for (int x = -8; x <= 8; x += 2) // TODO: proper range!
+
+            for (float ix = -edgeMultX; ix <= edgeMultX; ix += 2)
             {
+                float x = ix * stripWidth;
+                float x1 = (ix + 1) * stripWidth;
                 zigZagPoints.AddMany(
-                    new Vector3(x, y, 0),
-                    new Vector3(x, y, 8),
-                    new Vector3(x + 1, y, 8)
+                    new Vector3(x, y, middleOffset),
+                    new Vector3(x, y, edgeZ),
+                    new Vector3(x1, y, edgeZ)
                     );
-                if (x < 8)
+                if (ix + 2 < edgeMultX)
                 {
-                    zigZagPoints.Add(new Vector3(x + 1, y, 0));
+                    zigZagPoints.Add(new Vector3(x1, y, middleOffset));
                 }
             }
 
-            for (int x = 8; x >= -8; x -= 2) // TODO: proper range!
+            for (float ix = edgeMultX; ix >= -edgeMultX; ix -= 2)
             {
-                if (x < 8)
+                float x = ix * stripWidth;
+                float x1 = (ix + 1) * stripWidth;
+                if (ix + 2 < edgeMultX)
                 {
-                    zigZagPoints.Add(new Vector3(x + 1, y, 0));
+                    zigZagPoints.Add(new Vector3(x1, y, -middleOffset));
                 }
                 zigZagPoints.AddMany(
-                    new Vector3(x + 1, y, -8),
-                    new Vector3(x, y, -8),
-                    new Vector3(x, y, 0)
+                    new Vector3(x1, y, -edgeZ),
+                    new Vector3(x, y, -edgeZ),
+                    new Vector3(x, y, -middleOffset)
                     );
             }
-            var fakeSegment1 = new List<Vector3> { new Vector3(-9, y, 0), new Vector3(-8, y, 0) };
-            var fakeSegment2 = new List<Vector3> { new Vector3(10, y, 0), new Vector3(9, y, 0) };
+            //var fakeSegment1 = new List<Vector3> { new Vector3(-(edgeMultX + 1) * stripWidth, y, -middleOffset), new Vector3(-edgeMultX * stripWidth, y, -middleOffset) };
+            //var fakeSegment2 = new List<Vector3> { new Vector3(edgeMultX + 1 * stripWidth, y, middleOffset), new Vector3(edgeMultX * stripWidth, y, middleOffset) };
 
             ResetGraphStructures();
             int halfCount = offsetBasePoints.Count / 2;
             var baseSegments = new List<ContourSegment> { new ContourSegment(zigZagPoints),
-                new ContourSegment(fakeSegment1), new ContourSegment(fakeSegment2),
+                //new ContourSegment(fakeSegment1), new ContourSegment(fakeSegment2),
                 new ContourSegment(offsetBasePoints.Take(halfCount).ToList()),
                 new ContourSegment(offsetBasePoints.Skip(halfCount).ToList())};
             var (baseGraph, baseGraphCount) = GetContourGraph(baseSegments, 0);
-            var basePath = GetPathFromGraph(baseGraph, baseGraphCount, 0, new Vector3(-9, y, -9));
+            var basePath = GetPathFromGraph(baseGraph, baseGraphCount, 0, new Vector3(-8, y, -2));
 
-            ToolDiameter = baseDiam * MillingPath.SCALE;
+            var basePathPoints = new List<Vector3>();
+            foreach (var edge in basePath)
+            {
+                basePathPoints.AddRange(edge.Points);
+            }
+
+            MillingIO.SaveFile(basePathPoints, new ToolData(true, baseDiamMil), location, "2", startIndex);
+            ToolDiameter = baseDiamMil * MillingPath.SCALE;
             IsFlat = true;
-            path = new MillingPath(basePath);
+            path = new MillingPath(basePathPoints);
         }
 
         public void WriteDetailPath(List<PatchManager> patches, float reductionEps, string location, int startIndex)
@@ -863,36 +882,61 @@ namespace AbraCADabra.Milling
             ContourIntersection.ResetCounter();
         }
 
-        private List<Vector3> OffsetContour(List<Vector3> points, float offset, bool ccw)
+        private List<Vector3> OffsetContour(List<ContourEdge> contour, float offset, bool ccw)
         {
-            var pointRes = new List<Vector3>();
+            var offsetSegments = new List<ContourSegment>();
             var vec = Vector3.UnitY;
             if (!ccw)
             {
                 vec = -vec;
             };
 
-            for (int i = 0; i < points.Count - 1; i++)
+            ResetGraphStructures();
+            foreach (var edge in contour)
             {
-                Vector3 p1 = points[i], p2 = points[i + 1];
-                Vector3 diff = p2 - p1;
-                if (diff.LengthSquared == 0)
+                var points = edge.Points;
+                var offsetPoints = new List<Vector3>();
+                for (int i = 0; i < points.Count - 1; i++)
                 {
-                    continue;
+                    Vector3 p1 = points[i], p2 = points[i + 1];
+                    Vector3 diff = p2 - p1;
+                    if (diff.LengthSquared == 0)
+                    {
+                        continue;
+                    }
+                    Vector3 normal = Vector3.Cross(diff, vec);
+                    normal.Normalize();
+                    offsetPoints.AddMany(p1 + normal * offset, p2 + normal * offset);
                 }
-                Vector3 normal = Vector3.Cross(diff, vec);
-                normal.Normalize();
-                pointRes.AddMany(p1 + normal * offset, p2 + normal * offset);
+                offsetSegments.Add(new ContourSegment(offsetPoints));
             }
 
-            ResetGraphStructures();
-            var (graph, graphCount) = GetContourGraph(new List<ContourSegment> { new ContourSegment(pointRes) }, 0, true);
-            var fixedPoints = GetPathFromGraph(graph, graphCount, 0, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
+            // add fake segments connecting actual segments
+            int actualSegCount = offsetSegments.Count;
+            float minSegDist = 1, minSegDistSq = minSegDist * minSegDist;
+            for (int i = 0; i < actualSegCount; i++)
+            {
+                var seg1 = offsetSegments[i].Points;
+                var seg2 = offsetSegments[(i + 1) % actualSegCount].Points;
+                Vector3 p1 = seg1[seg1.Count - 1], p2 = seg2[0];
+                if ((p2 - p1).LengthSquared > minSegDistSq) // TODO: check instead if segments have any intersection
+                {
+                    List<Vector3> fakeSegment = new List<Vector3> { p1, p2 };
+                    offsetSegments.Add(new ContourSegment(fakeSegment));
+                }
+            }
 
+            var (graph, graphCount) = GetContourGraph(offsetSegments, 0);
+            var fixedPath = GetPathFromGraph(graph, graphCount, 14, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
+            var fixedPoints = new List<Vector3>();
+            foreach (var edge in fixedPath)
+            {
+                fixedPoints.AddRange(edge.Points);
+            }
             return fixedPoints;
         }
 
-        private List<Vector3> GetPathFromGraph(
+        private List<ContourEdge> GetPathFromGraph(
             Dictionary<int, ContourVertex> graph, int graphCount, int startVertex, Vector3 prevPoint, bool reverseCheck = false)
         {
             int prevVertex = -1;
@@ -901,7 +945,6 @@ namespace AbraCADabra.Milling
             var contour = new List<ContourEdge>();
             Vector3 curPoint = graph[startVertex].Point;
 
-            int mult = reverseCheck ? -1 : 1;
             while (true)
             {
                 int bestInd = -1;
@@ -917,15 +960,15 @@ namespace AbraCADabra.Milling
                         Vector2 potentialDir = new Vector2(potentialNext.X - prevPoint.X, potentialNext.Z - prevPoint.Z);
                         potentialDir.Normalize();
                         float brodkaCross = curDir.X * potentialDir.Y - curDir.Y * potentialDir.X;
-                        double val = Math.Acos(curDir.X * potentialDir.X + curDir.Y * potentialDir.Y) * Math.Sign(brodkaCross);
+                        double val = Math.Acos(Vector2.Dot(curDir, potentialDir)) * Math.Sign(brodkaCross);
                         if (double.IsNaN(val))
                         {
-                            val = 0;
+                            val = Math.PI;
                         }
-                        if (mult * val > bestVal)
+                        if (val > bestVal)
                         {
                             bestInd = i;
-                            bestVal = mult * val;
+                            bestVal = val;
                         }
                     }
                 }
@@ -947,20 +990,20 @@ namespace AbraCADabra.Milling
                 startVertex = bestVertex;
             }
 
-            var contourPoints = new List<Vector3>();
-            foreach (var edge in contour)
-            {
-                contourPoints.AddRange(edge.Points);
-            }
-            return contourPoints;
+            //var contourPoints = new List<Vector3>();
+            //foreach (var edge in contour)
+            //{
+            //    contourPoints.AddRange(edge.Points);
+            //}
+            return contour;
         }
 
         private (Dictionary<int, ContourVertex> graph, int graphCount) GetContourGraph(
-            List<ContourSegment> segments, int minEdgeCount, bool checkSelf = false)
+            List<ContourSegment> segments, int minEdgeCount)
         {
             for (int i = 0; i < segments.Count; i++)
             {
-                for (int j = checkSelf ? i : i + 1; j < segments.Count; j++)
+                for (int j = i + 1; j < segments.Count; j++)
                 {
                     var intersections = IntersectSegments(segments[i], segments[j]);
                     foreach (var inter in intersections)
