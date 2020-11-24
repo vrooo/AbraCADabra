@@ -762,43 +762,38 @@ namespace AbraCADabra.Milling
             float edgeMultX = stripCount / 2.0f + 1;
             float edgeZ = SizeZ / 2 + stripWidth;
             var zigZagPoints = new List<Vector3>();
-
-            for (float ix = -edgeMultX; ix <= edgeMultX; ix += 2)
+            for (int x = -8; x <= 8; x += 2) // TODO: proper range!
             {
-                float x = ix * stripWidth;
-                float x1 = (ix + 1) * stripWidth;
                 zigZagPoints.AddMany(
                     new Vector3(x, y, middleOffset),
                     new Vector3(x, y, edgeZ),
-                    new Vector3(x1, y, edgeZ)
+                    new Vector3(x + 1, y, edgeZ)
                     );
-                if (ix + 2 < edgeMultX)
+                if (x < 8)
                 {
-                    zigZagPoints.Add(new Vector3(x1, y, middleOffset));
+                    zigZagPoints.Add(new Vector3(x + 1, y, middleOffset));
                 }
             }
 
-            for (float ix = edgeMultX; ix >= -edgeMultX; ix -= 2)
+            for (int x = 8; x >= -8; x -= 2) // TODO: proper range!
             {
-                float x = ix * stripWidth;
-                float x1 = (ix + 1) * stripWidth;
-                if (ix + 2 < edgeMultX)
+                if (x < 8)
                 {
-                    zigZagPoints.Add(new Vector3(x1, y, -middleOffset));
+                    zigZagPoints.Add(new Vector3(x + 1, y, -middleOffset));
                 }
                 zigZagPoints.AddMany(
-                    new Vector3(x1, y, -edgeZ),
+                    new Vector3(x + 1, y, -edgeZ),
                     new Vector3(x, y, -edgeZ),
                     new Vector3(x, y, -middleOffset)
                     );
             }
-            //var fakeSegment1 = new List<Vector3> { new Vector3(-(edgeMultX + 1) * stripWidth, y, -middleOffset), new Vector3(-edgeMultX * stripWidth, y, -middleOffset) };
-            //var fakeSegment2 = new List<Vector3> { new Vector3(edgeMultX + 1 * stripWidth, y, middleOffset), new Vector3(edgeMultX * stripWidth, y, middleOffset) };
+            var fakeSegment1 = new List<Vector3> { new Vector3(-9, y, -middleOffset), new Vector3(-8, y, -middleOffset) };
+            var fakeSegment2 = new List<Vector3> { new Vector3(10, y, middleOffset), new Vector3(9, y, middleOffset) };
 
             ResetGraphStructures();
             int halfCount = offsetBasePoints.Count / 2;
             var baseSegments = new List<ContourSegment> { new ContourSegment(zigZagPoints),
-                //new ContourSegment(fakeSegment1), new ContourSegment(fakeSegment2),
+                new ContourSegment(fakeSegment1), new ContourSegment(fakeSegment2),
                 new ContourSegment(offsetBasePoints.Take(halfCount).ToList()),
                 new ContourSegment(offsetBasePoints.Skip(halfCount).ToList())};
             var (baseGraph, baseGraphCount) = GetContourGraph(baseSegments, 0);
