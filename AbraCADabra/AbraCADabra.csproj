@@ -113,6 +113,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Milling\OffsetSurface.cs" />
     <Compile Include="Utilites\ImageIO.cs" />
     <Compile Include="Milling\MillingManager.cs" />
     <Compile Include="Milling\MillingPath.cs" />

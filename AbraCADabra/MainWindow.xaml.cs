@@ -222,10 +222,13 @@ namespace AbraCADabra
                 plane.Render(shader);
             }
 
-            foreach (var ob in objects)
+            if (CheckBoxObjects.IsChecked == true)
             {
-                if (!(ob is PointManager) || CheckBoxPoints.IsChecked == true)
-                    ob.Render(shader);
+                foreach (var ob in objects)
+                {
+                    if (!(ob is PointManager) || CheckBoxPoints.IsChecked == true)
+                        ob.Render(shader);
+                }
             }
 
             millingManager.Render(shader);
@@ -248,14 +251,6 @@ namespace AbraCADabra
         {
             int texWidth = (int)millingManager.DivX, texHeight = (int)millingManager.DivZ; // TODO: values from some other place?
             GL.ActiveTexture(TextureUnit.Texture2);
-            //GL.BindFramebuffer(FramebufferTarget.Framebuffer, pathHeightFrameBuffer);
-
-            //GL.BindTexture(TextureTarget.Texture2D, pathHeightTex);
-            //SetupTexture(pathHeightTex, texWidth, texHeight,
-            //             PixelInternalFormat.R32f, OpenTK.Graphics.OpenGL.PixelFormat.Red, PixelType.Float);
-
-            //GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, pathHeightTex, 0);
-            //GL.DrawBuffer(DrawBufferMode.ColorAttachment0);
             SetRenderTexture(pathHeightTex, pathHeightFrameBuffer, pathHeightRenderBuffer, texWidth, texHeight,
                              PixelInternalFormat.R32f, OpenTK.Graphics.OpenGL.PixelFormat.Red, PixelType.Float);
 
@@ -276,7 +271,6 @@ namespace AbraCADabra
             int ind = 0;
             var pixels = new float[texWidth, texHeight];
             // order of loops is important!
-            //for (int i = 0; i < texHeight; i++)
             for (int i = texHeight - 1; i >= 0; i--)
             {
                 for (int j = 0; j < texWidth; j++)
@@ -960,6 +954,12 @@ namespace AbraCADabra
         private void MenuMillingGenerateBaseClick(object sender, RoutedEventArgs e)
         {
             millingManager.WriteBasePaths(GetPatches(), 0.0001f, "../../../../paths/mine/", 1);
+            RefreshView(); // TODO: remove when it's not needed
+        }
+
+        private void MenuMillingGenerateDetailClick(object sender, RoutedEventArgs e)
+        {
+            millingManager.WriteDetailPath(GetPatches(), 0.0001f, "../../../../paths/mine/", 1);
             RefreshView(); // TODO: remove when it's not needed
         }
 

@@ -750,7 +750,9 @@ namespace AbraCADabra.Milling
             const float baseEps = baseDiam / 20.0f, contourEps = contourDiam / 20.0f;
 
             var offsetBasePoints = OffsetContour(contourPoints, baseDiam * MillingPath.SCALE / 2.0f, true);
-            //path = new MillingPath(offsetBasePoints); return; // TODO
+            ToolDiameter = baseDiam * MillingPath.SCALE;
+            IsFlat = true;
+            path = new MillingPath(offsetBasePoints); return; // TODO
 
             var zigZagPoints = new List<Vector3>();
             for (int x = -8; x <= 8; x += 2) // TODO: proper range!
@@ -790,7 +792,69 @@ namespace AbraCADabra.Milling
             var (baseGraph, baseGraphCount) = GetContourGraph(baseSegments, 0);
             var basePath = GetPathFromGraph(baseGraph, baseGraphCount, 0, new Vector3(-9, y, -9));
 
+            ToolDiameter = baseDiam * MillingPath.SCALE;
+            IsFlat = true;
             path = new MillingPath(basePath);
+        }
+
+        public void WriteDetailPath(List<PatchManager> patches, float reductionEps, string location, int startIndex)
+        {
+            const int detailDiamMil = 8;
+            const float detailRad = detailDiamMil * MillingPath.SCALE / 2;
+            const float detailBaseEps = 0.01f;
+
+            var offsetPatches = new List<OffsetSurface>();
+            foreach (var patch in patches)
+            {
+                offsetPatches.Add(new OffsetSurface(patch, detailRad));
+            }
+
+            float yMax = BaseHeight + PATH_BASE_DIST + detailBaseEps;
+            // only body for testing purposes
+            var bodyPatch = offsetPatches[2];
+            var lines = new List<List<Vector3>>();
+            float uStep = 0.02f, vStep = 0.1f;
+            for (float u = 0; u < bodyPatch.UScale; u += uStep)
+            {
+                var line = new List<Vector3>();
+                int firstBelow = -1;
+                for (float v = 0; v < bodyPatch.VScale; v += vStep)
+                {
+                    var pt = bodyPatch.GetUVPoint(u, v);
+                    pt.Y -= detailRad;
+                    if (pt.Y > yMax)
+                    {
+                        line.Add(pt);
+                    }
+                    else if(firstBelow == -1)
+                    {
+                        firstBelow = line.Count;
+                    }
+                }
+                if (firstBelow != -1)
+                {
+                    var lineTmp = new List<Vector3>();
+                    lineTmp.AddRange(line.Skip(firstBelow));
+                    lineTmp.AddRange(line.Take(firstBelow));
+                    line = lineTmp;
+                }
+                lines.Add(line);
+            }
+
+            var tmp = new List<Vector3>();
+            for (int i = 0; i < lines.Count; i++)
+            {
+                var line = lines[i];
+                if (line.Count < 1) continue;
+                if (i % 2 == 0) line.Reverse();
+                tmp.Add(new Vector3(line[0].X, yMax + TOOL_DIST, line[0].Z));
+                tmp.AddRange(line);
+                tmp.Add(new Vector3(line[line.Count - 1].X, yMax + TOOL_DIST, line[line.Count - 1].Z));
+            }
+
+            ToolDiameter = detailDiamMil * MillingPath.SCALE;
+            IsFlat = false;
+            path = new MillingPath(tmp);
         }
 
         private void ResetGraphStructures()

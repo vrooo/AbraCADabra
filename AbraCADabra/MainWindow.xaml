@@ -34,8 +34,9 @@
             </MenuItem>
             <MenuItem x:Name="MenuMilling" Header="Milling" IsEnabled="{Binding IsIdle}">
                 <MenuItem x:Name="MenuMillingLoad" Header="Load Milling Path..." Click="MenuMillingLoadClick"/>
-                <MenuItem Header="Generate Roughing Path..." Click="MenuMillingGenerateRoughClick"/>
-                <MenuItem Header="Generate Base and Contour Path..." Click="MenuMillingGenerateBaseClick"/>
+                <MenuItem Header="Generate Roughing Path" Click="MenuMillingGenerateRoughClick"/>
+                <MenuItem Header="Generate Base and Contour Path" Click="MenuMillingGenerateBaseClick"/>
+                <MenuItem Header="Generate Detail Path" Click="MenuMillingGenerateDetailClick"/>
                 <Separator/>
                 <MenuItem Header="Scale..." Click="MenuMillingScaleClick"/>
                 <MenuItem Header="Align to Material" Click="MenuMillingAlignClick"/>
@@ -159,10 +160,12 @@
                     
                     <Expander Header="Configuration" IsExpanded="False">
                         <StackPanel>
-                            <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
-                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
+                            <CheckBox x:Name="CheckBoxObjects" IsChecked="True"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show objects</CheckBox>
                             <CheckBox x:Name="CheckBoxPoints" IsChecked="False"
                                   Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show points</CheckBox>
+                            <CheckBox x:Name="CheckBoxGrid" IsChecked="True"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show grid</CheckBox>
                             <CheckBox x:Name="CheckBoxRotateOrigin" IsChecked="False">Rotate around cursor</CheckBox>
                         </StackPanel>
                     </Expander>

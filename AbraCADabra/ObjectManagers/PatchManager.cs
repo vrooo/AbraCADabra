@@ -281,6 +281,13 @@ namespace AbraCADabra
                 q[i] = CalcPoint(u, p);
             }
             return CalcPoint(v, q);
+            // TODO: begin temp offset
+            var pt = CalcPoint(v, q);
+            Vector3 du = GetDu(u, v), dv = GetDv(u, v);
+            Vector3 normal = Vector3.Cross(dv, du);
+            normal.Normalize();
+            return pt + 0.4f * normal;
+            // TODO: end temp offset
         }
 
         public Vector3 GetDu(float u, float v)
