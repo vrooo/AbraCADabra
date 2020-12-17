@@ -753,8 +753,7 @@ namespace AbraCADabra.Milling
             const float baseDiam = baseDiamMil * MillingPath.SCALE, contourDiam = contourDiamMil * MillingPath.SCALE;
             const float baseEps = baseDiam / 20.0f;
 
-            var (offsetBasePoints, _) = OffsetContour(contour, baseDiam / 2.0f, true, 12);
-            //MillingIO.SaveFile(offsetBasePoints, new ToolData(true, baseDiamMil), location, "3", startIndex); // TODO: separate offset
+            var (offsetBasePoints, _) = OffsetContour(contour, baseDiam / 2.0f, true, 0);
             //ToolDiameter = baseDiam * MillingPath.SCALE;
             //IsFlat = true;
             //path = new MillingPath(offsetBasePoints); return; // TODO
@@ -824,7 +823,7 @@ namespace AbraCADabra.Milling
             IsFlat = true;
             path = new MillingPath(basePathPoints);
 
-            var (contourBasePoints, visualizer) = OffsetContour(contour, contourDiam / 2.0f, true, 6);
+            var (contourBasePoints, visualizer) = OffsetContour(contour, contourDiam / 2.0f, true, 0);
             MillingIO.SaveFile(contourBasePoints, new ToolData(true, contourDiamMil), location, "3", startIndex);
             return visualizer;
         }
@@ -945,18 +944,17 @@ namespace AbraCADabra.Milling
             ResetGraphStructures();
             var (graph, graphCount) = GetContourGraph(offsetSegments, 0);
 
-            // TODO: REMOVE ME
-            Console.WriteLine("\nAAA\n");
-            for (int i = 0; i < graphCount; i++)
-            {
-                var tmpPath = GetPathFromGraph(graph, graphCount, i, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
-                var tmpPoints = new List<Vector3>();
-                foreach (var edge in tmpPath)
-                {
-                    tmpPoints.AddRange(edge.Points);
-                }
-                Console.WriteLine($"{i}, {tmpPoints.Count}");
-            }
+            //Console.WriteLine("\nAAA\n");
+            //foreach (var i in graph.Keys)
+            //{
+            //    var tmpPath = GetPathFromGraph(graph, graphCount, i, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
+            //    var tmpPoints = new List<Vector3>();
+            //    foreach (var edge in tmpPath)
+            //    {
+            //        tmpPoints.AddRange(edge.Points);
+            //    }
+            //    Console.WriteLine($"{i}, {tmpPoints.Count}");
+            //}
 
             var fixedPath = GetPathFromGraph(graph, graphCount, pathVertexInd, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
             var fixedPoints = new List<Vector3>();
@@ -976,7 +974,7 @@ namespace AbraCADabra.Milling
             var contour = new List<ContourEdge>();
             Vector3 curPoint = graph[startVertex].Point;
 
-            Console.WriteLine("\nBBB\n");
+            //Console.WriteLine("\nBBB\n");
             while (true)
             {
                 int bestInd = -1;
@@ -1008,7 +1006,7 @@ namespace AbraCADabra.Milling
                             bestInd = i;
                             bestVal = val;
                         }
-                        Console.WriteLine($"{i} to {edge.To}: {val}");
+                        //Console.WriteLine($"{i} to {edge.To}: {val}");
                     }
                 }
                 if (bestInd == -1)
@@ -1128,6 +1126,48 @@ namespace AbraCADabra.Milling
                 }
             }
 
+            float sameVertexDist = 1e-2f, svdSq = sameVertexDist * sameVertexDist;
+            // fuse vertices
+            for (int i = 0; i <= maxInd; i++)
+            {
+                if (!graph.ContainsKey(i)) continue;
+                for (int j = i + 1; j <= maxInd; j++)
+                {
+                    if (!graph.ContainsKey(j)) continue;
+                    if ((graph[i].Point - graph[j].Point).LengthSquared < svdSq)
+                    {
+                        foreach (var vertex in graph)
+                        {
+                            if (vertex.Key == j) continue;
+                            for (int e = vertex.Value.OutEdges.Count - 1; e >= 0; e--)
+                            {
+                                var edge = vertex.Value.OutEdges[e];
+                                if (edge.To == j)
+                                {
+                                    if (vertex.Key == i)
+                                    {
+                                        vertex.Value.OutEdges.RemoveAt(e);
+                                    }
+                                    else
+                                    {
+                                        edge.To = i;
+                                    }
+                                }
+                            }
+                        }
+                        foreach (var edge in graph[j].OutEdges)
+                        {
+                            if (edge.To != i)
+                            {
+                                edge.From = i;
+                                graph[i].OutEdges.Add(edge);
+                            }
+                        }
+                        graph.Remove(j);
+                    }
+                }
+            }
+
             return (graph, maxInd + 1);
         }
 
@@ -1183,8 +1223,11 @@ namespace AbraCADabra.Milling
                         MathHelper.HasIntersection(a1, b1, a2, b2))
                     {
                         var inter2d = MathHelper.GetIntersection(a1, b1, a2, b2, out _);
-                        var inter = new Vector3(inter2d.X, y, inter2d.Y);
-                        intersections.Add(new ContourIntersection(seg1.Id, seg2.Id, i, j, inter));
+                        if (!float.IsNaN(inter2d.X) && !float.IsNaN(inter2d.Y))
+                        {
+                            var inter = new Vector3(inter2d.X, y, inter2d.Y);
+                            intersections.Add(new ContourIntersection(seg1.Id, seg2.Id, i, j, inter));
+                        }
                     }
                 }
             }
