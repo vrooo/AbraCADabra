@@ -122,7 +122,7 @@ namespace AbraCADabra
             }
         }
         public abstract string DefaultName { get; }
-        protected abstract int instanceCounter { get; } // TODO: better solution?
+        protected abstract int instanceCounter { get; }
 
         public virtual bool Deletable => true;
 
@@ -188,7 +188,7 @@ namespace AbraCADabra
         public virtual bool TestHit(Camera camera, float width, float height, float x, float y, out float z)
             => Transform.TestHit(camera, width, height, x, y, out z);
 
-        public abstract void Update(); // TODO: this should set update flag which is checked before render
+        public abstract void Update(); // WONTDO: this should set update flag which is checked before render
 
         public virtual void Render(ShaderManager shader)
         {

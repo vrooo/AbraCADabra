@@ -230,11 +230,13 @@
                     <Expander x:Name="ExpanderMilling" Header="Milling">
                         <StackPanel Orientation="Vertical">
                             <CheckBox IsChecked="{Binding DisplayPath}"
-                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Display path</CheckBox>
-                            <CheckBox IsChecked="{Binding DisplayMaterial}"
-                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Display material</CheckBox>
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show path</CheckBox>
                             <CheckBox IsChecked="{Binding ShowPathOnTop}"
                                   Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show path on top</CheckBox>
+                            <CheckBox IsChecked="{Binding DisplayTool}"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show tool</CheckBox>
+                            <CheckBox IsChecked="{Binding DisplayMaterial}"
+                                  Checked="RoutedInvalidate" Unchecked="RoutedInvalidate">Show material</CheckBox>
 
                             <StackPanel Orientation="Vertical" IsEnabled="{Binding IsIdle}">
                                 <TextBlock Style="{StaticResource TextBlockBasic}">Size:</TextBlock>

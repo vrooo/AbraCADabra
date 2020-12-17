@@ -952,7 +952,6 @@ namespace AbraCADabra
         // TODO: window with generation params, maybe one for all?
         private void MenuMillingGenerateRoughClick(object sender, RoutedEventArgs e)
         {
-            // TODO: window with params
             var pixels = SetupObjectHeightMap(GetPatches());
             millingManager.WriteRoughPath(pixels, 0.01f, "../../../../paths/mine/", 1);
         }

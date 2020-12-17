@@ -112,7 +112,7 @@ namespace AbraCADabra
             polyLine.Update(bPoints);
         }
 
-        public override void Translate(float x, float y, float z) // TODO: put it in Bezier3Manager
+        public override void Translate(float x, float y, float z) // WONTDO: put it in Bezier3Manager
         {
             foreach (var pm in Points.Distinct())
             {
@@ -124,7 +124,7 @@ namespace AbraCADabra
             Update();
         }
 
-        public override void RotateAround(float xAngle, float yAngle, float zAngle, Vector3 center) // TODO: put it in Bezier3Manager
+        public override void RotateAround(float xAngle, float yAngle, float zAngle, Vector3 center) // WONTDO: put it in Bezier3Manager
         {
             foreach (var pm in Points.Distinct())
             {

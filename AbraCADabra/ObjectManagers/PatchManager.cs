@@ -123,7 +123,7 @@ namespace AbraCADabra
             return (res, pos);
         }
 
-        // TODO: base type for XmlPatch pls
+        // WONTDO: base type for XmlPatch pls
         protected static (PointManager[,] pointManagers, int xDim, int zDim, PatchType type, int divX, int divZ) GetPointsFromDictionary(XmlPatchPointRef[] pointRefs,
             WrapType wrapType, int rowSlices, int columnSlices, Dictionary<string, PointManager> points)
         {
@@ -247,7 +247,7 @@ namespace AbraCADabra
 
         private (float u, float v, int sx, int sz) TranslateUV(float u, float v)
         {
-            u = WrapU(u); // TODO: check with clamping?
+            u = WrapU(u); // WONTDO: check with clamping?
             //var tmp = ClampUV(u, v);
             //u = tmp.X;
             //v = tmp.Y;

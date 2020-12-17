@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 
 namespace AbraCADabra
 {
-    // TODO: separate files!
     public abstract class FloatTransform : Transform<float>
     {
         public FloatTransform() { }

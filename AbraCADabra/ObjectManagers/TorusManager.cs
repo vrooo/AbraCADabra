@@ -57,7 +57,7 @@ namespace AbraCADabra
 
         private Torus torus;
 
-        // TODO: remove maxDivs
+        // WONTDO: remove maxDivs
         public TorusManager(Vector3 position, uint maxDivMajorR, uint maxDivMinorR) 
             : this(new Torus(position, maxDivMajorR, maxDivMinorR)) { }
 

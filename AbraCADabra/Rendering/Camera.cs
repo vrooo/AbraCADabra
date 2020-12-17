@@ -35,7 +35,7 @@ namespace AbraCADabra
 
         public Matrix4 GetViewMatrix()
         {
-            // TODO: cache and calc inv matrix
+            // WONTDO: cache and calc inv matrix
             Vector3 rotateAround = Position - Offset;
             return Matrix4.CreateTranslation(rotateAround) *
                    GetRotationMatrix() *
@@ -58,7 +58,7 @@ namespace AbraCADabra
 
         public Matrix4 GetProjectionMatrix(float width, float height)
         {
-            // TODO: cache
+            // WONTDO: cache
             return Matrix4.CreatePerspectiveFieldOfView(FOV, width/height, ZNear, ZFar);
         }
 

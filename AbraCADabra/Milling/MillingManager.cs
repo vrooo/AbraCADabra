@@ -104,6 +104,7 @@ namespace AbraCADabra.Milling
         private MillingPath path;
 
         public bool DisplayPath { get; set; } = true;
+        public bool DisplayTool { get; set; } = true;
         public bool DisplayMaterial { get; set; } = true;
         public bool ShowPathOnTop { get; set; } = false;
 
@@ -413,7 +414,7 @@ namespace AbraCADabra.Milling
         private void MillRadius(int x, float tipHeight, int z, FillingMode mode = FillingMode.Full)
         {
             int centerX = x, centerZ = z;
-            float radius = tool.Diameter / 2; 
+            float radius = tool.Diameter / 2;
             int gridRadX = mode == FillingMode.Z ? 0 : (int)Math.Ceiling(radius / SizeX * DivX);
             int gridRadZ = mode == FillingMode.X ? 0 : (int)Math.Ceiling(radius / SizeZ * DivZ);
             Vector3 centerWorld = GridToWorld(x, tipHeight, z);
@@ -536,12 +537,6 @@ namespace AbraCADabra.Milling
             return path.Points.Count > 0;
         }
 
-        //public void WritePaths(List<PatchManager> patches, float[,] modelHeightMap, string location, MillingPathParams pathParams)
-        //{
-        //    WriteRoughPath(modelHeightMap, location, pathParams.StartIndex, pathParams.ReductionEpsRough);
-        //    WriteBasePaths(patches, pathParams.ReductionEpsBase);
-        //}
-
         public void WriteRoughPath(float[,] modelHeightMap, float reductionEps, string location, int startIndex)
         {
             const int diamMil = 16;
@@ -574,7 +569,6 @@ namespace AbraCADabra.Milling
                 }
             }
 
-            // TODO: add border?
             var minLegalHeight = new float[mapDimX, mapDimZ];
             for (int i = 0; i < mapDimX; i++)
             {
@@ -731,6 +725,7 @@ namespace AbraCADabra.Milling
             }
 
             var (graph, graphCount) = GetContourGraph(segments, 4);
+            var visualizer = new GraphVisualizer(graph);
 
             Vector3 prevPoint = new Vector3(-SizeX / 2, y, -SizeZ / 2); // top-left corner
             int curVertex = 0;
@@ -757,7 +752,7 @@ namespace AbraCADabra.Milling
             //ToolDiameter = baseDiam * MillingPath.SCALE;
             //IsFlat = true;
             //path = new MillingPath(offsetBasePoints); return; // TODO
-            
+
             float middleOffset = 1e-4f;
             float stripWidth = baseDiam - baseEps;
             int stripCount = (int)Math.Floor(SizeX / stripWidth);
@@ -800,17 +795,24 @@ namespace AbraCADabra.Milling
                     new Vector3(x, y, -middleOffset)
                     );
             }
-            var fakeSegment1 = new List<Vector3> { new Vector3(-9, y, -middleOffset), new Vector3(-8, y, -middleOffset) };
-            var fakeSegment2 = new List<Vector3> { new Vector3(10, y, middleOffset), new Vector3(9, y, middleOffset) };
+
+            float maxX = edgeMultX * stripWidth;
+            var fakeSegment1 = new List<Vector3> { new Vector3(-maxX - 1, y, -middleOffset), new Vector3(-maxX + 0.1f, y, -middleOffset) };
+            var fakeSegment2 = new List<Vector3> { new Vector3(-maxX - 1, y, middleOffset), new Vector3(-maxX + 0.1f, y, middleOffset) };
+            var fakeSegment3 = new List<Vector3> { new Vector3(maxX + 1, y, -middleOffset), new Vector3(maxX - 0.1f, y, -middleOffset) };
+            var fakeSegment4 = new List<Vector3> { new Vector3(maxX + 1, y, middleOffset), new Vector3(maxX - 0.1f, y, middleOffset) };
 
             ResetGraphStructures();
             int halfCount = offsetBasePoints.Count / 2;
             var baseSegments = new List<ContourSegment> { new ContourSegment(zigZagPoints),
                 new ContourSegment(fakeSegment1), new ContourSegment(fakeSegment2),
+                new ContourSegment(fakeSegment3), new ContourSegment(fakeSegment4),
                 new ContourSegment(offsetBasePoints.Take(halfCount).ToList()),
                 new ContourSegment(offsetBasePoints.Skip(halfCount).ToList())};
             var (baseGraph, baseGraphCount) = GetContourGraph(baseSegments, 0);
-            var basePath = GetPathFromGraph(baseGraph, baseGraphCount, 0, new Vector3(-8, y, -2));
+
+            var basePath = GetPathFromGraph(baseGraph, baseGraphCount, 0, new Vector3(-maxX - 2, y, 0));
+            // TODO: add lines from the bottom!!!
 
             var basePathPoints = new List<Vector3>();
             foreach (var edge in basePath)
@@ -823,8 +825,27 @@ namespace AbraCADabra.Milling
             IsFlat = true;
             path = new MillingPath(basePathPoints);
 
-            var (contourBasePoints, visualizer) = OffsetContour(contour, contourDiam / 2.0f, true, 0);
+            var (contourBasePoints, _) = OffsetContour(contour, contourDiam / 2.0f, true, 0);
             MillingIO.SaveFile(contourBasePoints, new ToolData(true, contourDiamMil), location, "3", startIndex);
+
+            // inner base
+            prevPoint = new Vector3(0, y, 0); // center
+            curVertex = 0;
+            bestDistSq = float.MaxValue;
+            for (int i = 0; i < graphCount; i++)
+            {
+                if (!graph.ContainsKey(i)) continue;
+                float distSq = (prevPoint - graph[i].Point).LengthSquared;
+                if (distSq < bestDistSq)
+                {
+                    bestDistSq = distSq;
+                    curVertex = i;
+                }
+            }
+
+            var innerContour = GetPathFromGraph(graph, graphCount, curVertex, prevPoint);
+            
+
             return visualizer;
         }
 
@@ -857,7 +878,7 @@ namespace AbraCADabra.Milling
                     {
                         line.Add(pt);
                     }
-                    else if(firstBelow == -1)
+                    else if (firstBelow == -1)
                     {
                         firstBelow = line.Count;
                     }
@@ -1319,9 +1340,12 @@ namespace AbraCADabra.Milling
                     }
                 }
 
-                shader.UsePhong();
-                tool.Render(shader);
-                shader.UseBasic();
+                if (DisplayTool)
+                {
+                    shader.UsePhong();
+                    tool.Render(shader);
+                    shader.UseBasic();
+                }
 
                 GL.Disable(EnableCap.CullFace);
             }
@@ -1437,6 +1461,17 @@ namespace AbraCADabra.Milling
             }
 
             public GraphVisualizer(List<ContourSegment> segments)
+            {
+                foreach (var segment in segments)
+                {
+                    float r = (float)colorRand.NextDouble();
+                    float g = (float)colorRand.NextDouble();
+                    float b = (float)colorRand.NextDouble();
+                    lines.Add(new PolyLine(segment.Points, new Vector4(r, g, b, 1)));
+                }
+            }
+
+            public GraphVisualizer(List<ContourEdge> segments)
             {
                 foreach (var segment in segments)
                 {

@@ -95,7 +95,7 @@ namespace AbraCADabra
         public static (PatchC2Manager, PointManager[,]) CreatePatchC2(Vector3 position,
             PatchType patchType, float widrad, float height, int countX, int countZ)
         {
-            float ws = widrad / (countX * 2.0f); // TODO: better?
+            float ws = widrad / (countX * 2.0f);
             float hs = height / (countZ * 2.0f);
             PointManager[,] points = null;
             switch (patchType)

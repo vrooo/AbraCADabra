@@ -121,7 +121,7 @@ namespace AbraCADabra
 
         public void AddEdgesIncluding(PatchGraph graph, PointManager pm)
         {
-            AddEdgesFrom(graph, pm); // TODO: other options
+            AddEdgesFrom(graph, pm); // WONTDO: other options
         }
 
         public void AddAllEdges(PatchGraph graph)
