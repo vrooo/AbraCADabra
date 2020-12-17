@@ -53,7 +53,7 @@ namespace AbraCADabra
         }
         public static Vector2 FindPointAtT(Vector2 a, Vector2 b, double t) => FindPointAtT(a.X, a.Y, b.X, b.Y, t);
 
-        public static bool HasIntersection(Vector2 v1start, Vector2 v1end, Vector2 v2start, Vector2 v2end)
+        public static bool HasIntersection(Vector2 v1start, Vector2 v1end, Vector2 v2start, Vector2 v2end, bool checkCollinear = false)
         {
             // https://stackoverflow.com/questions/217578/how-can-i-determine-whether-a-2d-point-is-within-a-polygon
             float a1 = v1end.Y - v1start.Y;
@@ -78,10 +78,13 @@ namespace AbraCADabra
 
             if ((a1 * b2) - (a2 * b1) == 0.0f) // collinear
             {
-                //return IsPointInRectangle(v1start, v2start, v2end) ||
-                //       IsPointInRectangle(v1end, v2start, v2end) ||
-                //       IsPointInRectangle(v2start, v1start, v1end) ||
-                //       IsPointInRectangle(v2end, v1start, v1end);
+                if (checkCollinear)
+                {
+                    return IsPointInRectangle(v1start, v2start, v2end) ||
+                           IsPointInRectangle(v1end, v2start, v2end) ||
+                           IsPointInRectangle(v2start, v1start, v1end) ||
+                           IsPointInRectangle(v2end, v1start, v1end);
+                }
                 return false;
             }
             return true;

@@ -753,7 +753,7 @@ namespace AbraCADabra.Milling
             const float baseDiam = baseDiamMil * MillingPath.SCALE, contourDiam = contourDiamMil * MillingPath.SCALE;
             const float baseEps = baseDiam / 20.0f;
 
-            var (offsetBasePoints, _) = OffsetContour(contour, baseDiam / 2.0f, true, 14);
+            var (offsetBasePoints, _) = OffsetContour(contour, baseDiam / 2.0f, true, 12);
             //MillingIO.SaveFile(offsetBasePoints, new ToolData(true, baseDiamMil), location, "3", startIndex); // TODO: separate offset
             //ToolDiameter = baseDiam * MillingPath.SCALE;
             //IsFlat = true;
@@ -765,27 +765,38 @@ namespace AbraCADabra.Milling
             float edgeMultX = stripCount / 2.0f + 1;
             float edgeZ = SizeZ / 2 + stripWidth;
             var zigZagPoints = new List<Vector3>();
-            for (int x = -8; x <= 8; x += 2) // TODO: proper range!
+            //for (int x = -8; x <= 8; x += 2) // TODO: proper range!
+            //{
+            float ix;
+            for (ix = -edgeMultX; ix <= edgeMultX; ix += 2)
             {
+                float x = ix * stripWidth, xPlus = (ix + 1) * stripWidth;
                 zigZagPoints.AddMany(
                     new Vector3(x, y, middleOffset),
                     new Vector3(x, y, edgeZ),
-                    new Vector3(x + 1, y, edgeZ)
+                    new Vector3(xPlus, y, edgeZ)
                     );
-                if (x < 8)
+                //if (x < 8)
+                if (ix + 2 <= edgeMultX)
                 {
-                    zigZagPoints.Add(new Vector3(x + 1, y, middleOffset));
+                    zigZagPoints.Add(new Vector3(xPlus, y, middleOffset));
                 }
             }
 
-            for (int x = 8; x >= -8; x -= 2) // TODO: proper range!
+            //for (int x = 8; x >= -8; x -= 2) // TODO: proper range!
+            //{
+            bool first = true;
+            for (ix -= 2; ix >= -edgeMultX; ix -= 2)
             {
-                if (x < 8)
+                float x = ix * stripWidth, xPlus = (ix + 1) * stripWidth;
+                //if (x < 8)
+                if (!first)
                 {
-                    zigZagPoints.Add(new Vector3(x + 1, y, -middleOffset));
+                    zigZagPoints.Add(new Vector3(xPlus, y, -middleOffset));
                 }
+                first = false;
                 zigZagPoints.AddMany(
-                    new Vector3(x + 1, y, -edgeZ),
+                    new Vector3(xPlus, y, -edgeZ),
                     new Vector3(x, y, -edgeZ),
                     new Vector3(x, y, -middleOffset)
                     );
@@ -809,13 +820,13 @@ namespace AbraCADabra.Milling
             }
 
             MillingIO.SaveFile(basePathPoints, new ToolData(true, baseDiamMil), location, "2", startIndex);
-            //ToolDiameter = baseDiamMil * MillingPath.SCALE;
-            //IsFlat = true;
-            //path = new MillingPath(basePathPoints);
+            ToolDiameter = baseDiamMil * MillingPath.SCALE;
+            IsFlat = true;
+            path = new MillingPath(basePathPoints);
 
-            var (contourBasePoints, contourGraph) = OffsetContour(contour, contourDiam / 2.0f, true, 4);
-            MillingIO.SaveFile(contourBasePoints, new ToolData(true, contourDiamMil), location, "3", startIndex); // TODO: separate offset
-            return new GraphVisualizer(contourGraph);
+            var (contourBasePoints, visualizer) = OffsetContour(contour, contourDiam / 2.0f, true, 6);
+            MillingIO.SaveFile(contourBasePoints, new ToolData(true, contourDiamMil), location, "3", startIndex);
+            return visualizer;
         }
 
         public void WriteDetailPath(List<PatchManager> patches, float reductionEps, string location, int startIndex)
@@ -885,7 +896,7 @@ namespace AbraCADabra.Milling
         }
 
         // TODO: remove graph return
-        private (List<Vector3>, Dictionary<int, ContourVertex>) OffsetContour(List<ContourEdge> contour, float offset, bool ccw, int pathVertexInd)
+        private (List<Vector3>, GraphVisualizer) OffsetContour(List<ContourEdge> contour, float offset, bool ccw, int pathVertexInd)
         {
             var offsetSegments = new List<ContourSegment>();
             var vec = Vector3.UnitY;
@@ -915,34 +926,37 @@ namespace AbraCADabra.Milling
             }
 
             // add fake segments connecting actual segments
+            // TODO: join with circular segments instead!
             int actualSegCount = offsetSegments.Count;
-            float minSegDist = 1, minSegDistSq = minSegDist * minSegDist;
             for (int i = 0; i < actualSegCount; i++)
             {
-                var seg1 = offsetSegments[i].Points;
-                var seg2 = offsetSegments[(i + 1) % actualSegCount].Points;
-                Vector3 p1 = seg1[seg1.Count - 1], p2 = seg2[0];
-                if ((p2 - p1).LengthSquared > minSegDistSq) // TODO: check instead if segments have any intersection
+                var seg1 = offsetSegments[i];
+                var seg2 = offsetSegments[(i + 1) % actualSegCount];
+                var points1 = seg1.Points;
+                var points2 = seg2.Points;
+                if (IntersectSegments(seg1, seg2).Count == 0)
                 {
+                    Vector3 p1 = points1[points1.Count - 1], p2 = points2[0];
                     List<Vector3> fakeSegment = new List<Vector3> { p1, p2 };
                     offsetSegments.Add(new ContourSegment(fakeSegment));
                 }
             }
 
+            ResetGraphStructures();
             var (graph, graphCount) = GetContourGraph(offsetSegments, 0);
 
             // TODO: REMOVE ME
-            //Console.WriteLine("\nAAA\n");
-            //for (int i = 0; i < graphCount; i++)
-            //{
-            //    var tmpPath = GetPathFromGraph(graph, graphCount, i, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
-            //    var tmpPoints = new List<Vector3>();
-            //    foreach (var edge in tmpPath)
-            //    {
-            //        tmpPoints.AddRange(edge.Points);
-            //    }
-            //    Console.WriteLine($"{i}, {tmpPoints.Count}");
-            //}
+            Console.WriteLine("\nAAA\n");
+            for (int i = 0; i < graphCount; i++)
+            {
+                var tmpPath = GetPathFromGraph(graph, graphCount, i, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
+                var tmpPoints = new List<Vector3>();
+                foreach (var edge in tmpPath)
+                {
+                    tmpPoints.AddRange(edge.Points);
+                }
+                Console.WriteLine($"{i}, {tmpPoints.Count}");
+            }
 
             var fixedPath = GetPathFromGraph(graph, graphCount, pathVertexInd, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
             var fixedPoints = new List<Vector3>();
@@ -950,7 +964,7 @@ namespace AbraCADabra.Milling
             {
                 fixedPoints.AddRange(edge.Points);
             }
-            return (fixedPoints, graph);
+            return (fixedPoints, new GraphVisualizer(graph));
         }
 
         private List<ContourEdge> GetPathFromGraph(
@@ -962,6 +976,7 @@ namespace AbraCADabra.Milling
             var contour = new List<ContourEdge>();
             Vector3 curPoint = graph[startVertex].Point;
 
+            Console.WriteLine("\nBBB\n");
             while (true)
             {
                 int bestInd = -1;
@@ -975,18 +990,25 @@ namespace AbraCADabra.Milling
                     {
                         var potentialNext = edge.Points[1];
                         Vector2 potentialDir = new Vector2(potentialNext.X - prevPoint.X, potentialNext.Z - prevPoint.Z);
-                        potentialDir.Normalize();
-                        float brodkaCross = curDir.X * potentialDir.Y - curDir.Y * potentialDir.X;
-                        double val = Math.Acos(Vector2.Dot(curDir, potentialDir)) * Math.Sign(brodkaCross);
-                        if (double.IsNaN(val))
+                        double val = 0;
+                        if (potentialDir.Length == 0 && edge.Points.Count > 2)
                         {
-                            val = Math.PI;
+                            // one more try
+                            potentialNext = edge.Points[2];
+                            potentialDir = new Vector2(potentialNext.X - prevPoint.X, potentialNext.Z - prevPoint.Z);
+                        }
+                        if (potentialDir.Length > 0)
+                        {
+                            potentialDir.Normalize();
+                            float brodkaCross = curDir.X * potentialDir.Y - curDir.Y * potentialDir.X;
+                            val = Math.Acos(Math.Max(-1, Math.Min(1, Vector2.Dot(curDir, potentialDir)))) * Math.Sign(brodkaCross);
                         }
                         if (val > bestVal)
                         {
                             bestInd = i;
                             bestVal = val;
                         }
+                        Console.WriteLine($"{i} to {edge.To}: {val}");
                     }
                 }
                 if (bestInd == -1)
@@ -1274,7 +1296,8 @@ namespace AbraCADabra.Milling
             }
         }
 
-        private class ContourSegment
+        // TODO: private all these
+        public class ContourSegment
         {
             private static int counter = 0;
             public int Id { get; }
@@ -1293,7 +1316,7 @@ namespace AbraCADabra.Milling
             }
         }
 
-        private class ContourIntersection
+        public class ContourIntersection
         {
             private static int counter = 0;
             public int Id { get; }
@@ -1319,7 +1342,6 @@ namespace AbraCADabra.Milling
             }
         }
 
-        // TODO: private all these
         public class ContourVertex
         {
             public int Id { get; }
@@ -1346,20 +1368,39 @@ namespace AbraCADabra.Milling
 
         public class GraphVisualizer
         {
+            private Random colorRand = new Random();
             private List<PolyLine> lines = new List<PolyLine>();
+            private List<CustomLine> vertexMarkers = new List<CustomLine>();
 
             public GraphVisualizer(Dictionary<int, ContourVertex> graph)
             {
-                Random colorRand = new Random();
                 foreach (var vertex in graph)
                 {
+                    float r = (float)colorRand.NextDouble();
+                    float g = (float)colorRand.NextDouble();
+                    float b = (float)colorRand.NextDouble();
+                    var p1 = vertex.Value.Point;
+                    var p2 = p1 + Vector3.UnitY * vertex.Value.OutEdges.Count;
+                    vertexMarkers.Add(new CustomLine(p1, p2, new Vector4(r, g, b, 1)));
                     foreach (var edge in vertex.Value.OutEdges)
                     {
-                        float r = (float)colorRand.NextDouble();
-                        float g = (float)colorRand.NextDouble();
-                        float b = (float)colorRand.NextDouble();
-                        lines.Add(new PolyLine(edge.Points, new Vector4(r, g, b, 1)));
+                        r = (float)colorRand.NextDouble();
+                        g = (float)colorRand.NextDouble();
+                        b = (float)colorRand.NextDouble();
+                        if (edge.From < edge.To)
+                            lines.Add(new PolyLine(edge.Points, new Vector4(r, g, b, 1)));
                     }
+                }
+            }
+
+            public GraphVisualizer(List<ContourSegment> segments)
+            {
+                foreach (var segment in segments)
+                {
+                    float r = (float)colorRand.NextDouble();
+                    float g = (float)colorRand.NextDouble();
+                    float b = (float)colorRand.NextDouble();
+                    lines.Add(new PolyLine(segment.Points, new Vector4(r, g, b, 1)));
                 }
             }
 
@@ -1368,6 +1409,10 @@ namespace AbraCADabra.Milling
                 foreach (var line in lines)
                 {
                     line.Render(shader);
+                }
+                foreach (var marker in vertexMarkers)
+                {
+                    marker.Render(shader);
                 }
             }
         }
