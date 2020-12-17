@@ -52,7 +52,7 @@ namespace AbraCADabra
         ObservableCollection<TransformManager> objects = new ObservableCollection<TransformManager>();
 
         System.Drawing.Point prevLocation;
-        float rotateSpeed = 0.02f;
+        float rotateSpeed = 0.01f;
         float translateSpeed = 0.04f;
         float scrollCamSpeed = 0.02f;
         float scrollMoveSpeed = 0.005f;
@@ -71,6 +71,7 @@ namespace AbraCADabra
         public double MillingStepDelay { get; set; } = 0.001;
         MillingManager millingManager;
         DispatcherTimer millingTimer = new DispatcherTimer();
+        MillingManager.GraphVisualizer graphVis;
 
         int pathHeightFrameBuffer;
         int pathHeightRenderBuffer;
@@ -229,6 +230,11 @@ namespace AbraCADabra
                     if (!(ob is PointManager) || CheckBoxPoints.IsChecked == true)
                         ob.Render(shader);
                 }
+            }
+
+            if (graphVis != null)
+            {
+                graphVis.Render(shader);
             }
 
             millingManager.Render(shader);
@@ -953,7 +959,7 @@ namespace AbraCADabra
 
         private void MenuMillingGenerateBaseClick(object sender, RoutedEventArgs e)
         {
-            millingManager.WriteBasePaths(GetPatches(), 0.0001f, "../../../../paths/mine/", 1);
+            graphVis = millingManager.WriteBasePaths(GetPatches(), 0.0001f, "../../../../paths/mine/", 1);
             RefreshView(); // TODO: remove when it's not needed
         }
 

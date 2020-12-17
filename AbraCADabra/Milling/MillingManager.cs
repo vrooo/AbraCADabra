@@ -688,11 +688,13 @@ namespace AbraCADabra.Milling
             public const int Count          = 8;
         }
 
-        public void WriteBasePaths(List<PatchManager> patches, float reductionEps, string location, int startIndex)
+        // TODO: void
+        public GraphVisualizer WriteBasePaths(List<PatchManager> patches, float reductionEps, string location, int startIndex)
         {
             if (patches.Count != FishPart.Count) // prevent an exception when the dumdum that is me tries to find paths before loading the model
             {
-                return;
+                //return;
+                return null;
             }
 
             ResetGraphStructures();
@@ -724,7 +726,8 @@ namespace AbraCADabra.Milling
 
             if (!success) // something has gone terribly wrong
             {
-                return;
+                //return;
+                return null;
             }
 
             var (graph, graphCount) = GetContourGraph(segments, 4);
@@ -750,8 +753,8 @@ namespace AbraCADabra.Milling
             const float baseDiam = baseDiamMil * MillingPath.SCALE, contourDiam = contourDiamMil * MillingPath.SCALE;
             const float baseEps = baseDiam / 20.0f;
 
-            var offsetBasePoints = OffsetContour(contour, baseDiam / 2.0f, true);
-            MillingIO.SaveFile(offsetBasePoints, new ToolData(true, baseDiamMil), location, "3", startIndex); // TODO: separate offset
+            var (offsetBasePoints, _) = OffsetContour(contour, baseDiam / 2.0f, true, 14);
+            //MillingIO.SaveFile(offsetBasePoints, new ToolData(true, baseDiamMil), location, "3", startIndex); // TODO: separate offset
             //ToolDiameter = baseDiam * MillingPath.SCALE;
             //IsFlat = true;
             //path = new MillingPath(offsetBasePoints); return; // TODO
@@ -806,9 +809,13 @@ namespace AbraCADabra.Milling
             }
 
             MillingIO.SaveFile(basePathPoints, new ToolData(true, baseDiamMil), location, "2", startIndex);
-            ToolDiameter = baseDiamMil * MillingPath.SCALE;
-            IsFlat = true;
-            path = new MillingPath(basePathPoints);
+            //ToolDiameter = baseDiamMil * MillingPath.SCALE;
+            //IsFlat = true;
+            //path = new MillingPath(basePathPoints);
+
+            var (contourBasePoints, contourGraph) = OffsetContour(contour, contourDiam / 2.0f, true, 4);
+            MillingIO.SaveFile(contourBasePoints, new ToolData(true, contourDiamMil), location, "3", startIndex); // TODO: separate offset
+            return new GraphVisualizer(contourGraph);
         }
 
         public void WriteDetailPath(List<PatchManager> patches, float reductionEps, string location, int startIndex)
@@ -877,7 +884,8 @@ namespace AbraCADabra.Milling
             ContourIntersection.ResetCounter();
         }
 
-        private List<Vector3> OffsetContour(List<ContourEdge> contour, float offset, bool ccw)
+        // TODO: remove graph return
+        private (List<Vector3>, Dictionary<int, ContourVertex>) OffsetContour(List<ContourEdge> contour, float offset, bool ccw, int pathVertexInd)
         {
             var offsetSegments = new List<ContourSegment>();
             var vec = Vector3.UnitY;
@@ -922,13 +930,27 @@ namespace AbraCADabra.Milling
             }
 
             var (graph, graphCount) = GetContourGraph(offsetSegments, 0);
-            var fixedPath = GetPathFromGraph(graph, graphCount, 14, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
+
+            // TODO: REMOVE ME
+            //Console.WriteLine("\nAAA\n");
+            //for (int i = 0; i < graphCount; i++)
+            //{
+            //    var tmpPath = GetPathFromGraph(graph, graphCount, i, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
+            //    var tmpPoints = new List<Vector3>();
+            //    foreach (var edge in tmpPath)
+            //    {
+            //        tmpPoints.AddRange(edge.Points);
+            //    }
+            //    Console.WriteLine($"{i}, {tmpPoints.Count}");
+            //}
+
+            var fixedPath = GetPathFromGraph(graph, graphCount, pathVertexInd, new Vector3(-SizeX / 2, BaseHeight + PATH_BASE_DIST, -SizeZ / 2), false);
             var fixedPoints = new List<Vector3>();
             foreach (var edge in fixedPath)
             {
                 fixedPoints.AddRange(edge.Points);
             }
-            return fixedPoints;
+            return (fixedPoints, graph);
         }
 
         private List<ContourEdge> GetPathFromGraph(
@@ -1242,20 +1264,7 @@ namespace AbraCADabra.Milling
 
         private void OnPropertyChanged([CallerMemberName] string name = null)
         {
-            //PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
             var args = new PropertyChangedEventArgs(name);
-            //foreach (Delegate d in PropertyChanged.GetInvocationList())
-            //{
-            //    ISynchronizeInvoke syncer = d.Target as ISynchronizeInvoke;
-            //    if (syncer == null)
-            //    {
-            //        d.DynamicInvoke(this, args);
-            //    }
-            //    else
-            //    {
-            //        syncer.BeginInvoke(d, new object[] { this, args });
-            //    }
-            //}
             if (Application.Current != null)
             {
                 foreach (Delegate d in PropertyChanged.GetInvocationList())
@@ -1310,7 +1319,8 @@ namespace AbraCADabra.Milling
             }
         }
 
-        private class ContourVertex
+        // TODO: private all these
+        public class ContourVertex
         {
             public int Id { get; }
             public Vector3 Point { get; }
@@ -1322,7 +1332,8 @@ namespace AbraCADabra.Milling
                 Point = point;
             }
         }
-        private class ContourEdge
+
+        public class ContourEdge
         {
             public int From { get; set; }
             public int To { get; set; }
@@ -1330,6 +1341,34 @@ namespace AbraCADabra.Milling
             public ContourEdge(List<Vector3> points)
             {
                 Points = points;
+            }
+        }
+
+        public class GraphVisualizer
+        {
+            private List<PolyLine> lines = new List<PolyLine>();
+
+            public GraphVisualizer(Dictionary<int, ContourVertex> graph)
+            {
+                Random colorRand = new Random();
+                foreach (var vertex in graph)
+                {
+                    foreach (var edge in vertex.Value.OutEdges)
+                    {
+                        float r = (float)colorRand.NextDouble();
+                        float g = (float)colorRand.NextDouble();
+                        float b = (float)colorRand.NextDouble();
+                        lines.Add(new PolyLine(edge.Points, new Vector4(r, g, b, 1)));
+                    }
+                }
+            }
+
+            public void Render(ShaderManager shader)
+            {
+                foreach (var line in lines)
+                {
+                    line.Render(shader);
+                }
             }
         }
     }
