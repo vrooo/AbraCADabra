@@ -281,14 +281,16 @@ namespace AbraCADabra
                 q[i] = CalcPoint(u, p);
             }
             return CalcPoint(v, q);
-            // TODO: begin temp offset
-            var pt = CalcPoint(v, q);
-            Vector3 du = GetDu(u, v), dv = GetDv(u, v);
-            Vector3 normal = Vector3.Cross(dv, du);
-            normal.Normalize();
-            return pt + 0.4f * normal;
-            // TODO: end temp offset
         }
+
+        //public Vector3 GetUVPoint(float u, float v)
+        //{
+        //    var pt = GetUVPointSurface(u, v);
+        //    Vector3 du = GetDuSurface(u, v), dv = GetDvSurface(u, v);
+        //    Vector3 normal = Vector3.Cross(dv, du);
+        //    normal.Normalize();
+        //    return pt + 0.4f * normal;
+        //}
 
         public Vector3 GetDu(float u, float v)
         {
@@ -308,6 +310,17 @@ namespace AbraCADabra
             return CalcPoint(v, q);
         }
 
+        //public Vector3 GetDu(float u, float v)
+        //{
+        //    float offset = 0.4f;
+        //    var du = GetDuSurface(u, v);
+        //    var dv = GetDvSurface(u, v);
+        //    var dudu = GetDuDu(u, v);
+        //    var dudv = GetDuDv(u, v);
+        //    return offset * (Vector3.Cross(dv, dudu) + Vector3.Cross(dudv, du)) / (float)Math.Sqrt(Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, du)))
+        //        - offset * Vector3.Cross(dv, du) * (Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, dudu) + Vector3.Cross(dudv, du)) + Vector3.Dot(Vector3.Cross(dv, dudu) + Vector3.Cross(dudv, du), Vector3.Cross(dv, du))) / (2 * (float)Math.Pow(Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, du)), 1.5)) + du;
+        //}
+
         public Vector3 GetDv(float u, float v)
         {
             var (pts, _) = GetPointPositions(points, patchType, continuity);
@@ -325,6 +338,17 @@ namespace AbraCADabra
             }
             return CalcPoint(u, q);
         }
+
+        //public Vector3 GetDv(float u, float v)
+        //{
+        //    float offset = 0.4f;
+        //    var du = GetDuSurface(u, v);
+        //    var dv = GetDvSurface(u, v);
+        //    var dudv = GetDuDv(u, v);
+        //    var dvdv = GetDvDv(u, v);
+        //    return offset * (Vector3.Cross(dv, dudv) + Vector3.Cross(dvdv, du)) / (float)Math.Sqrt(Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, du)))
+        //        - offset * Vector3.Cross(dv, du) * (Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, dudv) + Vector3.Cross(dvdv, du)) + Vector3.Dot(Vector3.Cross(dv, dudv) + Vector3.Cross(dvdv, du), Vector3.Cross(dv, du))) / (2 * (float)Math.Pow(Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, du)), 1.5)) + dv;
+        //}
 
         public Vector3 GetDuDu(float u, float v)
         {

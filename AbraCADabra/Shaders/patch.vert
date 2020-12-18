@@ -106,12 +106,12 @@ void main()
     bool deboor = continuity == 2;
     vec4 pos = getPatchPoint(uv, mult * indexX, mult * indexZ, deboor);
 
-    // begin temporary offset
+    // begin temporary offset preview
 //    vec3 du = getDu(uv, mult * indexX, mult * indexZ, deboor, mult).xyz;
 //    vec3 dv = getDv(uv, mult * indexX, mult * indexZ, deboor, mult).xyz;
 //    vec4 normal = vec4(normalize(cross(dv, du)), 0);
 //    pos += normal * 0.4;
-    // end temporary offset
+    // end temporary offset preview
 
     vec4 worldPos = modelMatrix * pos;
     world = worldPos.xyz;

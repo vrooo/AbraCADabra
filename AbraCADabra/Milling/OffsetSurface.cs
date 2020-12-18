@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using System;
 
 namespace AbraCADabra
 {
@@ -54,7 +55,12 @@ namespace AbraCADabra
 
         public Vector3 GetDu(float u, float v)
         {
-            return surface.GetDu(u, v);
+            var du = surface.GetDu(u, v);
+            var dv = surface.GetDv(u, v);
+            var dudu = surface.GetDuDu(u, v);
+            var dudv = surface.GetDuDv(u, v);
+            return offset * (Vector3.Cross(dv, dudu) + Vector3.Cross(dudv, du)) / (float)Math.Sqrt(Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, du))) 
+                - offset * Vector3.Cross(dv, du) * (Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, dudu) + Vector3.Cross(dudv, du)) + Vector3.Dot(Vector3.Cross(dv, dudu) + Vector3.Cross(dudv, du), Vector3.Cross(dv, du))) / (2 * (float)Math.Pow(Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, du)), 1.5)) + du;
         }
 
         public Vector3 GetDuDu(float u, float v)
@@ -69,7 +75,12 @@ namespace AbraCADabra
 
         public Vector3 GetDv(float u, float v)
         {
-            return surface.GetDv(u, v);
+            var du = surface.GetDu(u, v);
+            var dv = surface.GetDv(u, v);
+            var dudv = surface.GetDuDv(u, v);
+            var dvdv = surface.GetDvDv(u, v);
+            return offset * (Vector3.Cross(dv, dudv) + Vector3.Cross(dvdv, du)) / (float)Math.Sqrt(Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, du))) 
+                - offset * Vector3.Cross(dv, du) * (Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, dudv) + Vector3.Cross(dvdv, du)) + Vector3.Dot(Vector3.Cross(dv, dudv) + Vector3.Cross(dvdv, du), Vector3.Cross(dv, du))) / (2 * (float)Math.Pow(Vector3.Dot(Vector3.Cross(dv, du), Vector3.Cross(dv, du)), 1.5)) + dv;
         }
 
         public Vector3 GetDvDv(float u, float v)
