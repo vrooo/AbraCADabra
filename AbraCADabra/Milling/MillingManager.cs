@@ -1008,6 +1008,11 @@ namespace AbraCADabra.Milling
 
         public void WriteDetailPath(List<PatchManager> patches, float reductionEps, string location, int startIndex)
         {
+            if (patches.Count != FishPart.Count) // dumdumproof this too
+            {
+                return;
+            }
+
             const int detailDiamMil = 8;
             const float detailRad = detailDiamMil * MillingPath.SCALE / 2;
             const float detailBaseEps = 0.01f;
@@ -1018,35 +1023,115 @@ namespace AbraCADabra.Milling
                 offsetPatches.Add(new OffsetSurface(patch, detailRad));
             }
 
+            // create all intersection objects
+            var icms = new List<IntersectionCurveManager>();
+            var finderParams = new IntersectionFinderParams();
+            int divs = 4;
+
+            var icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Collar], offsetPatches[FishPart.Body], divs);
+            if (icm == null) return;
+            icm.TrimModeP = TrimMode.SideA;
+            icm.TrimModeQ = TrimMode.SideB;
+            icms.Add(icm);
+
+            icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Body], offsetPatches[FishPart.MedUpperFin], divs);
+            if (icm == null) return;
+            icm.TrimModeP = TrimMode.SideA;
+            icm.TrimModeQ = TrimMode.SideB;
+            icms.Add(icm);
+
+            icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Head], offsetPatches[FishPart.Body], divs);
+            if (icm == null) return;
+            icm.TrimModeP = TrimMode.SideA;
+            icm.TrimModeQ = TrimMode.SideA; // only exception!
+            icms.Add(icm);
+
+            icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Head], offsetPatches[FishPart.SmallInnerFin], divs);
+            if (icm == null) return;
+            icm.TrimModeP = TrimMode.SideA;
+            icm.TrimModeQ = TrimMode.SideB;
+            icms.Add(icm);
+
+            icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Head], offsetPatches[FishPart.SmallOuterFin], divs);
+            if (icm == null) return;
+            icm.TrimModeP = TrimMode.SideA;
+            icm.TrimModeQ = TrimMode.SideB;
+            icms.Add(icm);
+
+            icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Body], offsetPatches[FishPart.MedLowerFin], divs);
+            if (icm == null) return;
+            icm.TrimModeP = TrimMode.SideA;
+            icm.TrimModeQ = TrimMode.SideB;
+            icms.Add(icm);
+
+            finderParams.StartMaxIterations = finderParams.CurveMaxIterations = 100;
+            icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Body], offsetPatches[FishPart.MedLowerFin], divs, new Vector3(0.1f, 2, 3.1f));
+            if (icm == null) return;
+            icm.TrimModeP = TrimMode.SideA;
+            icm.TrimModeQ = TrimMode.SideB;
+            icms.Add(icm);
+            finderParams.Reset();
+
+            finderParams.StartMaxIterations = finderParams.CurveMaxIterations = 100;
+            icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Head], offsetPatches[FishPart.Collar], divs);
+            if (icm == null) return;
+            icm.TrimModeP = TrimMode.SideA;
+            icm.TrimModeQ = TrimMode.SideB;
+            icms.Add(icm);
+            finderParams.Reset();
+
+            finderParams.CurveEps = 1e-5f;
+            icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Body], offsetPatches[FishPart.LongFin], divs);
+            if (icm == null) return;
+            icm.TrimModeP = TrimMode.SideA;
+            icm.TrimModeQ = TrimMode.SideB;
+            icms.Add(icm);
+
             float yMax = BaseHeight + PATH_BASE_DIST + detailBaseEps;
-            // only body for testing purposes
-            var bodyPatch = offsetPatches[2];
+            var curPatch = offsetPatches[FishPart.Head];
             var lines = new List<List<Vector3>>();
             float uStep = 0.02f, vStep = 0.1f;
-            for (float u = 0; u < bodyPatch.UScale; u += uStep)
+            for (float u = 0; u < curPatch.UScale; u += uStep)
             {
                 var line = new List<Vector3>();
-                int firstBelow = -1;
-                for (float v = 0; v < bodyPatch.VScale; v += vStep)
+                for (float v = 0; v < curPatch.VScale; v += vStep)
                 {
-                    var pt = bodyPatch.GetUVPoint(u, v);
+                    var pt = curPatch.GetUVPoint(u, v);
                     pt.Y -= detailRad;
+                    bool remove = false;
                     if (pt.Y > yMax)
+                    {
+                        foreach (var curve in curPatch.GetIntersectionCurves())
+                        {
+                            if (curve.IsPointInside(curPatch, u, v))
+                            {
+                                remove = true;
+                                break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        remove = true;
+                    }
+
+                    if (!remove)
                     {
                         line.Add(pt);
                     }
-                    else if (firstBelow == -1)
+                    else
                     {
-                        firstBelow = line.Count;
+                        pt.Y = SizeY + TOOL_DIST;
+                        line.Add(pt);
                     }
                 }
-                if (firstBelow != -1)
-                {
-                    var lineTmp = new List<Vector3>();
-                    lineTmp.AddRange(line.Skip(firstBelow));
-                    lineTmp.AddRange(line.Take(firstBelow));
-                    line = lineTmp;
-                }
+                //if (firstRemoved != -1)
+                //{
+                //    var lineShifted = new List<Vector3>();
+                //    lineShifted.AddRange(line.Skip(firstRemoved));
+                //    lineShifted.AddRange(line.Take(firstRemoved));
+                //    line = lineShifted;
+                //}
                 lines.Add(line);
             }
 
@@ -1056,14 +1141,43 @@ namespace AbraCADabra.Milling
                 var line = lines[i];
                 if (line.Count < 1) continue;
                 if (i % 2 == 0) line.Reverse();
-                tmp.Add(new Vector3(line[0].X, yMax + TOOL_DIST, line[0].Z));
+
+                if (line[0].Y < SizeY + TOOL_DIST)
+                {
+                    tmp.Add(new Vector3(line[0].X, SizeY + TOOL_DIST, line[0].Z));
+                }
                 tmp.AddRange(line);
-                tmp.Add(new Vector3(line[line.Count - 1].X, yMax + TOOL_DIST, line[line.Count - 1].Z));
+                if (line[line.Count - 1].Y < SizeY + TOOL_DIST)
+                {
+                    tmp.Add(new Vector3(line[line.Count - 1].X, yMax + TOOL_DIST, line[line.Count - 1].Z));
+                }
             }
 
             ToolDiameter = detailDiamMil * MillingPath.SCALE;
             IsFlat = false;
             path = new MillingPath(tmp);
+        }
+
+        private IntersectionCurveManager GetIntersectionCurve(IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs)
+        {
+            var (iRes, points, xs, loop) = IntersectionFinder.FindIntersectionDataWithoutStartPoint(
+                finderParams, P, Q, divs);
+            if (iRes == IntersectionResult.OK)
+            {
+                return new IntersectionCurveManager(P, Q, points, xs, loop);
+            }
+            return null;
+        }
+
+        private IntersectionCurveManager GetIntersectionCurve(IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs, Vector3 startPoint)
+        {
+            var (iRes, points, xs, loop) = IntersectionFinder.FindIntersectionDataWithStartPoint(
+                finderParams, P, Q, divs, startPoint);
+            if (iRes == IntersectionResult.OK)
+            {
+                return new IntersectionCurveManager(P, Q, points, xs, loop);
+            }
+            return null;
         }
 
         private void ResetGraphStructures()
@@ -1413,7 +1527,7 @@ namespace AbraCADabra.Milling
         private bool AddIntersection(List<ContourSegment> segments,
             float eps, IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs)
         {
-            var (iRes, interPoints, _) = IntersectionFinder.FindIntersectionDataWithoutStartPoint(finderParams, P, Q, divs);
+            var (iRes, interPoints, _, _) = IntersectionFinder.FindIntersectionDataWithoutStartPoint(finderParams, P, Q, divs);
             if (iRes == IntersectionResult.OK)
             {
                 segments.Add(new ContourSegment(DouglasPeucker(interPoints, eps)));
@@ -1425,7 +1539,7 @@ namespace AbraCADabra.Milling
         private bool AddIntersection(List<ContourSegment> segments,
             float eps, IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs, Vector3 start)
         {
-            var (iRes, interPoints, _) = IntersectionFinder.FindIntersectionDataWithStartPoint(finderParams, P, Q, divs, start);
+            var (iRes, interPoints, _, _) = IntersectionFinder.FindIntersectionDataWithStartPoint(finderParams, P, Q, divs, start);
             if (iRes == IntersectionResult.OK)
             {
                 segments.Add(new ContourSegment(DouglasPeucker(interPoints, eps)));

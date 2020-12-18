@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using System.Collections.Generic;
 
 namespace AbraCADabra
 {
@@ -24,6 +25,7 @@ namespace AbraCADabra
         Vector2 GetClosestValidUV(float u, float v, float uPrev, float vPrev, out double t); // prev is valid
 
         void AddIntersectionCurve(IntersectionCurveManager icm);
+        List<IntersectionCurveManager> GetIntersectionCurves();
         void UpdateMesh();
 
         bool IsEdgeAllowed(EdgeType start, EdgeType end);

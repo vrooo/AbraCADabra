@@ -1,4 +1,5 @@
 ﻿using OpenTK;
+using System.Collections.Generic;
 
 namespace AbraCADabra
 {
@@ -30,6 +31,7 @@ namespace AbraCADabra
         }
 
         public void AddIntersectionCurve(IntersectionCurveManager icm) { }
+        public List<IntersectionCurveManager> GetIntersectionCurves() => new List<IntersectionCurveManager>();
         public void UpdateMesh() { }
         public bool IsEdgeAllowed(EdgeType start, EdgeType end) => true;
     }

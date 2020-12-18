@@ -18,6 +18,21 @@ namespace AbraCADabra
         public float CurveStep { get; set; } = 0.05f;
         public float CurveEps { get; set; } = 1e-6f;
         public float CurveEndDist { get; set; } = 0.05f;
+
+        public void Reset()
+        {
+            StartDims = 4;
+            StartMaxIterations = 30;
+            StartEps = 1e-6f;
+            StartPointEps = 1e-2f;
+            StartSelfDiff = 0.1f;
+
+            CurveMaxPoints = 1000;
+            CurveMaxIterations = 30;
+            CurveStep = 0.05f;
+            CurveEps = 1e-6f;
+            CurveEndDist = 0.05f;
+        }
     }
 
     public static class IntersectionFinder
@@ -88,7 +103,7 @@ namespace AbraCADabra
             return (intRes, null);
         }
 
-        public static (IntersectionResult iRes, List<Vector3> points, bool loop) FindIntersectionDataWithStartPoint(
+        public static (IntersectionResult iRes, List<Vector3> points, List<Vector4> xs, bool loop) FindIntersectionDataWithStartPoint(
             IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs, Vector3 startPoint)
         {
             float fdivs = divs;
@@ -118,10 +133,10 @@ namespace AbraCADabra
                             if (boolIntRes2 == false) continue;
 
                             Vector4 start = new Vector4(start1.X, start1.Y, start2.X, start2.Y);
-                            var (intRes, points, _, loop) = FindIntersectionData(finderParams, P, Q, start, false);
+                            var (intRes, points, xs, loop) = FindIntersectionData(finderParams, P, Q, start, false);
                             if (intRes == IntersectionResult.OK)
                             {
-                                return (intRes, points, loop);
+                                return (intRes, points, xs, loop);
                             }
                             else if (intRes == IntersectionResult.NoCurve)
                             {
@@ -133,12 +148,12 @@ namespace AbraCADabra
             }
             if (noCurve)
             {
-                return (IntersectionResult.NoCurve, null, false);
+                return (IntersectionResult.NoCurve, null, null, false);
             }
-            return (IntersectionResult.NoIntersection, null, false);
+            return (IntersectionResult.NoIntersection, null, null, false);
         }
 
-        public static (IntersectionResult iRes, List<Vector3> points, bool loop) FindIntersectionDataWithoutStartPoint(
+        public static (IntersectionResult iRes, List<Vector3> points, List<Vector4> xs, bool loop) FindIntersectionDataWithoutStartPoint(
             IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs)
         {
             float fdivs = divs;
@@ -153,10 +168,10 @@ namespace AbraCADabra
                         {
                             Vector4 start = divs > 1 ? new Vector4(x / fdivs, y / fdivs, z / fdivs, w / fdivs)
                                                          : new Vector4(0.5f);
-                            var (intRes, points, _, loop) = FindIntersectionData(finderParams, P, Q, start);
+                            var (intRes, points, xs, loop) = FindIntersectionData(finderParams, P, Q, start);
                             if (intRes == IntersectionResult.OK)
                             {
-                                return (intRes, points, loop);
+                                return (intRes, points, xs, loop);
                             }
                             else if (intRes == IntersectionResult.NoCurve)
                             {
@@ -168,9 +183,9 @@ namespace AbraCADabra
             }
             if (noCurve)
             {
-                return (IntersectionResult.NoCurve, null, false);
+                return (IntersectionResult.NoCurve, null, null, false);
             }
-            return (IntersectionResult.NoIntersection, null, false);
+            return (IntersectionResult.NoIntersection, null, null, false);
         }
 
         public static (IntersectionResult intRes, List<Vector3> points, List<Vector4> xs, bool loop) FindIntersectionData(

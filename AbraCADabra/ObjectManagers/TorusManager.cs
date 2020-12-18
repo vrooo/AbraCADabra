@@ -186,6 +186,11 @@ namespace AbraCADabra
             curves.Add(icm);
         }
 
+        public List<IntersectionCurveManager> GetIntersectionCurves()
+        {
+            return curves;
+        }
+
         private void CurveDisposing(TransformManager sender)
         {
             sender.ManagerDisposing -= CurveDisposing;

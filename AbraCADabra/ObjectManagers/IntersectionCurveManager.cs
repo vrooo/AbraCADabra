@@ -88,6 +88,40 @@ namespace AbraCADabra
             }
         }
 
+        public bool IsPointInside(ISurface surface, float u, float v)
+        {
+            List<List<Vector2>> polygons = new List<List<Vector2>>();
+            TrimMode trimMode = TrimMode.None;
+            if (surface == P && IsTrimmableP)
+            {
+                polygons = PolygonsP;
+                trimMode = TrimModeP;
+            }
+            if (surface == Q && IsTrimmableQ)
+            {
+                polygons = PolygonsQ;
+                trimMode = TrimModeQ;
+            }
+            if (trimMode == TrimMode.None)
+            {
+                return false;
+            }
+
+            var uv = new Vector2(u, v);
+            Vector2 scaleVector = new Vector2(surface.UScale, surface.VScale);
+            bool isInside = trimMode != TrimMode.SideA;
+            foreach (var polygon in polygons)
+            {
+                uv.X /= scaleVector.X;
+                uv.Y /= scaleVector.Y;
+                if (MathHelper.IsPointInPolygon(uv, polygon))
+                {
+                    isInside = !isInside;
+                }
+            }
+            return isInside;
+        }
+
         private void Trim(ISurface surface, List<Vector2> vertices, List<uint> indices,
                           List<List<Vector2>> polygons, List<List<Vector2>> segments, TrimMode trimMode, bool isClosed)
         {

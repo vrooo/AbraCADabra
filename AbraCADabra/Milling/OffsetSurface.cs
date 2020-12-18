@@ -1,5 +1,6 @@
 ﻿using OpenTK;
 using System;
+using System.Collections.Generic;
 
 namespace AbraCADabra
 {
@@ -21,6 +22,8 @@ namespace AbraCADabra
             return pt + offset * normal;
         }
 
+        public Vector3 GetUVPointSurface(float u, float v) => surface.GetUVPoint(u, v);
+
         private Vector3 GetNormal(float u, float v)
         {
             Vector3 du = surface.GetDu(u, v), dv = surface.GetDv(u, v);
@@ -36,6 +39,11 @@ namespace AbraCADabra
         public void AddIntersectionCurve(IntersectionCurveManager icm)
         {
             surface.AddIntersectionCurve(icm);
+        }
+
+        public List<IntersectionCurveManager> GetIntersectionCurves()
+        {
+            return surface.GetIntersectionCurves();
         }
 
         public Vector2 ClampScaledUV(float u, float v)
