@@ -255,7 +255,7 @@ namespace AbraCADabra
 
         private float[,] SetupObjectHeightMap(IEnumerable<PatchManager> patches)
         {
-            int texWidth = (int)millingManager.DivX, texHeight = (int)millingManager.DivZ; // TODO: values from some other place?
+            int texWidth = 500, texHeight = 500; // TODO: values from params window?
             GL.ActiveTexture(TextureUnit.Texture2);
             SetRenderTexture(pathHeightTex, pathHeightFrameBuffer, pathHeightRenderBuffer, texWidth, texHeight,
                              PixelInternalFormat.R32f, OpenTK.Graphics.OpenGL.PixelFormat.Red, PixelType.Float);
@@ -959,7 +959,7 @@ namespace AbraCADabra
         private void MenuMillingGenerateBaseClick(object sender, RoutedEventArgs e)
         {
             graphVis = millingManager.WriteBasePaths(GetPatches(), 0.0001f, "../../../../paths/mine/", 1);
-            RefreshView(); // TODO: remove when it's not needed
+            RefreshView(); // useful for debugging
         }
 
         private void MenuMillingGenerateDetailClick(object sender, RoutedEventArgs e)
