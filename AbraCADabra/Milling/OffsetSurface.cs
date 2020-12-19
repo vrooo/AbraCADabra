@@ -24,7 +24,7 @@ namespace AbraCADabra
 
         public Vector3 GetUVPointSurface(float u, float v) => surface.GetUVPoint(u, v);
 
-        private Vector3 GetNormal(float u, float v)
+        public Vector3 GetNormal(float u, float v)
         {
             Vector3 du = surface.GetDu(u, v), dv = surface.GetDv(u, v);
             Vector3 normal = Vector3.Cross(dv, du);

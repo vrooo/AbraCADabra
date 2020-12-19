@@ -1088,22 +1088,22 @@ namespace AbraCADabra.Milling
             icm.TrimModeQ = TrimMode.SideB;
             icms.Add(icm);
 
-            var partParams = new (float uStep, float vStep, float yBelowAllowed, bool trimCurveSum)[FishPart.Count];
-            partParams[FishPart.Head]           = (0.04f, 0.02f, 0.00f, false);
-            partParams[FishPart.Collar]         = (0.04f, 0.02f, 0.00f, false);
-            partParams[FishPart.Body]           = (0.04f, 0.01f, 0.00f, false);
-            partParams[FishPart.MedLowerFin]    = (0.04f, 0.10f, 0.10f, true);
-            partParams[FishPart.MedUpperFin]    = (0.10f, 0.10f, 0.10f, false);
-            partParams[FishPart.LongFin]        = (0.10f, 0.05f, 0.00f, false);
-            partParams[FishPart.SmallInnerFin]  = (0.10f, 0.10f, 0.10f, false);
-            partParams[FishPart.SmallOuterFin]  = (0.10f, 0.10f, 0.00f, false);
+            var partParams = new (float uStep, float vStep, float yBelowAllowed, bool trimCurveSum, bool doDistTest)[FishPart.Count];
+            partParams[FishPart.Head]           = (0.04f, 0.02f, 0.00f, false, false);
+            partParams[FishPart.Collar]         = (0.04f, 0.02f, 0.00f, false, true);
+            partParams[FishPart.Body]           = (0.04f, 0.01f, 0.00f, false, false);
+            partParams[FishPart.MedLowerFin]    = (0.04f, 0.10f, 0.10f, true, false);
+            partParams[FishPart.MedUpperFin]    = (0.10f, 0.10f, 0.10f, false, false);
+            partParams[FishPart.LongFin]        = (0.10f, 0.05f, 0.00f, false, false);
+            partParams[FishPart.SmallInnerFin]  = (0.10f, 0.10f, 0.10f, false, false);
+            partParams[FishPart.SmallOuterFin]  = (0.10f, 0.10f, 0.00f, false, false);
 
             float yMax = BaseHeight + PATH_BASE_DIST + detailBaseEps;
             var lines = new List<List<Vector3>>();
             for (int i = 0; i < FishPart.Count; i++)
             {
                 var curPatch = offsetPatches[i];
-                var (uStep, vStep, yBelowAllowed, trimCurveSum) = partParams[i];
+                var (uStep, vStep, yBelowAllowed, trimCurveSum, doDistTest) = partParams[i];
                 for (float u = 0; u <= curPatch.UScale; u += uStep)
                 {
                     var line = new List<Vector3>();
@@ -1145,6 +1145,7 @@ namespace AbraCADabra.Milling
                             remove = true;
                         }
 
+                        bool prevSkipped = skipping;
                         if (remove && !skipping) // start skipping
                         {
                             skipping = true;
@@ -1165,6 +1166,17 @@ namespace AbraCADabra.Milling
 
                         if (!skipping)
                         {
+                            if (doDistTest && v > 0 && !prevSkipped)
+                            {
+                                var prevPt = curPatch.GetUVPoint(u, v - vStep);
+                                prevPt.Y -= detailRad;
+                                if ((pt - prevPt).LengthSquared > 0.25f)
+                                {
+                                    var normal = (curPatch.GetNormal(u, v) + curPatch.GetNormal(u, v - vStep)) / 2;
+                                    normal.Normalize();
+                                    line.AddMany(prevPt + detailRad * normal, pt + detailRad * normal);
+                                }
+                            }
                             line.Add(pt);
                         }
                     }
@@ -1341,12 +1353,12 @@ namespace AbraCADabra.Milling
                 return segment;
             }
 
-            if (BrodkaCrossSign(startXZ, endXZ) > 0)
-            {
-                Vector2 tmp = startXZ;
-                startXZ = endXZ;
-                endXZ = tmp;
-            }
+            //if (BrodkaCrossSign(startXZ, endXZ) > 0)
+            //{
+            //    Vector2 tmp = startXZ;
+            //    startXZ = endXZ;
+            //    endXZ = tmp;
+            //}
             double angle = Math.Acos(Math.Max(-1, Math.Min(1, Vector2.Dot(startXZ.Normalized(), endXZ.Normalized()))));
 
             double angleStep = angle / divs;
