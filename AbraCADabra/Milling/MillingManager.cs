@@ -1172,9 +1172,12 @@ namespace AbraCADabra.Milling
                                 prevPt.Y -= detailRad;
                                 if ((pt - prevPt).LengthSquared > 0.25f)
                                 {
-                                    var normal = (curPatch.GetNormal(u, v) + curPatch.GetNormal(u, v - vStep)) / 2;
+                                    Vector3 normal = (curPatch.GetNormal(u, v) + curPatch.GetNormal(u, v - vStep)) / 2;
                                     normal.Normalize();
-                                    line.AddMany(prevPt + detailRad * normal, pt + detailRad * normal);
+                                    Vector3 prevOffset = prevPt + detailRad * normal, curOffset = pt + detailRad * normal;
+                                    prevOffset.Y = Math.Max(prevOffset.Y, yMax);
+                                    curOffset.Y = Math.Max(curOffset.Y, yMax);
+                                    line.AddMany(prevOffset, curOffset);
                                 }
                             }
                             line.Add(pt);
