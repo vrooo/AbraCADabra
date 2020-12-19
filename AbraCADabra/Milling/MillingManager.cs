@@ -1088,23 +1088,22 @@ namespace AbraCADabra.Milling
             icm.TrimModeQ = TrimMode.SideB;
             icms.Add(icm);
 
-            var partParams = new (float uStep, float vStep, bool trimCurveSum)[FishPart.Count];
-            partParams[FishPart.Head]           = (0.04f, 0.02f, false);
-            partParams[FishPart.Collar]         = (0.04f, 0.02f, false);
-            partParams[FishPart.Body]           = (0.04f, 0.01f, false);
-            partParams[FishPart.MedLowerFin]    = (0.04f, 0.10f, true);
-            partParams[FishPart.MedUpperFin]    = (0.10f, 0.10f, false);
-            partParams[FishPart.LongFin]        = (0.10f, 0.05f, false);
-            partParams[FishPart.SmallInnerFin]  = (0.10f, 0.10f, false);
-            partParams[FishPart.SmallOuterFin]  = (0.10f, 0.10f, false);
+            var partParams = new (float uStep, float vStep, float yBelowAllowed, bool trimCurveSum)[FishPart.Count];
+            partParams[FishPart.Head]           = (0.04f, 0.02f, 0.00f, false);
+            partParams[FishPart.Collar]         = (0.04f, 0.02f, 0.00f, false);
+            partParams[FishPart.Body]           = (0.04f, 0.01f, 0.00f, false);
+            partParams[FishPart.MedLowerFin]    = (0.04f, 0.10f, 0.10f, true);
+            partParams[FishPart.MedUpperFin]    = (0.10f, 0.10f, 0.10f, false);
+            partParams[FishPart.LongFin]        = (0.10f, 0.05f, 0.00f, false);
+            partParams[FishPart.SmallInnerFin]  = (0.10f, 0.10f, 0.10f, false);
+            partParams[FishPart.SmallOuterFin]  = (0.10f, 0.10f, 0.00f, false);
 
             float yMax = BaseHeight + PATH_BASE_DIST + detailBaseEps;
             var lines = new List<List<Vector3>>();
             for (int i = 0; i < FishPart.Count; i++)
             {
                 var curPatch = offsetPatches[i];
-                // TODO: param table with the steps
-                var (uStep, vStep, trimCurveSum) = partParams[i];
+                var (uStep, vStep, yBelowAllowed, trimCurveSum) = partParams[i];
                 for (float u = 0; u <= curPatch.UScale; u += uStep)
                 {
                     var line = new List<Vector3>();
@@ -1114,8 +1113,9 @@ namespace AbraCADabra.Milling
                         var pt = curPatch.GetUVPoint(u, v);
                         pt.Y -= detailRad;
                         bool remove = false;
-                        if (pt.Y >= yMax)
+                        if (pt.Y >= yMax - yBelowAllowed)
                         {
+                            pt.Y = Math.Max(pt.Y, yMax);
                             if (trimCurveSum)
                             {
                                 remove = true;
