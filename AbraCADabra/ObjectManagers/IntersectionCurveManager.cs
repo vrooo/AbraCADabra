@@ -36,7 +36,7 @@ namespace AbraCADabra
         private static int counter = 0;
         protected override int instanceCounter => counter++;
 
-        private IEnumerable<Vector3> points;
+        public IEnumerable<Vector3> Points { get; }
 
         public ISurface P { get; }
         public ISurface Q { get; }
@@ -63,7 +63,7 @@ namespace AbraCADabra
             IsLoop = loop;
             P = p;
             Q = q;
-            this.points = points;
+            Points = points;
             CalculateSegments(xs);
             CalculatePolygons();
 
@@ -498,7 +498,7 @@ namespace AbraCADabra
         public (List<PointManager> points, Bezier3InterManager curve) ToBezierInter()
         {
             var pms = new List<PointManager>();
-            foreach (var point in points)
+            foreach (var point in Points)
             {
                 pms.Add(new PointManager(point));
             }
