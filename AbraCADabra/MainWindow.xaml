@@ -34,9 +34,10 @@
             </MenuItem>
             <MenuItem x:Name="MenuMilling" Header="Milling" IsEnabled="{Binding IsIdle}">
                 <MenuItem x:Name="MenuMillingLoad" Header="Load Milling Path..." Click="MenuMillingLoadClick"/>
-                <MenuItem Header="Generate Roughing Path" Click="MenuMillingGenerateRoughClick"/>
+                <!--<MenuItem Header="Generate Roughing Path" Click="MenuMillingGenerateRoughClick"/>
                 <MenuItem Header="Generate Base and Contour Path" Click="MenuMillingGenerateBaseClick"/>
-                <MenuItem Header="Generate Detail Path" Click="MenuMillingGenerateDetailClick"/>
+                <MenuItem Header="Generate Detail Path" Click="MenuMillingGenerateDetailClick"/>-->
+                <MenuItem Header="Generate Paths" Click="MenuMillingGenerateClick"/>
                 <Separator/>
                 <MenuItem Header="Scale..." Click="MenuMillingScaleClick"/>
                 <MenuItem Header="Align to Material" Click="MenuMillingAlignClick"/>

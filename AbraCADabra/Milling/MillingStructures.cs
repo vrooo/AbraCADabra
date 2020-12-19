@@ -15,11 +15,15 @@ namespace AbraCADabra.Milling
         }
     }
 
-    public struct MillingPathParams
+    public class MillingPathData
     {
-        public int StartIndex;
-        public float ReductionEpsRough;
-        public float ReductionEpsBase;
+        public List<Vector3> Points { get; }
+        public ToolData ToolData { get; }
+        public MillingPathData(List<Vector3> points, bool flat, int diameter)
+        {
+            Points = points;
+            ToolData = new ToolData(flat, diameter);
+        }
     }
 
     public class MillingException : Exception

@@ -84,12 +84,12 @@ namespace AbraCADabra.Milling
             return (new MillingPath(moves), toolData);
         }
 
-        public static void SaveFile(List<Vector3> points, ToolData toolData, string location, string name, int startMove)
+        public static void SaveFile(MillingPathData pathData, string location, string name, int startMove)
         {
-            string filename = name + "." + (toolData.IsFlat ? "f" : "k") + toolData.Diameter.ToString("D2");
+            string filename = name + "." + (pathData.ToolData.IsFlat ? "f" : "k") + pathData.ToolData.Diameter.ToString("D2");
             StreamWriter sw = new StreamWriter(Path.Combine(location, filename));
 
-            foreach (var origPoint in points)
+            foreach (var origPoint in pathData.Points)
             {
                 var point = TransformCoordsWrite(origPoint);
                 sw.WriteLine("N{0}G01X{1:F3}Y{2:F3}Z{3:F3}", startMove, point.X, point.Y, point.Z);

@@ -950,22 +950,41 @@ namespace AbraCADabra
         }
 
         // TODO: window with generation params, maybe one for all?
-        private void MenuMillingGenerateRoughClick(object sender, RoutedEventArgs e)
-        {
-            var pixels = SetupObjectHeightMap(GetPatches());
-            millingManager.WriteRoughPath(pixels, 0.01f, "../../../../paths/mine/", 1);
-        }
+        //private void MenuMillingGenerateRoughClick(object sender, RoutedEventArgs e)
+        //{
+        //    var pixels = SetupObjectHeightMap(GetPatches());
+        //    millingManager.WriteRoughPath(pixels, 0.01f, "../../../../paths/mine/", 1);
+        //}
 
-        private void MenuMillingGenerateBaseClick(object sender, RoutedEventArgs e)
-        {
-            graphVis = millingManager.WriteBasePaths(GetPatches(), 0.0001f, "../../../../paths/mine/", 1);
-            RefreshView(); // useful for debugging
-        }
+        //private void MenuMillingGenerateBaseClick(object sender, RoutedEventArgs e)
+        //{
+        //    graphVis = millingManager.WriteBasePaths(GetPatches(), 0.0001f, "../../../../paths/mine/", 1);
+        //    RefreshView(); // useful for debugging
+        //}
 
-        private void MenuMillingGenerateDetailClick(object sender, RoutedEventArgs e)
+        //private void MenuMillingGenerateDetailClick(object sender, RoutedEventArgs e)
+        //{
+        //    millingManager.WriteDetailPath(GetPatches(), 0.0001f, "../../../../paths/mine/", 1);
+        //}
+
+        private void MenuMillingGenerateClick(object sender, RoutedEventArgs e)
         {
-            millingManager.WriteDetailPath(GetPatches(), 0.0001f, "../../../../paths/mine/", 1);
-            RefreshView(); // TODO: remove when it's not needed
+            int startMove = 3;
+            string location = "../../../../paths/mine/";
+            var patches = GetPatches();
+            var pixels = SetupObjectHeightMap(patches);
+
+            var roughPath = millingManager.GetRoughPath(pixels, 0.01f);
+            var (basePath, contourPath, innerPath) = millingManager.GetBasePaths(patches, 0.0001f);
+            var detailPath = millingManager.GetDetailPath(patches);
+            // join innerPath and detailPath - same ToolData
+            innerPath.Points.RemoveAt(innerPath.Points.Count - 1);
+            innerPath.Points.AddRange(detailPath.Points.Skip(1));
+
+            MillingIO.SaveFile(roughPath, location, "1", startMove);
+            MillingIO.SaveFile(basePath, location, "2", startMove);
+            MillingIO.SaveFile(contourPath, location, "3", startMove);
+            MillingIO.SaveFile(innerPath, location, "4", startMove);
         }
 
         private void MenuMillingScaleClick(object sender, RoutedEventArgs e)

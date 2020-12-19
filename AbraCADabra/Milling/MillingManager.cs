@@ -537,10 +537,9 @@ namespace AbraCADabra.Milling
             return path.Points.Count > 0;
         }
 
-        public void WriteRoughPath(float[,] modelHeightMap, float reductionEps, string location, int startIndex)
+        public MillingPathData GetRoughPath(float[,] modelHeightMap, float reductionEps)
         {
             const int diamMil = 16;
-            var toolData = new ToolData(false, diamMil);
             int mapDimX = modelHeightMap.GetLength(0), mapDimZ = modelHeightMap.GetLength(1);
             float diamEps = 2 * MillingPath.SCALE, stripWidth = 7 * MillingPath.SCALE; // TODO: should be params
             float radEps = diamEps / 2;
@@ -666,7 +665,8 @@ namespace AbraCADabra.Milling
             pts = DouglasPeucker(pts, reductionEps);
             pts.Add(new Vector3(directionX * edgeMultX * stripWidth, SizeY + TOOL_DIST, -directionZ * edgeZ));
             pts.Add(new Vector3(0, SizeY + TOOL_DIST, 0));
-            MillingIO.SaveFile(pts, toolData, location, "1", startIndex);
+            //MillingIO.SaveFile(pts, toolData, location, "1", startIndex);
+            return new MillingPathData(pts, false, diamMil);
         }
 
         private static class FishPart
@@ -682,12 +682,12 @@ namespace AbraCADabra.Milling
             public const int Count          = 8;
         }
 
-        public GraphVisualizer WriteBasePaths(List<PatchManager> patches, float reductionEps, string location, int startIndex)
+        public (MillingPathData basePath, MillingPathData contourPath, MillingPathData innerPath) GetBasePaths(
+            List<PatchManager> patches, float reductionEps)
         {
             if (patches.Count != FishPart.Count) // prevent an exception when the dumdum that is me tries to find paths before loading the model
             {
-                //return;
-                return null;
+                return (null, null, null);
             }
 
             ResetGraphStructures();
@@ -719,8 +719,7 @@ namespace AbraCADabra.Milling
 
             if (!success) // something has gone terribly wrong
             {
-                //return;
-                return null;
+                return (null, null, null);
             }
 
             var (graph, graphCount) = GetContourGraph(segments, 4);
@@ -863,7 +862,7 @@ namespace AbraCADabra.Milling
                 new Vector3(lastBasePathPoint.X, SizeY + TOOL_DIST, lastBasePathPoint.Z),
                 new Vector3(0, SizeY + TOOL_DIST, 0));
 
-            MillingIO.SaveFile(basePathPoints, new ToolData(true, baseDiamMil), location, "2", startIndex);
+            //MillingIO.SaveFile(basePathPoints, new ToolData(true, baseDiamMil), location, "2", startIndex);
             //ToolDiameter = baseDiamMil * MillingPath.SCALE;
             //IsFlat = true;
             //path = new MillingPath(basePathPoints);
@@ -882,7 +881,7 @@ namespace AbraCADabra.Milling
             contourPathPoints.AddMany(
                 new Vector3(lastContourPathPoint.X, SizeY + TOOL_DIST, lastContourPathPoint.Z),
                 new Vector3(0, SizeY + TOOL_DIST, 0));
-            MillingIO.SaveFile(contourPathPoints, new ToolData(true, contourDiamMil), location, "3", startIndex);
+            //MillingIO.SaveFile(contourPathPoints, new ToolData(true, contourDiamMil), location, "3", startIndex);
 
             // inner base
             prevPoint = new Vector3(0, y, 0); // center
@@ -1001,17 +1000,18 @@ namespace AbraCADabra.Milling
                 new Vector3(0, SizeY + TOOL_DIST, 0)
                 );
 
-            MillingIO.SaveFile(innerPathPoints, new ToolData(false, innerBaseDiamMil), location, "4", startIndex);
-            //return new GraphVisualizer(bottomBaseGraph);
-            return null;
+            //MillingIO.SaveFile(innerPathPoints, new ToolData(false, innerBaseDiamMil), location, "4", startIndex);
+            var basePathData = new MillingPathData(basePathPoints, true, baseDiamMil);
+            var contourPathData = new MillingPathData(contourPathPoints, true, contourDiamMil);
+            var innerPathData = new MillingPathData(innerPathPoints, false, innerBaseDiamMil);
+            return (basePathData, contourPathData, innerPathData);
         }
 
-        public void WriteDetailPath(List<PatchManager> patches, float reductionEps, string location, int startIndex)
+        public MillingPathData GetDetailPath(List<PatchManager> patches)
         {
-            // TODO: smooth out collar!
             if (patches.Count != FishPart.Count) // dumdumproof this too
             {
-                return;
+                return null;
             }
 
             const int detailDiamMil = 8;
@@ -1030,44 +1030,44 @@ namespace AbraCADabra.Milling
             int divs = 4;
 
             var icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Collar], offsetPatches[FishPart.Body], divs);
-            if (icm == null) return;
+            if (icm == null) return null;
             icm.TrimModeP = TrimMode.SideA;
             icm.TrimModeQ = TrimMode.SideB;
             icms.Add(icm);
 
             icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Body], offsetPatches[FishPart.MedUpperFin], divs);
-            if (icm == null) return;
+            if (icm == null) return null;
             icm.TrimModeP = TrimMode.SideA;
             icm.TrimModeQ = TrimMode.SideB;
             icms.Add(icm);
 
             icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Head], offsetPatches[FishPart.Body], divs);
-            if (icm == null) return;
+            if (icm == null) return null;
             icm.TrimModeP = TrimMode.SideA;
             icm.TrimModeQ = TrimMode.SideA; // only exception!
             icms.Add(icm);
 
             icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Head], offsetPatches[FishPart.SmallInnerFin], divs);
-            if (icm == null) return;
+            if (icm == null) return null;
             icm.TrimModeP = TrimMode.SideA;
             icm.TrimModeQ = TrimMode.SideB;
             icms.Add(icm);
 
             icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Head], offsetPatches[FishPart.SmallOuterFin], divs);
-            if (icm == null) return;
+            if (icm == null) return null;
             icm.TrimModeP = TrimMode.SideA;
             icm.TrimModeQ = TrimMode.SideB;
             icms.Add(icm);
 
             icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Body], offsetPatches[FishPart.MedLowerFin], divs);
-            if (icm == null) return;
+            if (icm == null) return null;
             icm.TrimModeP = TrimMode.SideA;
             icm.TrimModeQ = TrimMode.SideB;
             icms.Add(icm);
 
             finderParams.StartMaxIterations = finderParams.CurveMaxIterations = 100;
             icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Body], offsetPatches[FishPart.MedLowerFin], divs, new Vector3(0.1f, 2, 3.1f));
-            if (icm == null) return;
+            if (icm == null) return null;
             icm.TrimModeP = TrimMode.SideA;
             icm.TrimModeQ = TrimMode.SideB;
             icms.Add(icm);
@@ -1075,7 +1075,7 @@ namespace AbraCADabra.Milling
 
             finderParams.StartMaxIterations = finderParams.CurveMaxIterations = 100;
             icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Head], offsetPatches[FishPart.Collar], divs);
-            if (icm == null) return;
+            if (icm == null) return null;
             icm.TrimModeP = TrimMode.SideA;
             icm.TrimModeQ = TrimMode.SideB;
             icms.Add(icm);
@@ -1083,7 +1083,7 @@ namespace AbraCADabra.Milling
 
             finderParams.CurveEps = 1e-5f;
             icm = GetIntersectionCurve(finderParams, offsetPatches[FishPart.Body], offsetPatches[FishPart.LongFin], divs);
-            if (icm == null) return;
+            if (icm == null) return null;
             icm.TrimModeP = TrimMode.SideA;
             icm.TrimModeQ = TrimMode.SideB;
             icms.Add(icm);
@@ -1191,8 +1191,10 @@ namespace AbraCADabra.Milling
             {
                 var curveSegments = new List<List<Vector3>>();
                 curveSegments.Add(new List<Vector3>());
-                foreach (var pt in curve.Points)
+                foreach (var point in curve.Points)
                 {
+                    var pt = point;
+                    pt.Y -= detailRad;
                     if (pt.Y < yMax)
                     {
                         if (curveSegments[curveSegments.Count - 1].Count > 0)
@@ -1230,7 +1232,8 @@ namespace AbraCADabra.Milling
             //ToolDiameter = detailDiamMil * MillingPath.SCALE;
             //IsFlat = false;
             //path = new MillingPath(detailPoints);
-            MillingIO.SaveFile(detailPoints, new ToolData(false, detailDiamMil), location, "5", startIndex);
+            //MillingIO.SaveFile(detailPoints, new ToolData(false, detailDiamMil), location, "5", startIndex);
+            return new MillingPathData(detailPoints, false, detailDiamMil);
         }
 
         private IntersectionCurveManager GetIntersectionCurve(IntersectionFinderParams finderParams, ISurface P, ISurface Q, int divs)
