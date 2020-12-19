@@ -108,12 +108,11 @@ namespace AbraCADabra
             }
 
             var uv = new Vector2(u, v);
-            Vector2 scaleVector = new Vector2(surface.UScale, surface.VScale);
+            uv.X /= surface.UScale;
+            uv.Y /= surface.VScale;
             bool isInside = trimMode != TrimMode.SideA;
             foreach (var polygon in polygons)
             {
-                uv.X /= scaleVector.X;
-                uv.Y /= scaleVector.Y;
                 if (MathHelper.IsPointInPolygon(uv, polygon))
                 {
                     isInside = !isInside;

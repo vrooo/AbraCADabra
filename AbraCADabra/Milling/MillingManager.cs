@@ -1088,51 +1088,77 @@ namespace AbraCADabra.Milling
             icms.Add(icm);
 
             float yMax = BaseHeight + PATH_BASE_DIST + detailBaseEps;
-            var curPatch = offsetPatches[FishPart.Head];
             var lines = new List<List<Vector3>>();
-            float uStep = 0.02f, vStep = 0.1f;
-            for (float u = 0; u < curPatch.UScale; u += uStep)
+            for (int i = 0; i < FishPart.Count; i++)
             {
-                var line = new List<Vector3>();
-                for (float v = 0; v < curPatch.VScale; v += vStep)
+                var curPatch = offsetPatches[i];
+                // TODO: param table with the steps
+                float uStep = 0.05f, vStep = 0.02f;
+                for (float u = 0; u <= curPatch.UScale; u += uStep)
                 {
-                    var pt = curPatch.GetUVPoint(u, v);
-                    pt.Y -= detailRad;
-                    bool remove = false;
-                    if (pt.Y > yMax)
+                    var line = new List<Vector3>();
+                    bool skipping = false;
+                    for (float v = 0; v <= curPatch.VScale; v += vStep)
                     {
-                        foreach (var curve in curPatch.GetIntersectionCurves())
+                        var pt = curPatch.GetUVPoint(u, v);
+                        pt.Y -= detailRad;
+                        bool remove = false;
+                        if (pt.Y > yMax)
                         {
-                            if (curve.IsPointInside(curPatch, u, v))
+                            if (i == FishPart.MedLowerFin)
                             {
                                 remove = true;
-                                break;
+                                foreach (var curve in curPatch.GetIntersectionCurves())
+                                {
+                                    if (!curve.IsPointInside(curPatch, u, v))
+                                    {
+                                        remove = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                foreach (var curve in curPatch.GetIntersectionCurves())
+                                {
+                                    if (curve.IsPointInside(curPatch, u, v))
+                                    {
+                                        remove = true;
+                                        break;
+                                    }
+                                }
                             }
                         }
-                    }
-                    else
-                    {
-                        remove = true;
-                    }
+                        else
+                        {
+                            remove = true;
+                        }
 
-                    if (!remove)
-                    {
-                        line.Add(pt);
+                        if (remove && !skipping) // start skipping
+                        {
+                            skipping = true;
+                            if (line.Count > 0)
+                            {
+                                var ptUp = line[line.Count - 1];
+                                ptUp.Y = SizeY + TOOL_DIST;
+                                line.Add(ptUp);
+                            }
+                        }
+                        else if (!remove && skipping) // end skipping
+                        {
+                            skipping = false;
+                            var ptUp = pt;
+                            ptUp.Y = SizeY + TOOL_DIST;
+                            line.Add(ptUp);
+                        }
+
+                        if (!skipping)
+                        {
+                            line.Add(pt);
+                        }
                     }
-                    else
-                    {
-                        pt.Y = SizeY + TOOL_DIST;
-                        line.Add(pt);
-                    }
+                    lines.Add(line);
                 }
-                //if (firstRemoved != -1)
-                //{
-                //    var lineShifted = new List<Vector3>();
-                //    lineShifted.AddRange(line.Skip(firstRemoved));
-                //    lineShifted.AddRange(line.Take(firstRemoved));
-                //    line = lineShifted;
-                //}
-                lines.Add(line);
             }
 
             var tmp = new List<Vector3>();
